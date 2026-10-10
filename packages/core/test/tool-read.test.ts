@@ -13,6 +13,7 @@ import { Session } from "@opencode/core/session"
 import { AbsolutePath, RelativePath } from "@opencode/core/schema"
 import { Global } from "@opencode/util/global"
 import { FileAccess } from "@opencode/core/file-access"
+import { FileStamp } from "@opencode/core/file-stamp"
 import { location } from "./fixture/location"
 import { Tool } from "@opencode/core/tool"
 import { ReadTool } from "@opencode/core/tool/plugin/read"
@@ -31,6 +32,7 @@ const readToolNode = makeLocationNode({
     Tool.node,
     ReadToolFileSystem.node,
     FileAccess.node,
+    FileStamp.node,
     Image.node,
     Permission.node,
     SessionInstructions.node,
@@ -59,7 +61,16 @@ let readResult: ReadToolFileSystem.FileContent | ReadToolFileSystem.TextPage | R
   mime: "text/plain",
 }
 let readFailure: ReadToolFileSystem.ReadError | undefined
-let readOverride: ReadToolFileSystem.Interface["read"] | undefined
+let readOverride:
+  | ((
+      input: AbsolutePath,
+      resource: string,
+      page?: ReadToolFileSystem.PageInput,
+    ) => Effect.Effect<
+      ReadToolFileSystem.FileContent | ReadToolFileSystem.TextPage | ReadToolFileSystem.ListPage,
+      ReadToolFileSystem.ReadError
+    >)
+  | undefined
 const reader = Layer.succeed(
   ReadToolFileSystem.Service,
   ReadToolFileSystem.Service.of({
@@ -70,9 +81,9 @@ const reader = Layer.succeed(
     read: (input, resource, page = {}) => {
       readCalls.push({ input, page })
       if (readDefect !== undefined) return Effect.die(readDefect)
-      if (readOverride) return readOverride(input, resource, page)
+      if (readOverride) return Effect.map(readOverride(input, resource, page), (content) => ({ content }))
       if (readFailure !== undefined) return Effect.fail(readFailure)
-      return Effect.succeed(readResult)
+      return Effect.succeed({ content: readResult })
     },
   }),
 )
@@ -118,7 +129,7 @@ const unavailableImage = Layer.mock(Image.Service, {
 })
 const readLayer = (imageLayer: Layer.Layer<Image.Service>) =>
   Layer.mergeAll(
-    AppNodeBuilder.build(LayerNode.group([Tool.node, readToolNode]), [
+    AppNodeBuilder.build(LayerNode.group([Tool.node, FileStamp.node, readToolNode]), [
       ReadToolFileSystem.node.replace(reader),
       Permission.node.replace(permission),
       Config.node.replace(config),

@@ -13,6 +13,7 @@ import { Global } from "@opencode/util/global"
 import { Image } from "@opencode/core/image"
 import { Location } from "@opencode/core/location"
 import { FileAccess } from "@opencode/core/file-access"
+import { FileStamp } from "@opencode/core/file-stamp"
 import { Model } from "@opencode/core/model"
 import { Permission } from "@opencode/core/permission"
 import { Project } from "@opencode/core/project"
@@ -43,6 +44,7 @@ const readToolNode = makeLocationNode({
     Tool.node,
     ReadToolFileSystem.node,
     FileAccess.node,
+    FileStamp.node,
     Image.node,
     Permission.node,
     SessionInstructions.node,
@@ -65,6 +67,7 @@ const testLayer = AppNodeBuilder.build(
     Location.node,
     FSUtil.node,
     FileAccess.node,
+    FileStamp.node,
     ReadToolFileSystem.node,
     readToolNode,
     Tool.node,

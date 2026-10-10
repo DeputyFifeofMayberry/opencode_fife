@@ -5,7 +5,7 @@ import { pathToFileURL } from "url"
 import { makeLocationNode } from "@opencode/util/effect/app-node"
 import { Context, Effect, Layer, Schema } from "effect"
 import { lookup } from "mime-types"
-import { Environment } from "../environment/index.js"
+import { Environment, type FileInfo } from "../environment/index.js"
 import type { Files } from "../environment/index.js"
 import { FileSystem } from "../filesystem.js"
 import { Mime } from "../mime.js"
@@ -106,7 +106,18 @@ export interface Interface {
     path: AbsolutePath,
     resource: string,
     page?: PageInput,
-  ) => Effect.Effect<FileContent | TextPage | ListPage, ReadError>
+  ) => Effect.Effect<StampedRead, ReadError>
+}
+
+/**
+ * A read result plus the raw bytes and FileInfo that produced it, so callers can
+ * fingerprint what they read. `info` and `bytes` are absent for directory listings
+ * and partial when a page stops before EOF.
+ */
+export interface StampedRead {
+  readonly content: FileContent | TextPage | ListPage
+  readonly info?: FileInfo
+  readonly bytes?: Uint8Array
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/ReadToolFileSystem") {}
@@ -131,7 +142,7 @@ export const read = Effect.fn("ReadTool.read")(function* (
       )
     }),
   )
-  if (first instanceof ListPage) return first
+  if (first instanceof ListPage) return { content: first }
 
   const media = Mime.detect(first.bytes)
   if (MEDIA_MIMES.has(media)) {
@@ -139,12 +150,16 @@ export const read = Effect.fn("ReadTool.read")(function* (
       return yield* new MediaIngestLimitError({ resource, maximumBytes: MAX_MEDIA_INGEST_BYTES })
     const whole = yield* readFile(files, input, resource)
     return {
-      type: "file" as const,
-      uri: pathToFileURL(input).href,
-      name: path.basename(input),
-      content: Buffer.from(whole.bytes).toString("base64"),
-      encoding: "base64" as const,
-      mime: media,
+      content: {
+        type: "file" as const,
+        uri: pathToFileURL(input).href,
+        name: path.basename(input),
+        content: Buffer.from(whole.bytes).toString("base64"),
+        encoding: "base64" as const,
+        mime: media,
+      },
+      info: whole.info,
+      bytes: whole.bytes,
     }
   }
 
@@ -152,25 +167,30 @@ export const read = Effect.fn("ReadTool.read")(function* (
   if (!paged) {
     if (first.bytes.includes(0)) return yield* new BinaryFileError({ resource })
     return {
-      type: "file" as const,
-      uri: pathToFileURL(input).href,
-      name: path.basename(input),
-      content: new TextDecoder().decode(first.bytes).split("\n").map(clampLine).join("\n"),
-      encoding: "utf8" as const,
-      mime: mimeType(input),
+      content: {
+        type: "file" as const,
+        uri: pathToFileURL(input).href,
+        name: path.basename(input),
+        content: new TextDecoder().decode(first.bytes).split("\n").map(clampLine).join("\n"),
+        encoding: "utf8" as const,
+        mime: mimeType(input),
+      },
+      info: first.info,
+      bytes: first.bytes,
     }
   }
 
   if (first.bytes.length >= first.info.size) {
     const result = textPage(first.bytes, true, page)
     if (result === undefined) return yield* Effect.die("Read page did not settle for a complete first chunk")
-    return yield* makeTextPage(
+    const content = yield* makeTextPage(
       input,
       resource,
       result,
       first.bytes.subarray(0, result.consumed).includes(0),
       lineCount(textLeaf(first.bytes).summary.lines, first.bytes.at(-1)),
     )
+    return { content, info: first.info, bytes: first.bytes }
   }
 
   const offset = page.offset || 1
@@ -207,7 +227,9 @@ export const read = Effect.fn("ReadTool.read")(function* (
           checked += leaf.summary.bytes
           return length > 0 && leaf.bytes.subarray(0, length).includes(0)
         })
-        return yield* makeTextPage(input, resource, translated, binary, lineCount(lines, leaves.at(-1)?.bytes.at(-1)))
+        const content = yield* makeTextPage(input, resource, translated, binary, lineCount(lines, leaves.at(-1)?.bytes.at(-1)))
+        // Bytes read so far; shorter than info.size when the page stopped before EOF.
+        return { content, info: first.info, bytes: Buffer.concat(leaves.map((leaf) => leaf.bytes)) }
       }
     }
 
