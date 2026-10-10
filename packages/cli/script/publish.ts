@@ -161,13 +161,23 @@ async function archive(bin: string, target: string, binary: string, directory: s
   if (!(await Bun.file(source).exists()) || !Bun.file(source).size) throw new Error(`Missing binary: ${source}`)
   // GitHub artifact downloads lose execute bits. Fixed timestamps make retries reproducible.
   await chmod(source, 0o755)
-  await utimes(source, new Date("1980-01-01T00:00:00Z"), new Date("1980-01-01T00:00:00Z"))
+  const files = [
+    executable,
+    ...(target.startsWith("windows-")
+      ? Array.from(new Bun.Glob("opentui-*.dll").scanSync({ cwd: bin })).toSorted()
+      : []),
+  ]
+  await Promise.all(
+    files.map((file) =>
+      utimes(path.join(bin, file), new Date("1980-01-01T00:00:00Z"), new Date("1980-01-01T00:00:00Z")),
+    ),
+  )
   const extension = target.startsWith("linux-") ? "tar.gz" : "zip"
   const output = path.join(directory, `${binary}-${target}.${extension}`)
   await rm(output, { force: true })
   if (extension === "tar.gz") {
     await $`tar --mtime=@0 --owner=0 --group=0 --numeric-owner -czf ${output} -C ${bin} ${executable}`
   }
-  if (extension === "zip") await $`zip -X -q ${output} ${executable}`.cwd(bin)
+  if (extension === "zip") await $`zip -X -q ${output} ${files}`.cwd(bin)
   return output
 }
