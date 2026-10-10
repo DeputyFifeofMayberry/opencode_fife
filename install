@@ -325,6 +325,14 @@ download_with_progress() {
     return $ret
 }
 
+install_native_libraries() {
+    local library
+    for library in "$1"/opentui-*.dll; do
+        [ -f "$library" ] || continue
+        [ -f "$INSTALL_DIR/$(basename "$library")" ] || cp "$library" "$INSTALL_DIR/"
+    done
+}
+
 download_and_install() {
     print_message info "\n${MUTED}Installing ${NC}$APP ${MUTED}version: ${NC}$specific_version"
     local tmp_dir="${TMPDIR:-/tmp}/opencode_install_$$"
@@ -339,6 +347,7 @@ download_and_install() {
     local installed_binary="$APP"
     if [ "$os" = "windows" ]; then
         installed_binary="$APP.exe"
+        install_native_libraries "$tmp_dir/package/bin"
     fi
     mv "$tmp_dir/package/bin/$binary_name" "$INSTALL_DIR/$installed_binary"
     chmod 755 "$INSTALL_DIR/$installed_binary"
@@ -349,7 +358,10 @@ install_from_binary() {
     print_message info "\n${MUTED}Installing ${NC}$APP ${MUTED}from: ${NC}$binary_path"
     local installed_binary="$APP"
     case "$(uname -s)" in
-        MINGW*|MSYS*|CYGWIN*) installed_binary="$APP.exe" ;;
+        MINGW*|MSYS*|CYGWIN*)
+            installed_binary="$APP.exe"
+            install_native_libraries "$(dirname "$binary_path")"
+            ;;
     esac
     cp "$binary_path" "$INSTALL_DIR/$installed_binary"
     chmod 755 "$INSTALL_DIR/$installed_binary"

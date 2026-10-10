@@ -11,6 +11,7 @@ import { discoverPluginRuntimeSpecifiers, pluginRuntimeLoaderCode } from "@openc
 import { buildAppArchive } from "./app-assets"
 import { verifyArtifact, verifySimulationGraph } from "./verify-artifact"
 import { resolveOpencodePty } from "./opencode-pty"
+import { windowsOpenTui } from "./windows-opentui"
 
 const dir = path.resolve(import.meta.dirname, "..")
 const binary = "opencode"
@@ -109,6 +110,7 @@ const pluginRuntimePlugin: BunPlugin = {
 }
 
 for (const item of targets) {
+  const openTui = item.os === "win32" ? await windowsOpenTui(item.arch) : undefined
   const opencodePty = await resolveOpencodePty({
     platform: item.os,
     arch: item.arch,
@@ -154,6 +156,7 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
     entrypoints: ["./src/index.ts"],
     tsconfig: "./tsconfig.json",
     plugins: [
+      ...(openTui ? [openTui.plugin] : []),
       appAssetsPlugin,
       solidPlugin,
       parcelWatcherPlugin,
@@ -201,6 +204,7 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
     process.exit(1)
   }
   verifySimulationGraph(simulationInputs)
+  if (openTui) await Bun.write(path.join(outdir, name, "bin", openTui.name), Bun.file(openTui.source))
 
   await Bun.write(
     path.join(outdir, name, "package.json"),

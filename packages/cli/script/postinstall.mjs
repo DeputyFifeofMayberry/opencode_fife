@@ -101,6 +101,12 @@ function packageNames() {
 function copyBinary(source) {
   if (!fs.existsSync(source)) throw new Error(`Binary not found at ${source}`)
   fs.mkdirSync(path.dirname(targetBinary), { recursive: true })
+  if (platform === "windows") {
+    for (const name of fs.readdirSync(path.dirname(source)).filter((name) => /^opentui-[a-f0-9]+\.dll$/.test(name))) {
+      const target = path.join(path.dirname(targetBinary), name)
+      if (!fs.existsSync(target)) fs.copyFileSync(path.join(path.dirname(source), name), target)
+    }
+  }
   if (fs.existsSync(targetBinary)) {
     try {
       fs.unlinkSync(targetBinary)
