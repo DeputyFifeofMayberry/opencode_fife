@@ -13,6 +13,7 @@ import type { Agent } from "@opencode/schema/agent"
 import { Cause, Clock, Data, Effect, Exit, Fiber, Option, Stream } from "effect"
 import { SessionError } from "@opencode/schema/session-error"
 import { Bus } from "../../bus.js"
+import { ConfigHooks } from "../../config-hooks.js"
 import { Permission } from "../../permission.js"
 import { Snapshot } from "../../snapshot.js"
 import { Tool } from "../../tool.js"
@@ -89,7 +90,7 @@ export const make = Effect.gen(function* () {
     })
     const toolRuns: Array<{
       readonly call: ToolCall
-      readonly fiber: Fiber.Fiber<void, Permission.DeclinedError | QuestionTool.CancelledError>
+      readonly fiber: Fiber.Fiber<void, Permission.DeclinedError | QuestionTool.CancelledError | ConfigHooks.HaltError>
     }> = []
     const interruptTools = Effect.suspend(() => Fiber.interruptAll(toolRuns.map((run) => run.fiber)))
     const executeTool = (call: ToolCall) => {
@@ -215,7 +216,9 @@ export const make = Effect.gen(function* () {
               ? "Interaction cancelled because the location shut down"
               : decline.reason._tag === "QuestionTool.CancelledError"
                 ? decline.reason.message
-                : "The user declined this tool call",
+                : decline.reason._tag === "ConfigHooks.HaltError"
+                  ? "A config hook halted this tool call"
+                  : "The user declined this tool call",
           })
         const interrupted = tools.declines.length > 0 || streamInterrupted || tools.interrupted
         const toolFailure = interrupted
@@ -298,9 +301,11 @@ const isInterruptedStream = (failure: AIError) => {
   return false
 }
 
-/** Tool.Error settles in each fiber; only user declines remain in the typed error channel. */
+/** Tool.Error settles in each fiber; user declines and hook halts remain in the typed error channel. */
 const classifyToolExits = (
-  settled: Exit.Exit<Array<Exit.Exit<void, Permission.DeclinedError | QuestionTool.CancelledError>>>,
+  settled: Exit.Exit<
+    Array<Exit.Exit<void, Permission.DeclinedError | QuestionTool.CancelledError | ConfigHooks.HaltError>>
+  >,
   runs: ReadonlyArray<{ readonly call: ToolCall }>,
 ) => {
   const exits = Exit.isSuccess(settled) ? settled.value : []

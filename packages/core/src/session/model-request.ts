@@ -27,6 +27,7 @@ import { Cause, Context, Effect, Layer, Result, Stream } from "effect"
 import { HttpClientRequest, HttpClientResponse } from "effect/http"
 import { makeLocationNode } from "@opencode/util/effect/app-node"
 import { App } from "../app.js"
+import { ConfigHooks } from "../config-hooks.js"
 import { Permission } from "../permission.js"
 import { PluginHooks } from "../plugin/hooks.js"
 import { QuestionTool } from "../tool/plugin/question.js"
@@ -56,8 +57,8 @@ const ESTIMATE_ERROR = 0.15
 // Never ask for less; only reachable with automatic compaction off, since it keeps the window from filling this far.
 const OUTPUT_TOKEN_MIN = 1_024
 
-/** Tool errors, plus the user declining a permission or dismissing a question. */
-export type ExecuteError = Tool.Error | Permission.DeclinedError | QuestionTool.CancelledError
+/** Tool errors, plus the user declining a permission, dismissing a question, or a config hook halting the turn. */
+export type ExecuteError = Tool.Error | Permission.DeclinedError | QuestionTool.CancelledError | ConfigHooks.HaltError
 
 export interface Prepared<Event = SessionRequest> {
   readonly event: Event
@@ -405,7 +406,9 @@ export const layer = Layer.effect(
               (cause) => {
                 const decline = cause.reasons.flatMap((r) =>
                   Cause.isDieReason(r) &&
-                  (r.defect instanceof Permission.DeclinedError || r.defect instanceof QuestionTool.CancelledError)
+                  (r.defect instanceof Permission.DeclinedError ||
+                    r.defect instanceof QuestionTool.CancelledError ||
+                    r.defect instanceof ConfigHooks.HaltError)
                     ? [r.defect]
                     : [],
                 )[0]
