@@ -157,7 +157,7 @@ const make = Effect.gen(function* () {
     return values.findLast((value) => value !== undefined) ?? "notify"
   })
 
-  const exec = Effect.fnUntraced(function* (command: string[], timeout: Duration.Input = "10 seconds") {
+  const exec = Effect.fnUntraced(function* (command: string[], timeout: Duration.Input = "30 seconds") {
     return yield* appProcess
       .run(ChildProcess.make(command[0], command.slice(1)), {
         timeout,
@@ -202,13 +202,15 @@ const make = Effect.gen(function* () {
     if (installedFormula) return "brew"
     if (!installedPackage) return
 
-    const checks: ReadonlyArray<{ method: Method; command: string[] }> = [
+    const parts = executable.toLowerCase().split(path.sep).map((part) => part.replace(/^\./, ""))
+    const checks: Array<{ method: Method; command: string[] }> = [
       { method: "npm", command: ["npm", "list", "-g", "--depth=0", installedPackage] },
       { method: "pnpm", command: ["pnpm", "list", "-g", "--depth=0", installedPackage] },
       { method: "bun", command: ["bun", "pm", "ls", "-g"] },
       { method: "yarn", command: ["yarn", "global", "list"] },
       { method: "vp", command: ["vp", "list", "-g", "--json", installedPackage] },
     ]
+    checks.sort((a, b) => Number(parts.includes(b.method)) - Number(parts.includes(a.method)))
     const results = yield* Effect.forEach(
       checks,
       (check) =>
@@ -497,7 +499,12 @@ const make = Effect.gen(function* () {
   })
 
   const apply = Effect.fn("cli.updater.apply")(function* (version: string) {
-    if (!(yield* install(version))) return yield* Effect.fail(new Error("Installation method not found"))
+    if (!(yield* install(version)))
+      return yield* Effect.fail(
+        new Error(
+          "Could not detect the installation method. Update with your package manager or download the latest release.",
+        ),
+      )
   })
 
   const check = Effect.fn("cli.updater.check")(function* () {
@@ -506,7 +513,14 @@ const make = Effect.gen(function* () {
         type: "unavailable" as const,
         message: "This build runs from a source checkout. Use an installed OpenCode release to check for updates.",
       }
-    const version = yield* latest()
+    const detected = yield* method()
+    if (!detected)
+      return {
+        type: "unavailable" as const,
+        message:
+          "Could not detect the installation method. Update with your package manager or download the latest release.",
+      }
+    const version = yield* latest(detected)
     if (!parseReleaseVersion(version)) return yield* Effect.fail(new Error(`Invalid version: ${version}`))
     const current = yield* Ref.get(installedVersion)
     if (action(current, version, "auto") === "none") {
