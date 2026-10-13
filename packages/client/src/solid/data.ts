@@ -668,7 +668,8 @@ export function createData(config: CreateDataInput) {
         })
         return
       }
-      case "session.model.selected":
+      case "session.model.selected": {
+        const previous = event.data.previous ?? store.session.info[event.data.sessionID]?.model
         if (store.session.info[event.data.sessionID])
           setStore("session", "info", event.data.sessionID, "model", event.data.model)
         if (!store.session.message[event.data.sessionID]) return
@@ -676,6 +677,7 @@ export function createData(config: CreateDataInput) {
           id: messageIDFromEvent(event.id),
           type: "model-switched",
           model: event.data.model,
+          previous,
           time: { created: event.created },
         })
         refresh(() =>
@@ -690,6 +692,7 @@ export function createData(config: CreateDataInput) {
             }),
         )
         return
+      }
       case "session.renamed": {
         // Preserve the live title when it races the session's initial read.
         refresh(() => {
@@ -1828,7 +1831,9 @@ export function createData(config: CreateDataInput) {
     },
     project: {
       list() {
-        return Object.values(store.project.info).toSorted((a, b) => b.time.active - a.time.active)
+        return Object.values(store.project.info)
+          .filter((project) => project.time.archived === undefined)
+          .toSorted((a, b) => b.time.active - a.time.active)
       },
       get(projectID: string) {
         return store.project.info[projectID]
