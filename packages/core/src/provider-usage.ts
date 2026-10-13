@@ -1,6 +1,6 @@
 export * as ProviderUsage from "./provider-usage.js"
 
-import { Effect, Predicate, Schema } from "effect"
+import { Deferred, Effect, Predicate, Schema } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/http"
 import type { UsageSnapshot, UsageWindow } from "@opencode/schema/provider"
 import { Integration } from "./integration.js"
@@ -140,7 +140,7 @@ export class ProviderNotFoundError extends Schema.TaggedError<ProviderNotFoundEr
 type CacheEntry = { fetchedAt: number; retryAfter?: number; snapshot: UsageSnapshot }
 
 const cache = new Map<string, CacheEntry>()
-const inFlight = new Map<string, Effect.Effect<UsageSnapshot, never, HttpClient.HttpClient>>()
+const inFlight = new Map<string, Deferred.Deferred<UsageSnapshot>>()
 
 export const snapshot = Effect.fn("ProviderUsage.snapshot")(
   function* (providerID: Provider.ID, options?: { force?: boolean }) {
@@ -166,11 +166,20 @@ export const snapshot = Effect.fn("ProviderUsage.snapshot")(
     if (cached !== undefined && !shouldRefetch(cached, Date.now(), options?.force === true)) return cached.snapshot
 
     const running = inFlight.get(providerID)
-    if (running !== undefined) return yield* running
+    if (running !== undefined) return yield* Deferred.await(running)
 
-    const started = fetchSnapshot(providerID, origin, key)
-    inFlight.set(providerID, started)
-    return yield* started.pipe(Effect.ensuring(Effect.sync(() => inFlight.delete(providerID))))
+    // One upstream fetch per burst: the winner publishes its exit through the deferred, joiners await it.
+    // makeUnsafe keeps the get/set pair synchronous, so concurrent callers cannot both claim the slot.
+    const deferred = Deferred.makeUnsafe<UsageSnapshot>()
+    inFlight.set(providerID, deferred)
+    return yield* fetchSnapshot(providerID, origin, key).pipe(
+      Effect.onExit((exit) =>
+        Effect.sync(() => {
+          if (inFlight.get(providerID) === deferred) inFlight.delete(providerID)
+          Deferred.doneUnsafe(deferred, exit)
+        }),
+      ),
+    )
   },
 )
 
