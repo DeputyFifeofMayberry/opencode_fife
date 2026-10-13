@@ -1,7 +1,10 @@
 export * as ProviderUsage from "./provider-usage.js"
 
-import { Predicate } from "effect"
-import type { UsageWindow } from "@opencode/schema/provider"
+import { Effect, Predicate, Schema } from "effect"
+import { HttpClient, HttpClientRequest } from "effect/http"
+import type { UsageSnapshot, UsageWindow } from "@opencode/schema/provider"
+import { Integration } from "./integration.js"
+import { Provider } from "./provider.js"
 
 export const CACHE_TTL_MS = 240_000
 export const FORCE_TTL_MS = 15_000
@@ -125,3 +128,148 @@ function finiteOr(value: unknown): number | undefined {
 function numberOr(value: unknown): number {
   return finiteOr(value) ?? 0
 }
+
+export class ProviderNotFoundError extends Schema.TaggedError<ProviderNotFoundError>()(
+  "ProviderUsage.ProviderNotFound",
+  {
+    providerID: Provider.ID,
+    message: Schema.String,
+  },
+) {}
+
+type CacheEntry = { fetchedAt: number; retryAfter?: number; snapshot: UsageSnapshot }
+
+const cache = new Map<string, CacheEntry>()
+const inFlight = new Map<string, Effect.Effect<UsageSnapshot, never, HttpClient.HttpClient>>()
+
+export const snapshot = Effect.fn("ProviderUsage.snapshot")(
+  function* (providerID: Provider.ID, options?: { force?: boolean }) {
+    const origin = monitorOrigin(providerID)
+    if (origin === undefined) return bare(providerID, "unsupported_endpoint", Date.now())
+
+    const providers = yield* Provider.Service
+    const provider = yield* providers.get(providerID)
+    if (provider === undefined)
+      return yield* new ProviderNotFoundError({ providerID, message: `Provider not found: ${providerID}` })
+
+    const integrations = yield* Integration.Service
+    const connection = yield* integrations.connection.active(
+      provider.integrationID ?? Integration.ID.make(providerID),
+    )
+    const credential = connection
+      ? yield* integrations.connection.resolve(connection).pipe(Effect.orElseSucceed(() => undefined))
+      : undefined
+    const key = pickKey(credential, provider.settings)
+    if (key === undefined) return bare(providerID, "not_signed_in", Date.now())
+
+    const cached = cache.get(providerID)
+    if (cached !== undefined && !shouldRefetch(cached, Date.now(), options?.force === true)) return cached.snapshot
+
+    const running = inFlight.get(providerID)
+    if (running !== undefined) return yield* running
+
+    const started = fetchSnapshot(providerID, origin, key)
+    inFlight.set(providerID, started)
+    return yield* started.pipe(Effect.ensuring(Effect.sync(() => inFlight.delete(providerID))))
+  },
+)
+
+function bare(providerID: Provider.ID, state: UsageSnapshot["state"], fetchedAt: number): UsageSnapshot {
+  return { providerID, state, plan: {}, windows: [], fetchedAt }
+}
+
+const fetchSnapshot = Effect.fnUntraced(function* (providerID: Provider.ID, origin: string, key: string) {
+  const http = yield* HttpClient.HttpClient
+  const last = cache.get(providerID)
+  const quota = yield* quotaWithAuth(http, origin, key)
+  const now = Date.now()
+
+  if (quota.outcome.kind === "ok") {
+    const data = normalize(quota.outcome.data, now)
+    const name = yield* planName(http, origin, quota.authorization)
+    const snapshot: UsageSnapshot = {
+      providerID,
+      state: data.windows.length === 0 && data.tools === undefined ? "no_plan" : "ok",
+      plan: {
+        ...(data.level === undefined ? {} : { level: data.level }),
+        ...(name === undefined ? {} : { name }),
+      },
+      windows: data.windows,
+      ...(data.tools === undefined ? {} : { tools: data.tools }),
+      fetchedAt: now,
+    }
+    cache.set(providerID, { snapshot, fetchedAt: now })
+    return snapshot
+  }
+
+  if (quota.outcome.kind === "rate_limited") {
+    const retryAfter = now + quota.outcome.retryAfterMs
+    const snapshot: UsageSnapshot =
+      last === undefined
+        ? { ...bare(providerID, "rate_limited", now), retryAfter }
+        : { ...last.snapshot, state: "rate_limited", retryAfter }
+    cache.set(providerID, { snapshot, fetchedAt: now, retryAfter })
+    return snapshot
+  }
+
+  if (quota.outcome.kind === "unavailable") {
+    const snapshot: UsageSnapshot =
+      last === undefined ? bare(providerID, "unavailable", now) : { ...last.snapshot, state: "unavailable" }
+    cache.set(providerID, { snapshot, fetchedAt: now })
+    return snapshot
+  }
+
+  return bare(providerID, "key_rejected", now)
+})
+
+/** Raw key first; a 401 retries once with the Bearer scheme, and a second 401 is terminal. */
+function quotaWithAuth(
+  http: HttpClient.HttpClient,
+  origin: string,
+  key: string,
+): Effect.Effect<{ outcome: FetchOutcome; authorization: string }> {
+  return Effect.gen(function* () {
+    const first = yield* attemptQuota(http, origin, key)
+    if (first.kind !== "unauthorized") return { outcome: first, authorization: key }
+    const authorization = `Bearer ${key}`
+    const retry = yield* attemptQuota(http, origin, authorization)
+    if (retry.kind === "unauthorized") return { outcome: { kind: "key_rejected" }, authorization }
+    return { outcome: retry, authorization }
+  })
+}
+
+const attemptQuota = (http: HttpClient.HttpClient, origin: string, authorization: string) =>
+  http
+    .execute(
+      HttpClientRequest.get(`${origin}/api/monitor/usage/quota/limit`).pipe(
+        HttpClientRequest.setHeader("Authorization", authorization),
+        HttpClientRequest.setHeader("Accept-Language", "en-US,en"),
+      ),
+    )
+    .pipe(
+      Effect.timeout(REQUEST_TIMEOUT),
+      Effect.flatMap((response) =>
+        response.json.pipe(
+          Effect.orElseSucceed(() => undefined),
+          Effect.map((body) => classify(response.status, response.headers["retry-after"], body)),
+        ),
+      ),
+      // Transport failures and timeouts degrade to unavailable instead of failing the snapshot.
+      Effect.catch(() => Effect.succeed<FetchOutcome>({ kind: "unavailable" })),
+    )
+
+/** Best-effort plan name; any failure keeps `plan.name` absent without touching meters or state. */
+const planName = (http: HttpClient.HttpClient, origin: string, authorization: string) =>
+  http
+    .execute(
+      HttpClientRequest.get(`${origin}/api/biz/subscription/list`).pipe(
+        HttpClientRequest.setHeader("Authorization", authorization),
+      ),
+    )
+    .pipe(
+      Effect.timeout(REQUEST_TIMEOUT),
+      Effect.flatMap((response) => response.json.pipe(Effect.orElseSucceed(() => undefined))),
+      Effect.map(pickPlanName),
+      Effect.catch(() => Effect.succeed<string | undefined>(undefined)),
+    )
+
