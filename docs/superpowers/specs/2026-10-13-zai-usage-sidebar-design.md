@@ -10,10 +10,9 @@ right-side panel), so checking "how much of my quota window is left" happens
 without leaving the editor. The user chose the full scope: both rolling
 windows, the monthly MCP tool budget, and the plan name/tier.
 
-Feasibility was investigated first; this document encodes what the
-investigation established. The data source is real and working (used by
-Z.ai's own official plugin and ~10 independent OSS implementations), and the
-sidebar is plugin-slot based, so this is a small, well-bounded feature.
+The data source is real and working: Z.ai's own official plugin calls it, as
+do roughly ten independent OSS implementations. The sidebar is plugin-slot
+based, so this is a small, well-bounded feature.
 
 ## Goals
 
@@ -31,19 +30,19 @@ sidebar is plugin-slot based, so this is a small, well-bounded feature.
 - No per-model usage charts or time series (the `model-usage` endpoint stays
   unused).
 - No CN pay-as-you-go balance (`query-customer-account-report`).
-- No team-plan scope (org/project headers, `type=2/3` params) — personal
+- No team-plan scope (org/project headers, `type=2/3` params): personal
   plans only, matching Z.ai's official plugin.
 - No provider-generic usage framework. Build for the zai family; generalize
   when a second provider with a usage API shows up.
 - No subscription-management writes of any kind.
 - No new theme tokens (see Constraints).
 
-## Anti-goals (failure modes that would make this a bad feature)
+## Anti-goals (what would make this a bad feature)
 
 - Rendering a `200` response with `success:false` as "no usage" or "0%".
   It is an error (usually auth) and must surface as one.
 - Polling per keystroke or on any sub-minute cadence.
-- Letting usage fetches block, delay, or break session streaming, or logging
+- Letting usage fetches block or break session streaming, or logging
   the raw API key anywhere (sanitize errors).
 - Silently showing another provider's panel item, or showing this one when
   the active model isn't on the zai family.
@@ -61,15 +60,14 @@ Timeout: 10s
 ```
 
 - `{monitor-origin}` maps by provider family, never by the configured
-  `baseURL`: `zai-coding-plan`/`zai` → `https://api.z.ai`;
+  `baseURL`: `zai-coding-plan`/`zai` → `https://api.z.ai`,
   `zhipuai-coding-plan`/`zhipuai` → `https://open.bigmodel.cn`. A key only
-  works on its own platform's host, and a user-overridden proxy `baseURL`
-  has no monitor API and won't accept the raw key either — see Contract
-  decisions.
-- This endpoint is NOT in Z.ai's public API reference. The de-facto contract
-  is pinned by Z.ai's official plugin (`zai-org/zai-coding-plugins`,
-  `plugins/glm-plan-usage/.../query-usage.mjs`). It has already migrated once
-  (legacy `TOKENS_LIMIT` plans → `CREDIT_LIMIT`, July 2026) — parse both.
+  works on its own platform's host (see Contract decisions for proxy
+  `baseURL`s).
+- The endpoint is absent from Z.ai's public API reference; the de-facto
+  contract is pinned by Z.ai's official plugin (`zai-org/zai-coding-plugins`,
+  `plugins/glm-plan-usage/.../query-usage.mjs`). It already migrated once
+  (legacy `TOKENS_LIMIT` plans → `CREDIT_LIMIT`, July 2026), so parse both.
 
 Response envelope and one possible body:
 
@@ -97,14 +95,14 @@ oh-my-pi parsers):
 |---|---|
 | `type` | `CREDIT_LIMIT` (current plans), `TOKENS_LIMIT` (legacy), `TIME_LIMIT` (monthly MCP tool calls) |
 | `usage` / `currentValue` / `remaining` | window total / consumed / left |
-| `percentage` | server-**rounded** integer — prefer `currentValue/usage` when both present; clamp to [0,100] |
+| `percentage` | server-rounded integer; prefer `currentValue/usage` when both present, clamped to [0,100] |
 | `nextResetTime` | epoch **milliseconds** (tolerate seconds: values < 10^12) |
 | `unit`/`number` | window size, see mapping below |
 | `usageDetails` | per-tool breakdown, `TIME_LIMIT` only |
 | `data.level` | plan tier string (`lite`/`pro`/`max`), optional |
 
-Window mapping — only these pairs are verified across implementations; match
-on `unit`, ignore unknown units (don't crash, don't guess):
+Window mapping. Only these pairs are verified across implementations; match
+on `unit` and ignore unknown units rather than guessing:
 
 - `{unit: 3, number: 5}` → 5-hour rolling window (the primary coding quota)
 - `{unit: 6, number: 1|7}` → weekly window (`number` varies; `unit` is the marker)
@@ -117,10 +115,9 @@ GET {monitor-origin}/api/biz/subscription/list
 Authorization: <raw API key>
 ```
 
-Returns `data: [{ productName: " Pro " }]` (field may alternatively be
-`product_name`; value may carry padding whitespace — trim). A failure here
-must never blank the quota meters; render tier from `data.level` as fallback
-and omit the name.
+Returns `data: [{ productName: " Pro " }]` (sometimes `product_name`; trim
+padding whitespace). A failure here must never blank the quota meters: render
+tier from `data.level` and omit the name.
 
 ### Error taxonomy
 
@@ -137,9 +134,8 @@ and omit the name.
 
 Lite 2,000 / Pro 12,000 / Max 28,000 credits per 5h; 10k/60k/140k weekly.
 The 5h window rolls (resets 5h after consumption), weekly resets 7 days from
-subscription. Peak Mon–Fri 14:00–18:00 UTC+8 burns credits at 1× vs 0.5×
-off-peak — the panel shows server-reported numbers and does no math on
-pricing.
+subscription. Peak Mon-Fri 14:00-18:00 UTC+8 burns credits at 1× vs 0.5×
+off-peak; the panel shows server-reported numbers and does no pricing math.
 
 ## UI
 
@@ -161,9 +157,9 @@ a near-exhausted window (e.g. >90%) may use `theme.text.feedback.warning`
 tokens; no `text.feedback` usage for plain informational lines.
 
 Visibility rule (my call): render only when the session's active model
-provider is a coding-plan ID — `zai-coding-plan` or `zhipuai-coding-plan`
-(the repo has no `zhipu` ID). Pay-as-you-go `zai`/`zhipuai` are excluded:
-their users would see a permanent "No active GLM Coding Plan" panel, exactly
+provider is a coding-plan ID, `zai-coding-plan` or `zhipuai-coding-plan`
+(the repo has no `zhipu` ID). Pay-as-you-go `zai`/`zhipuai` are excluded
+because their users would see a permanent "No active GLM Coding Plan" panel,
 the cross-provider noise the anti-goals forbid. Widen later if wanted.
 
 Polling (my call): fetch on mount + every 5 minutes while the session route
@@ -208,9 +204,9 @@ error taxonomy so the TUI never re-derives errors.
   same way model resolution does: the provider's `Integration` connection
   (`active` + `resolve`, covering SQLite-stored keys and `type: "env"`
   connections, see `model-resolver.ts`) plus the config `providers[].apiKey`
-  path that `hasConfiguredAuth` accepts. Never read only the SQLite store —
-  a key from env or config must get a working panel too. Nothing resolvable
-  → the "Not signed in" state.
+  path that `hasConfiguredAuth` accepts. Never read only the SQLite store: a
+  key from env or config must get a working panel too. Nothing resolvable
+  means the "Not signed in" state.
 - **Snapshot contract, not HTTP errors.** The endpoint always returns 200
   with the snapshot; upstream outcomes (invalid key, 429, 5xx, timeout,
   unparseable body, empty limits) are encoded in `state` plus last-known
@@ -221,9 +217,9 @@ error taxonomy so the TUI never re-derives errors.
   per TUI client: TTL ~4 minutes (under the 5-minute client cadence),
   in-flight upstream dedupe, and a force-refresh path with short TTL for
   explicit refetch. Backoff/Retry-After lives in the cached snapshot.
-- **Monitor origin maps by provider family.** Overridden proxy `baseURL`s
-  are ignored for monitoring (see Data source); an unknown family returns an
-  "unsupported endpoint" state instead of guessing a host.
+- **Monitor origin.** The family mapping lives in Data source. Overridden
+  proxy `baseURL`s are ignored for monitoring; an unknown family returns an
+  "unsupported endpoint" state rather than guessing a host.
 
 ### Experiment gating
 
@@ -235,16 +231,15 @@ Experiments infrastructure itself.
 
 ## Constraints (repo rules that bind the builder)
 
-- Effect v4 code in this repo — follow the `effect` skill conventions; bind
-  services to named variables in generators; no nested service yields.
-- No `any`, no star/aliased imports, prefer `Bun.file()`/Bun APIs, avoid
-  `try/catch` where Effect idioms suffice, avoid `else` (early returns).
-- Never edit generated client files; regenerate via `bun run generate` after
-  protocol changes.
-- Tests run from package directories (e.g. `packages/core`), never repo
-  root; minimal mocks — parser tests should use captured/fixture JSON.
-- Canonical verification: `bun run check` from repo root; focused iteration:
-  `bun typecheck` from the affected package.
+Style and Effect conventions live in the repo `AGENTS.md`; follow them. The
+rules easiest to get wrong here:
+
+- Never edit generated client files; run `bun run generate` after protocol
+  changes.
+- Tests run from package directories (e.g. `packages/core`), never the repo
+  root; parser tests use fixture JSON, not mocks.
+- Canonical verification: `bun run check` from the repo root; during focused
+  iteration, `bun typecheck` from the affected package.
 - Optional but idiomatic: a fixture-driven TUI story under
   `packages/tui/src/feature-plugins/system/storybook` exercising the state
   matrix (normal/no-plan/error/rate-limited/stale) with a reset command.
@@ -271,10 +266,8 @@ My calls (rejectable):
 - Provider-family visibility gate.
 - 5-minute cadence; raw-key auth with one Bearer retry.
 - From the builder check: snapshot-in-200 protocol contract; server-side TTL
-  cache with dedupe and force-refresh; family-based monitor-origin mapping
-  (ignore proxy baseURLs); key resolution mirroring inference (connection +
-  config key) with a "Not signed in" state; visibility = coding-plan IDs
-  only, PAYG excluded.
+  cache; family-based monitor-origin mapping; key resolution mirroring
+  inference; visibility = coding-plan IDs only, PAYG excluded.
 
 ## Left to the builder
 
@@ -284,7 +277,7 @@ My calls (rejectable):
   required).
 - Naming of the core service, schema module, and experimental config key.
 - The reset-plausibility guard (e.g. "a 5h window can't reset >5h out") is
-  optional defensiveness — include only if cheap.
+  optional defensiveness; include only if cheap.
 
 ## Reference implementations
 
@@ -293,6 +286,6 @@ My calls (rejectable):
   oh-my-pi `packages/ai/src/usage/zai.ts`
 - Error handling/Retry-After: codeburn `src/quota/zai.ts`
 - opencode-specific precedent: `opencode-glm-quota` (npm),
-  `opencode-bar` `scripts/query-zai-coding-plan.sh` (reads legacy auth.json —
-  this fork stores credentials in SQLite; use the credential service)
+  `opencode-bar` `scripts/query-zai-coding-plan.sh` (reads legacy auth.json;
+  this fork stores credentials in SQLite, so use the credential service)
 - Regression pinning `200 + success:false` as error: ai-usagebar `src/zai/`
