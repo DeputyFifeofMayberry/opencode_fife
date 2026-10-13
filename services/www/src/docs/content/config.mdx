@@ -236,6 +236,60 @@ statements that broader configuration can override.
 See the [policies guide](/policies) for matching, precedence across configuration
 files, and Console-managed policy.
 
+### Hooks
+
+Run shell commands before every agent tool call to enforce standing rules.
+Each entry runs when its `matcher` — a regular expression matched against the
+tool name — matches; omit `matcher` to run on every tool call. Commands receive
+the pending tool call as JSON on stdin and decide through exit codes: `0`
+allows, `2` blocks the call with `stderr` as the reason the model sees, and `49`
+halts the turn.
+
+```jsonc
+{
+  "hooks": [
+    {
+      "matcher": "Bash",
+      "command": "bun .opencode/hooks/deny-force-push.js",
+    },
+  ],
+}
+```
+
+The script reads the pending call from stdin and blocks force pushes on any
+platform:
+
+```js
+// .opencode/hooks/deny-force-push.js
+const call = JSON.parse(await Bun.stdin.text())
+if (call.tool_input.command.includes("push --force")) {
+  console.error("never force push")
+  process.exit(2)
+}
+```
+
+Commands run under the platform shell — cmd.exe on Windows, `/bin/sh`
+elsewhere — so prefer portable script files over inline shell syntax.
+
+Instead of exit codes alone, a command may print a JSON envelope on stdout with
+`decision` (`allow` or `deny`), `updatedInput` (shallow-merged into the tool
+input), or `context` (text prepended to the tool result for the model).
+
+```jsonc
+{
+  "hooks": [
+    {
+      "matcher": "Write|Edit",
+      "command": "bun .opencode/hooks/check-secrets.js",
+    },
+  ],
+}
+```
+
+Entries run in config order and independently; any block wins. A failed or
+timed-out command (60-second limit) logs a warning and the tool proceeds, so a
+broken hook never blocks work.
+
 ### Agents
 
 Override built-in agents or define specialized agents with their own model,

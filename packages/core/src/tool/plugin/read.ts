@@ -7,6 +7,7 @@ import { Effect, Schema } from "effect"
 import { FSUtil } from "@opencode/util/fs-util"
 import { Location } from "../../location.js"
 import { FileAccess } from "../../file-access.js"
+import { FileStamp } from "../../file-stamp.js"
 import { SessionInstructions } from "../../session/instructions.js"
 import { AbsolutePath } from "../../schema.js"
 import { ReadToolFileSystem } from "../read-filesystem.js"
@@ -31,6 +32,7 @@ export const Plugin = {
   effect: Effect.fn("ReadTool.Plugin")(function* (ctx: Context) {
     const reader = yield* ReadToolFileSystem.Service
     const access = yield* FileAccess.Service
+    const stamps = yield* FileStamp.Service
     const sessionInstructions = yield* SessionInstructions.Service
     const fs = yield* FSUtil.Service
     const location = yield* Location.Service
@@ -54,7 +56,7 @@ export const Plugin = {
 
               const requested = yield* access.authorizeRead(input.path, context)
               const result = yield* read(requested).pipe(
-                Effect.map((content) => ({ content, target: requested, path: input.path })),
+                Effect.map((page) => ({ page, target: requested, path: input.path })),
                 Effect.catchIf(
                   (error) => error instanceof Environment.NotFound,
                   () =>
@@ -64,15 +66,15 @@ export const Plugin = {
                       )
                       if (!alternate) return yield* missing(input.path, requested.absolute)
                       const target = yield* access.authorizeRead(alternate, context, { siblingOf: requested })
-                      const content = yield* read(target).pipe(
+                      const page = yield* read(target).pipe(
                         Effect.catchIf(
                           (error) => error instanceof Environment.NotFound,
                           () => missing(input.path, requested.absolute),
                         ),
                       )
-                      if (content.type === "list-page") return yield* missing(input.path, requested.absolute)
+                      if (page.content.type === "list-page") return yield* missing(input.path, requested.absolute)
                       return {
-                        content,
+                        page,
                         target,
                         path: join(dirname(input.path), basename(alternate)),
                       }
@@ -92,7 +94,7 @@ export const Plugin = {
                 // even when an upward walk from elsewhere in the project cannot reach root.
                 const discovered = yield* fs.up({
                   targets: [FILENAME],
-                  start: result.content.type === "list-page" ? resolved : dirname(resolved),
+                  start: result.page.content.type === "list-page" ? resolved : dirname(resolved),
                   stop: root,
                   type: "file",
                 })
@@ -106,12 +108,18 @@ export const Plugin = {
                 Effect.catchDefect(() => Effect.void),
               )
               if (
-                result.content.type === "file" &&
-                result.content.encoding === "base64" &&
-                !ReadToolFileSystem.MEDIA_MIMES.has(result.content.mime)
+                result.page.content.type === "file" &&
+                result.page.content.encoding === "base64" &&
+                !ReadToolFileSystem.MEDIA_MIMES.has(result.page.content.mime)
               )
                 return yield* Effect.fail(new ReadToolFileSystem.BinaryFileError({ resource: result.target.resource }))
-              return { output: result.content, path: result.path }
+              // Stamp the file as read so later mutations from this session refuse to
+              // overwrite external changes. Only complete reads carry the full bytes a
+              // fingerprint needs; a page stopped before EOF is left unstamped.
+              const { info, bytes } = result.page
+              if (result.page.content.type !== "list-page" && info && bytes && bytes.length === info.size)
+                yield* stamps.record(context.sessionID, result.target.absolute, { info, bytes })
+              return { output: result.page.content, path: result.path }
             }).pipe(
               Effect.map((result) => ({
                 output: result.output,

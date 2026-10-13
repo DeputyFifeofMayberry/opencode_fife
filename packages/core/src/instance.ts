@@ -49,6 +49,7 @@ import { InstructionEntry } from "./session/instruction-entry.js"
 import { SessionInstructions } from "./session/instructions.js"
 import { McpTool } from "./tool/mcp.js"
 import { ReadToolFileSystem } from "./tool/read-filesystem.js"
+import { FileStamp } from "./file-stamp.js"
 import { Tool } from "./tool.js"
 import { ToolOutput } from "./tool-output.js"
 import { Vcs } from "./vcs.js"
@@ -86,6 +87,7 @@ const nodes = [
   InstructionDiscovery.node,
   FileAccess.node,
   FileMutation.node,
+  FileStamp.node,
   Formatter.node,
   Mcp.node,
   Permission.node,

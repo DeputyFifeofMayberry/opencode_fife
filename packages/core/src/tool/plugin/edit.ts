@@ -13,6 +13,7 @@ import { Bom } from "@opencode/util/bom"
 import { Effect, Schema } from "effect"
 import { Environment } from "../../environment/index.js"
 import { FileMutation } from "../../file-mutation.js"
+import { FileStamp } from "../../file-stamp.js"
 import { Formatter } from "../../formatter.js"
 import { Location } from "../../location.js"
 import { FileAccess } from "../../file-access.js"
@@ -209,6 +210,7 @@ export const Plugin = {
   effect: Effect.fn("EditTool.Plugin")(function* (ctx: Context) {
     const access = yield* FileAccess.Service
     const fileMutation = yield* FileMutation.Service
+    const fileStamp = yield* FileStamp.Service
     const environment = yield* Environment.Service
     const formatter = yield* Formatter.Service
     const location = yield* Location.Service
@@ -243,6 +245,10 @@ export const Plugin = {
 
               const target = yield* access.resolve({ path: input.path, kind: "file" })
               yield* access.authorizeExternal([target], context)
+              if (!(yield* fileStamp.check(context.sessionID, target.absolute)))
+                return yield* new ToolFailure({
+                  message: `File ${input.path} changed since you read it — re-read it and retry`,
+                })
 
               const original = yield* FileMutation.readText(environment.files, target.absolute).pipe(
                 Effect.catchTag("Environment.NotFound", () =>
@@ -299,6 +305,11 @@ export const Plugin = {
                 })
               }
               const replacementBom = replaced.startsWith("\uFEFF")
+              // Re-check after the permission prompt: the file may have changed while it sat open.
+              if (!(yield* fileStamp.check(context.sessionID, target.absolute)))
+                return yield* new ToolFailure({
+                  message: `File ${input.path} changed since you read it — re-read it and retry`,
+                })
               const result = yield* fileMutation.write({
                 target,
                 content: Bom.join(replaced, original.bom || replacementBom),
@@ -307,6 +318,7 @@ export const Plugin = {
               const formatted = (yield* formatter.file(target.absolute))
                 ? yield* FileMutation.syncTextBom(environment.files, target.absolute, bom)
                 : (yield* FileMutation.readText(environment.files, target.absolute)).text
+              yield* fileStamp.refresh(context.sessionID, target.absolute)
               return {
                 files: [fileDiff(result.resource, source, formatted)],
                 replacements,

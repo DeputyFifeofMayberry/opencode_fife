@@ -12,6 +12,7 @@ import { Effect, Schema } from "effect"
 import { Bom } from "@opencode/util/bom"
 import { Environment } from "../../environment/index.js"
 import { FileMutation } from "../../file-mutation.js"
+import { FileStamp } from "../../file-stamp.js"
 import { Formatter } from "../../formatter.js"
 import { FileAccess } from "../../file-access.js"
 import { Permission } from "../../permission.js"
@@ -48,6 +49,7 @@ export const Plugin = {
   effect: Effect.fn("WriteTool.Plugin")(function* (ctx: Context) {
     const access = yield* FileAccess.Service
     const fileMutation = yield* FileMutation.Service
+    const fileStamp = yield* FileStamp.Service
     const environment = yield* Environment.Service
     const formatter = yield* Formatter.Service
     const permission = yield* Permission.Service
@@ -70,6 +72,10 @@ export const Plugin = {
               }
               const target = yield* access.resolve({ path: input.path, kind: "file" })
               yield* access.authorizeExternal([target], context)
+              if (!(yield* fileStamp.check(context.sessionID, target.absolute)))
+                return yield* new ToolFailure({
+                  message: `File ${input.path} changed since you read it — re-read it and retry`,
+                })
               const current = yield* FileMutation.readText(environment.files, target.absolute).pipe(
                 Effect.catchTag("Environment.NotFound", () => Effect.undefined),
               )
@@ -84,15 +90,25 @@ export const Plugin = {
                 agent: context.agent,
                 source,
               })
+              // Re-check after the permission prompt: the file may have changed while it sat open.
+              if (!(yield* fileStamp.check(context.sessionID, target.absolute)))
+                return yield* new ToolFailure({
+                  message: `File ${input.path} changed since you read it — re-read it and retry`,
+                })
               const result = yield* fileMutation.writeTextPreservingBom({ target, content: input.content })
               const bom = (yield* FileMutation.readText(environment.files, target.absolute)).bom
               if (yield* formatter.file(target.absolute)) {
                 yield* FileMutation.syncTextBom(environment.files, target.absolute, bom)
               }
+              yield* fileStamp.refresh(context.sessionID, target.absolute)
               return result
             }).pipe(
               Effect.map((output) => ({ output, content: toModelContent(output) })),
-              Effect.mapError((error) => new ToolFailure({ message: `Unable to write ${input.path}`, error })),
+              Effect.mapError((error) =>
+                error instanceof ToolFailure
+                  ? error
+                  : new ToolFailure({ message: `Unable to write ${input.path}`, error }),
+              ),
             ),
         }),
       )

@@ -9,6 +9,7 @@ import { Bom } from "@opencode/util/bom"
 import { Environment } from "../../environment/index.js"
 import { Formatter } from "../../formatter.js"
 import { FileMutation } from "../../file-mutation.js"
+import { FileStamp } from "../../file-stamp.js"
 import { Location } from "../../location.js"
 import { FileAccess } from "../../file-access.js"
 import { Patch } from "@opencode/util/patch"
@@ -70,6 +71,7 @@ export const Plugin = {
     const environment = yield* Environment.Service
     const access = yield* FileAccess.Service
     const fileMutation = yield* FileMutation.Service
+    const fileStamp = yield* FileStamp.Service
     const formatter = yield* Formatter.Service
     const location = yield* Location.Service
     const permission = yield* Permission.Service
@@ -126,6 +128,14 @@ export const Plugin = {
               for (const hunk of hunks) {
                 yield* Effect.gen(function* () {
                   const target = yield* resolveTarget(hunk.path)
+                  // Prepare reads current bytes, so a stale stamp must fail here or the
+                  // hunk derivation below would report a misleading mismatch instead.
+                  if (!(yield* fileStamp.check(context.sessionID, target.absolute)))
+                    return yield* Effect.fail(
+                      new ToolFailure({
+                        message: `File ${target.resource} changed since you read it — re-read it and retry`,
+                      }),
+                    )
                   if (hunk.type === "add") {
                     const content =
                       hunk.contents.endsWith("\n") || hunk.contents === "" ? hunk.contents : `${hunk.contents}\n`
@@ -211,10 +221,19 @@ export const Plugin = {
                 prepared,
                 (change) =>
                   Effect.gen(function* () {
+                    // The stale-edit guard covers every mutation path, including deletes and moves.
+                    if (!(yield* fileStamp.check(context.sessionID, change.target.absolute)))
+                      return yield* Effect.fail(
+                        new ToolFailure({
+                          message: `File ${change.target.resource} changed since you read it — re-read it and retry`,
+                        }),
+                      )
                     if (change.type === "delete") {
                       yield* environment.files
                         .remove(change.target.absolute)
                         .pipe(Effect.mapError((error) => fail(`Failed to delete ${change.target.resource}`, error)))
+                      // A removed file leaves no guard: a later add to the path is a fresh file.
+                      yield* fileStamp.clear(context.sessionID, change.target.absolute)
                       applied.push({
                         type: change.type,
                         resource: change.target.resource,
@@ -224,6 +243,13 @@ export const Plugin = {
                     }
                     if (change.type === "update" && change.moveTarget) {
                       const moveTarget = change.moveTarget
+                      // The destination is mutated too, so its stamp guards it as well.
+                      if (!(yield* fileStamp.check(context.sessionID, moveTarget.absolute)))
+                        return yield* Effect.fail(
+                          new ToolFailure({
+                            message: `File ${moveTarget.resource} changed since you read it — re-read it and retry`,
+                          }),
+                        )
                       yield* environment.files
                         .write(moveTarget.absolute, new TextEncoder().encode(change.content))
                         .pipe(Effect.mapError((error) => fail(`Failed to write ${moveTarget.resource}`, error)))
@@ -234,6 +260,8 @@ export const Plugin = {
                             fail(`Wrote ${moveTarget.resource} but failed to remove ${change.target.resource}`, error),
                           ),
                         )
+                      yield* fileStamp.refresh(context.sessionID, moveTarget.absolute)
+                      yield* fileStamp.clear(context.sessionID, change.target.absolute)
                       applied.push({
                         type: change.type,
                         resource: change.moveTarget.resource,
@@ -244,6 +272,8 @@ export const Plugin = {
                     yield* environment.files
                       .write(change.target.absolute, new TextEncoder().encode(change.content))
                       .pipe(Effect.mapError((error) => fail(`Failed to write ${change.target.resource}`, error)))
+                    // Refresh so later hunks on this file see the applied state.
+                    yield* fileStamp.refresh(context.sessionID, change.target.absolute)
                     applied.push({
                       type: change.type,
                       resource: change.target.resource,
@@ -268,6 +298,8 @@ export const Plugin = {
                           )
                         : current.text,
                     )
+                    // Refresh after the formatter settles so the stamp matches final disk bytes.
+                    yield* fileStamp.refresh(context.sessionID, target)
                   }),
                 { discard: true },
               )

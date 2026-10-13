@@ -71,6 +71,15 @@ describe("Config.Entry", () => {
     expect(decode({ websearch: { provider: "random" } }).websearch).toEqual({ provider: "random" })
   })
 
+  test("round-trips hook entries and rejects incomplete ones", () => {
+    const decode = Schema.decodeUnknownSync(Config.Info)
+    const input = { hooks: [{ matcher: "Bash", command: "deny-force-push" }, { command: "audit" }] }
+    expect(Schema.encodeSync(Config.Info)(decode(input))).toEqual(input)
+    expect(Schema.encodeSync(Config.Info)(new Config.Info({ hooks: undefined }))).not.toHaveProperty("hooks")
+    for (const hooks of [[{ matcher: "Bash" }], [{ command: 1 }], "deny", [{ extra: true }]])
+      expect(() => decode({ hooks })).toThrow()
+  })
+
   test("round-trips every configuration entry type", () => {
     const entries = [
       new Config.Document({

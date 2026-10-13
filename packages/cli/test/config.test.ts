@@ -35,6 +35,13 @@ test("generates reusable keybind schemas and preserves descriptions and numeric 
   )
 })
 
+test("keeps the core-owned hooks key out of the TUI-facing schema", () => {
+  const document = Schema.toJsonSchemaDocument(Config.Info)
+  // hooks is configured in opencode.json and enforced by core, like permissions; cli.json stays TUI-only.
+  expect(document.schema.properties).not.toHaveProperty("hooks")
+  expect(document.definitions).not.toHaveProperty("Config.Hooks.Entry")
+})
+
 test("includes the published schema when creating cli.json", async () => {
   await using directory = await tmpdir()
 

@@ -104,8 +104,8 @@ describe("ReadTool text serialization", () => {
 
         const result = yield* ReadToolFileSystem.read(current.environment, file, "lines.txt", input.page)
 
-        expect(result).toMatchObject(input.output)
-        expect(ReadTool.toModelContent("lines.txt", undefined, result)).toBe(input.model)
+        expect(result.content).toMatchObject(input.output)
+        expect(ReadTool.toModelContent("lines.txt", undefined, result.content)).toBe(input.model)
       }),
     )
   })
@@ -131,7 +131,7 @@ describe("ReadToolFileSystem", () => {
 
       const result = yield* ReadToolFileSystem.read(environment, absolute(directory), "folder")
 
-      expect(result).toMatchObject({
+      expect(result.content).toMatchObject({
         type: "list-page",
         entries: [
           { path: `folder${path.sep}`, type: "directory" },
@@ -154,7 +154,7 @@ describe("ReadToolFileSystem", () => {
 
       expect(binaryError).toBeInstanceOf(ReadToolFileSystem.BinaryFileError)
       expect(binaryError.message).toBe("Cannot read binary file: archive.dat")
-      expect(malformedResult).toMatchObject({ type: "file", content: "hi\uFFFD", encoding: "utf8" })
+      expect(malformedResult.content).toMatchObject({ type: "file", content: "hi\uFFFD", encoding: "utf8" })
     }),
   )
 
@@ -166,7 +166,7 @@ describe("ReadToolFileSystem", () => {
 
       const result = yield* ReadToolFileSystem.read(environment, absolute(file), "notes.docx")
 
-      expect(result).toMatchObject({ type: "file", content: "plain text", encoding: "utf8" })
+      expect(result.content).toMatchObject({ type: "file", content: "plain text", encoding: "utf8" })
     }),
   )
 
@@ -182,9 +182,9 @@ describe("ReadToolFileSystem", () => {
 
       const result = yield* ReadToolFileSystem.read(environment, absolute(directory), "folder")
 
-      expect(result.type).toBe("list-page")
-      if (result.type !== "list-page") return
-      expect(result.entries.map((entry) => ({ ...entry, path: String(entry.path) }))).toEqual([
+      expect(result.content.type).toBe("list-page")
+      if (result.content.type !== "list-page") return
+      expect(result.content.entries.map((entry) => ({ ...entry, path: String(entry.path) }))).toEqual([
         { path: `folder${path.sep}`, type: "directory" },
         { path: "broken", type: "symlink" },
         { path: "escape", type: "symlink" },
@@ -205,7 +205,7 @@ describe("ReadToolFileSystem", () => {
 
       const result = yield* ReadToolFileSystem.read(environment, absolute(link), "link")
 
-      expect(result).toMatchObject({
+      expect(result.content).toMatchObject({
         type: "list-page",
         entries: [{ path: "file.txt", type: "file" }],
       })
@@ -238,7 +238,7 @@ describe("ReadToolFileSystem", () => {
         limit: 1,
       })
 
-      expect(result).toMatchObject({ type: "text-page", content: "two", offset: 2, truncated: true, next: 3 })
+      expect(result.content).toMatchObject({ type: "text-page", content: "two", offset: 2, truncated: true, next: 3 })
     }),
   )
 
@@ -250,7 +250,7 @@ describe("ReadToolFileSystem", () => {
 
       const result = yield* ReadToolFileSystem.read(environment, absolute(file), "long.txt", { limit: 1 })
 
-      expect(result).toMatchObject({
+      expect(result.content).toMatchObject({
         type: "text-page",
         content: `${"a".repeat(2_000)}... (line truncated to 2000 chars)`,
         truncated: false,
@@ -275,10 +275,10 @@ describe("ReadToolFileSystem", () => {
       const lines = yield* ReadToolFileSystem.read(environment, absolute(linesFile), "many-lines.txt", { limit: 2_000 })
       const bytes = yield* ReadToolFileSystem.read(tracked, absolute(bytesFile), "many-bytes.txt", {})
 
-      expect(lines).toMatchObject({ type: "text-page", truncated: true, next: 2_001 })
-      expect(lines.type === "text-page" ? lines.content.split("\n") : []).toHaveLength(2_000)
-      expect(bytes).toMatchObject({ type: "text-page", truncated: true, next: 26 })
-      expect(bytes.type === "text-page" ? Buffer.byteLength(bytes.content) : Infinity).toBeLessThanOrEqual(
+      expect(lines.content).toMatchObject({ type: "text-page", truncated: true, next: 2_001 })
+      expect(lines.content.type === "text-page" ? lines.content.content.split("\n") : []).toHaveLength(2_000)
+      expect(bytes.content).toMatchObject({ type: "text-page", truncated: true, next: 26 })
+      expect(bytes.content.type === "text-page" ? Buffer.byteLength(bytes.content.content) : Infinity).toBeLessThanOrEqual(
         ReadToolFileSystem.MAX_READ_BYTES,
       )
       expect(ranges).toEqual([{ offset: 0, length: 256 * 1024 }])
@@ -297,7 +297,7 @@ describe("ReadToolFileSystem", () => {
         limit: 1,
       })
 
-      expect(result).toMatchObject({
+      expect(result.content).toMatchObject({
         type: "list-page",
         entries: [{ path: `z${path.sep}`, type: "directory" }],
         truncated: true,
@@ -314,7 +314,7 @@ describe("ReadToolFileSystem", () => {
 
       const result = yield* ReadToolFileSystem.read(environment, absolute(file), "nul.txt", { limit: 1 })
 
-      expect(result).toMatchObject({ type: "text-page", content: "one", truncated: true, next: 2 })
+      expect(result.content).toMatchObject({ type: "text-page", content: "one", truncated: true, next: 2 })
     }),
   )
 
@@ -344,7 +344,7 @@ describe("ReadToolFileSystem", () => {
         limit: 1,
       })
 
-      expect(result).toMatchObject({ type: "text-page", content: "second", offset: 2, truncated: false })
+      expect(result.content).toMatchObject({ type: "text-page", content: "second", offset: 2, truncated: false })
     }),
   )
 
@@ -359,7 +359,7 @@ describe("ReadToolFileSystem", () => {
         limit: 1,
       })
 
-      expect(result).toMatchObject({ type: "text-page", content: "second", offset: 2, truncated: false })
+      expect(result.content).toMatchObject({ type: "text-page", content: "second", offset: 2, truncated: false })
     }),
   )
 
@@ -387,7 +387,7 @@ describe("ReadToolFileSystem", () => {
 
       const result = yield* ReadToolFileSystem.read(environment, absolute(file), "document.pdf")
 
-      expect(result).toMatchObject({
+      expect(result.content).toMatchObject({
         type: "file",
         content: Buffer.from("%PDF-1.7\ncontent").toString("base64"),
         encoding: "base64",
