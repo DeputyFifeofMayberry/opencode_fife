@@ -60,9 +60,12 @@ Content-Type: application/json
 Timeout: 10s
 ```
 
-- `{monitor-origin}` derives from the provider's inference base URL host:
-  `api.z.ai` → `https://api.z.ai`, `open.bigmodel.cn` →
-  `https://open.bigmodel.cn`. A key only works on its own platform's host.
+- `{monitor-origin}` maps by provider family, never by the configured
+  `baseURL`: `zai-coding-plan`/`zai` → `https://api.z.ai`;
+  `zhipuai-coding-plan`/`zhipuai` → `https://open.bigmodel.cn`. A key only
+  works on its own platform's host, and a user-overridden proxy `baseURL`
+  has no monitor API and won't accept the raw key either — see Contract
+  decisions.
 - This endpoint is NOT in Z.ai's public API reference. The de-facto contract
   is pinned by Z.ai's official plugin (`zai-org/zai-coding-plugins`,
   `plugins/glm-plan-usage/.../query-usage.mjs`). It has already migrated once
@@ -128,6 +131,7 @@ and omit the name.
 | HTTP 429 | honor `Retry-After` header (default 300s, floor 60s); show last-known data with retry time |
 | 5xx / network / timeout | transient; keep last-known data with a stale hint |
 | `data.limits` empty/missing | valid key, no active Coding Plan → "No active GLM Coding Plan" state, not 0% |
+| no key resolvable for the provider (see Key resolution) | "Not signed in" state; the panel explains instead of guessing |
 
 ### Reference plan limits (context only; panel reads server numbers)
 
@@ -157,8 +161,10 @@ a near-exhausted window (e.g. >90%) may use `theme.text.feedback.warning`
 tokens; no `text.feedback` usage for plain informational lines.
 
 Visibility rule (my call): render only when the session's active model
-provider is in the zai family (`zai-coding-plan`; `zhipu` acceptable). Hidden
-otherwise — no cross-provider noise.
+provider is a coding-plan ID — `zai-coding-plan` or `zhipuai-coding-plan`
+(the repo has no `zhipu` ID). Pay-as-you-go `zai`/`zhipuai` are excluded:
+their users would see a permanent "No active GLM Coding Plan" panel, exactly
+the cross-provider noise the anti-goals forbid. Widen later if wanted.
 
 Polling (my call): fetch on mount + every 5 minutes while the session route
 is active; one in-flight request at a time; immediate refetch when the
@@ -195,6 +201,29 @@ Normalized snapshot shape (suggested; builder may refine): plan tier/name,
 windows as `{kind: "five_hour"|"weekly", percent, used, total, resetsAt?}`,
 tool budget `{used, limit} | null`, `fetchedAt`, and a `state` field from the
 error taxonomy so the TUI never re-derives errors.
+
+### Contract decisions (pinned after the builder check)
+
+- **Key resolution mirrors inference exactly.** Resolve the credential the
+  same way model resolution does: the provider's `Integration` connection
+  (`active` + `resolve`, covering SQLite-stored keys and `type: "env"`
+  connections, see `model-resolver.ts`) plus the config `providers[].apiKey`
+  path that `hasConfiguredAuth` accepts. Never read only the SQLite store —
+  a key from env or config must get a working panel too. Nothing resolvable
+  → the "Not signed in" state.
+- **Snapshot contract, not HTTP errors.** The endpoint always returns 200
+  with the snapshot; upstream outcomes (invalid key, 429, 5xx, timeout,
+  unparseable body, empty limits) are encoded in `state` plus last-known
+  data. Declared protocol errors stay reserved for genuine infrastructure
+  cases (unknown `providerID` → `ProviderNotFoundError`). All degradation
+  handling and Retry-After state live server-side; the TUI renders states.
+- **Server-side TTL cache.** One upstream fetch per interval per server, not
+  per TUI client: TTL ~4 minutes (under the 5-minute client cadence),
+  in-flight upstream dedupe, and a force-refresh path with short TTL for
+  explicit refetch. Backoff/Retry-After lives in the cached snapshot.
+- **Monitor origin maps by provider family.** Overridden proxy `baseURL`s
+  are ignored for monitoring (see Data source); an unknown family returns an
+  "unsupported endpoint" state instead of guessing a host.
 
 ### Experiment gating
 
@@ -241,6 +270,11 @@ My calls (rejectable):
 - Server-side fetch + normalized snapshot endpoint, per the keyless-TUI rule.
 - Provider-family visibility gate.
 - 5-minute cadence; raw-key auth with one Bearer retry.
+- From the builder check: snapshot-in-200 protocol contract; server-side TTL
+  cache with dedupe and force-refresh; family-based monitor-origin mapping
+  (ignore proxy baseURLs); key resolution mirroring inference (connection +
+  config key) with a "Not signed in" state; visibility = coding-plan IDs
+  only, PAYG excluded.
 
 ## Left to the builder
 
