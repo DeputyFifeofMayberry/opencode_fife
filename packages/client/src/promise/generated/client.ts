@@ -113,6 +113,8 @@ import type {
   ProviderListOutput,
   ProviderGetInput,
   ProviderGetOutput,
+  ProviderUsageInput,
+  ProviderUsageOutput,
   IntegrationListInput,
   IntegrationListOutput,
   IntegrationGetInput,
@@ -1169,6 +1171,18 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/provider/${encodeURIComponent(input.providerID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 404, 503],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      usage: (input: ProviderUsageInput, requestOptions?: RequestOptions) =>
+        request<ProviderUsageOutput>(
+          {
+            method: "GET",
+            path: `/api/provider/${encodeURIComponent(input.providerID)}/usage`,
             query: { location: input["location"] },
             successStatus: 200,
             declaredStatuses: [400, 401, 404, 503],

@@ -176,6 +176,14 @@ export type GenerateTextResponse = { data: { text: string } }
 
 export type IntegrationID = string
 
+export type ProviderUsageWindow = {
+  kind: "five_hour" | "weekly"
+  percent: number | "Infinity" | "-Infinity" | "NaN"
+  used: number | "Infinity" | "-Infinity" | "NaN"
+  total: number | "Infinity" | "-Infinity" | "NaN"
+  resetsAt?: number | "Infinity" | "-Infinity" | "NaN"
+}
+
 export type IntegrationMethodID = string
 
 export type IntegrationEnvMethod = { type: "env"; names: Array<string> }
@@ -293,6 +301,8 @@ export type VcsBranchList = Array<string>
 export type WebSearchID = string
 
 export type WebSearchResult = { url: string; title?: string; content?: string; time: { published?: number } }
+
+export type ConfigHooksEntry = { matcher?: string; command: string }
 
 export type McpProtocol = "legacy" | "auto" | "2026-07-28"
 
@@ -656,6 +666,16 @@ export type ModelCost = {
   cache: { read: MoneyUSDPerMillionTokens; write: MoneyUSDPerMillionTokens }
 }
 
+export type ProviderUsageSnapshot = {
+  providerID: ProviderID
+  state: "ok" | "no_plan" | "key_rejected" | "rate_limited" | "unavailable" | "not_signed_in" | "unsupported_endpoint"
+  plan: { level?: string; name?: string }
+  windows: Array<ProviderUsageWindow>
+  tools?: { used: number | "Infinity" | "-Infinity" | "NaN"; limit: number | "Infinity" | "-Infinity" | "NaN" }
+  fetchedAt: number | "Infinity" | "-Infinity" | "NaN"
+  retryAfter?: number | "Infinity" | "-Infinity" | "NaN"
+}
+
 export type IntegrationCommandMethod = {
   id: IntegrationMethodID
   type: "command"
@@ -845,6 +865,8 @@ export type FormAnswer2 = { [x: string]: FormValue1 }
 export type VcsInfo = { provider?: string; branch: VcsBranch }
 
 export type WebSearchProvider = { id: WebSearchID; name: string }
+
+export type ConfigHooks = Array<ConfigHooksEntry>
 
 export type SessionMessageLocationSwitched = {
   id: SessionMessageID
@@ -2154,6 +2176,7 @@ export type ConfigEntry =
         enterprise?: { url?: string }
         username?: string
         permissions?: PermissionRuleset
+        hooks?: ConfigHooks
         agents?: {
           [x: string]: {
             model?: string | { providerID: string; model: string; variant?: string }
@@ -2303,6 +2326,7 @@ export type ConfigEntry =
         }
         experimental?: {
           portable_shell_scanner?: boolean
+          zai_usage?: boolean
           subagent_depth?: number
           policies?: Array<{
             action: "provider.use" | "tool.use" | "integration.use"
@@ -5777,6 +5801,13 @@ export type ProviderGetInput = {
 }
 
 export type ProviderGetOutput = { location: LocationPublicRef; data: ProviderInfo }
+
+export type ProviderUsageInput = {
+  readonly providerID: { readonly providerID: string }["providerID"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ProviderUsageOutput = { location: LocationPublicRef; data: ProviderUsageSnapshot }
 
 export type IntegrationListInput = {
   readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
