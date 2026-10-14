@@ -102,6 +102,7 @@ export const make = Effect.gen(function* () {
         messageID: input.assistantMessageID,
         call,
         progress: (update) => publisher.progress(call.id, update),
+        interrupted: (content) => publisher.interrupted(call.id, content),
       })
     }
 

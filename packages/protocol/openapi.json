@@ -14192,6 +14192,10 @@
               }
             ]
           },
+          "auto_background_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
           "providers": {
             "type": "object",
             "additionalProperties": {
