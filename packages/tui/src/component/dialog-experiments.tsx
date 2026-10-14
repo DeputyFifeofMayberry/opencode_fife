@@ -19,6 +19,11 @@ export const experiments: Experiment[] = [
     title: "Z.ai usage in sidebar",
     description: "Show GLM Coding Plan quota windows and tool budget in the session sidebar.",
   },
+  {
+    id: "diff-panel",
+    title: "Diff side panel",
+    description: "Open /diff in a panel beside the session instead of full screen",
+  },
 ]
 
 export function DialogExperiments() {
