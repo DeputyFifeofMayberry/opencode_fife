@@ -5581,6 +5581,124 @@
         "summary": "Get provider"
       }
     },
+    "/api/provider/{providerID}/usage": {
+      "get": {
+        "tags": ["provider"],
+        "operationId": "provider.usage",
+        "parameters": [
+          {
+            "name": "providerID",
+            "in": "path",
+            "schema": {
+              "$ref": "#/components/schemas/Provider.ID"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "directory": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/Location.PublicRef"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Provider.UsageSnapshot"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ProviderNotFoundError | LocationNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ProviderNotFoundErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Return the provider's coding-plan usage snapshot. Upstream fetch problems are encoded in the snapshot state, not as HTTP errors.",
+        "summary": "Get provider usage"
+      }
+    },
     "/api/integration": {
       "get": {
         "tags": ["integration"],
@@ -13755,6 +13873,26 @@
         },
         "additionalProperties": false
       },
+      "Config.Hooks": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Config.Hooks.Entry"
+        }
+      },
+      "Config.Hooks.Entry": {
+        "type": "object",
+        "properties": {
+          "matcher": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string",
+            "description": "Shell command run with the pending tool call as JSON on stdin"
+          }
+        },
+        "required": ["command"],
+        "additionalProperties": false
+      },
       "Config.InfoEncoded": {
         "type": "object",
         "properties": {
@@ -13816,6 +13954,9 @@
           },
           "permissions": {
             "$ref": "#/components/schemas/Permission.Ruleset"
+          },
+          "hooks": {
+            "$ref": "#/components/schemas/Config.Hooks"
           },
           "agents": {
             "type": "object",
@@ -14063,6 +14204,9 @@
               "portable_shell_scanner": {
                 "type": "boolean"
               },
+              "zai_usage": {
+                "type": "boolean"
+              },
               "subagent_depth": {
                 "type": "integer",
                 "minimum": 0
@@ -14190,6 +14334,9 @@
         "properties": {
           "compaction": {
             "$ref": "#/components/schemas/Provider.Compaction"
+          },
+          "encoding": {
+            "$ref": "#/components/schemas/Provider.Encoding"
           }
         },
         "allOf": [
@@ -14369,6 +14516,9 @@
           },
           "transport": {
             "$ref": "#/components/schemas/Provider.Transport"
+          },
+          "encoding": {
+            "$ref": "#/components/schemas/Provider.Encoding"
           }
         },
         "allOf": [
@@ -16838,6 +16988,9 @@
         "properties": {
           "compaction": {
             "$ref": "#/components/schemas/Provider.Compaction"
+          },
+          "encoding": {
+            "$ref": "#/components/schemas/Provider.Encoding"
           }
         },
         "allOf": [
@@ -17755,6 +17908,10 @@
         },
         "additionalProperties": false
       },
+      "Provider.Encoding": {
+        "type": "string",
+        "enum": ["zstd", "gzip", "none"]
+      },
       "Provider.ID": {
         "type": "string"
       },
@@ -17859,6 +18016,9 @@
           },
           "transport": {
             "$ref": "#/components/schemas/Provider.Transport"
+          },
+          "encoding": {
+            "$ref": "#/components/schemas/Provider.Encoding"
           }
         },
         "allOf": [
@@ -17871,6 +18031,152 @@
       "Provider.Transport": {
         "type": "string",
         "enum": ["http", "websocket"]
+      },
+      "Provider.UsageSnapshot": {
+        "type": "object",
+        "properties": {
+          "providerID": {
+            "$ref": "#/components/schemas/Provider.ID"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "no_plan",
+              "key_rejected",
+              "rate_limited",
+              "unavailable",
+              "not_signed_in",
+              "unsupported_endpoint"
+            ]
+          },
+          "plan": {
+            "type": "object",
+            "properties": {
+              "level": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "windows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Provider.UsageWindow"
+            }
+          },
+          "tools": {
+            "type": "object",
+            "properties": {
+              "used": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              },
+              "limit": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              }
+            },
+            "required": ["used", "limit"],
+            "additionalProperties": false
+          },
+          "fetchedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          },
+          "retryAfter": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          }
+        },
+        "required": ["providerID", "state", "plan", "windows", "fetchedAt"],
+        "additionalProperties": false
+      },
+      "Provider.UsageWindow": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["five_hour", "weekly"]
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          },
+          "used": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          },
+          "resetsAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          }
+        },
+        "required": ["kind", "percent", "used", "total"],
+        "additionalProperties": false
       },
       "ProviderNotFoundErrorEncoded": {
         "type": "object",

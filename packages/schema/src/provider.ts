@@ -94,3 +94,34 @@ export const Info = Schema.Struct({
       empty: (id: ID): Info => ({ id, name: id, activation: "auto", package: "" }),
     })),
   )
+
+export interface UsageWindow extends Schema.Schema.Type<typeof UsageWindow> {}
+export const UsageWindow = Schema.Struct({
+  kind: Schema.Literals(["five_hour", "weekly"]),
+  percent: Schema.Number,
+  used: Schema.Number,
+  total: Schema.Number,
+  resetsAt: Schema.Number.pipe(optional), // epoch ms
+}).annotate({ identifier: "Provider.UsageWindow" })
+
+export interface UsageSnapshot extends Schema.Schema.Type<typeof UsageSnapshot> {}
+export const UsageSnapshot = Schema.Struct({
+  providerID: ID,
+  state: Schema.Literals([
+    "ok",
+    "no_plan",
+    "key_rejected",
+    "rate_limited",
+    "unavailable",
+    "not_signed_in",
+    "unsupported_endpoint",
+  ]),
+  plan: Schema.Struct({
+    level: Schema.String.pipe(optional),
+    name: Schema.String.pipe(optional),
+  }),
+  windows: Schema.Array(UsageWindow),
+  tools: Schema.Struct({ used: Schema.Number, limit: Schema.Number }).pipe(optional),
+  fetchedAt: Schema.Number, // epoch ms of the upstream data; may be older than the request when served from cache
+  retryAfter: Schema.Number.pipe(optional), // epoch ms; present only for "rate_limited"
+}).annotate({ identifier: "Provider.UsageSnapshot" })

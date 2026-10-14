@@ -37,6 +37,23 @@ export const ProviderGroup = HttpApiGroup.make("server.provider")
         }),
       ),
   )
+  .add(
+    HttpApiEndpoint.get("provider.usage", "/api/provider/:providerID/usage", {
+      params: { providerID: Provider.ID },
+      query: LocationQuery,
+      success: Location.response(Provider.UsageSnapshot),
+      error: [ProviderNotFoundError, ServiceUnavailableError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "provider.usage",
+          summary: "Get provider usage",
+          description:
+            "Return the provider's coding-plan usage snapshot. Upstream fetch problems are encoded in the snapshot state, not as HTTP errors.",
+        }),
+      ),
+  )
   .annotateMerge(
     OpenApi.annotations({
       title: "provider",
