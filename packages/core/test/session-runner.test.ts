@@ -2565,13 +2565,13 @@ describe("SessionRunnerLLM", () => {
           "tools",
           "generation",
           "providerOptions",
-          "toolChoice",
           "cache",
           "promptCacheKey",
           "http",
         ] as const)
           expect(compact[field]).toEqual(normal[field])
-        expect(compact.toolChoice).toBeUndefined()
+        // Compaction pins toolChoice to none so a tool call cannot leave the summary empty; parity holds for the rest.
+        expect(compact.toolChoice).toMatchObject({ type: "none" })
         expect(compact.system.map((part) => part.text)).toContain("Review the project carefully.")
         expect(requestAgents[2]).toBe(agentID)
         expect(s.executions).toEqual(["x".repeat(4_000)])
@@ -2587,8 +2587,10 @@ describe("SessionRunnerLLM", () => {
         const input = Schema.decodeUnknownSync(Schema.Array(Schema.Unknown))
         const prefix = input(before.body[key])
         expect(input(after.body[key]).slice(0, prefix.length)).toEqual([...prefix])
+        // tool_choice is excluded: compaction pins it to none so a tool call cannot leave the summary empty,
+        // and it is a request parameter, not cached prefix content.
         expect(after.body).toMatchObject(
-          Object.fromEntries(Object.entries(before.body).filter(([name]) => name !== key)),
+          Object.fromEntries(Object.entries(before.body).filter(([name]) => name !== key && name !== "tool_choice")),
         )
       })
     }
@@ -2626,7 +2628,8 @@ describe("SessionRunnerLLM", () => {
           expect(s.requests).toHaveLength(2)
           expect(s.requests[1].messages.slice(0, -1)).toEqual([...s.requests[0].messages])
           expect(userTexts(s.requests[1]).at(-1)).toContain("did not fill in the required summary template")
-          expect(s.requests.every((request) => request.toolChoice === undefined)).toBe(true)
+          // Compaction pins toolChoice to none: the model must answer the summary in text.
+          s.requests.forEach((request) => expect(request.toolChoice).toMatchObject({ type: "none" }))
           expect(s.executions).toEqual([])
           expect(JSON.stringify(yield* s.messages)).not.toContain("rejected-summary-state")
           expect((yield* s.messages).find((message) => message.id === compact.id)).toMatchObject(

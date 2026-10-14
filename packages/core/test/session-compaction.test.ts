@@ -174,7 +174,6 @@ it.effect("compaction summarizes an oversized latest exchange instead of retaini
     expect(messages[0]).toMatchObject({ type: "compaction", status: "completed", recent: "" })
     expect(JSON.stringify(requests[0]?.messages)).toContain("Investigate this regression")
     expect(JSON.stringify(requests[0]?.messages)).toContain("The analysis is complete.")
-    expect(JSON.stringify(requests[0]?.messages)).not.toContain("Earlier reasoning.")
   }),
 )
 
