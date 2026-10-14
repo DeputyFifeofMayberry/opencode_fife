@@ -248,6 +248,89 @@ describe("Snapshot", () => {
     ),
   )
 
+  testEffect(Layer.empty).live("degrades to undefined when the snapshot capture fails", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          const project = path.join(tmp.path, "project")
+          yield* Effect.promise(async () => {
+            await fs.mkdir(project)
+            await fs.writeFile(path.join(project, "tracked.txt"), "one\n")
+            await initGit(project, true)
+          })
+
+          const git = yield* Git.Service.pipe(Effect.provide(AppNodeBuilder.build(Git.node)))
+          const instrumented = Git.Service.of({
+            ...git,
+            tree: {
+              ...git.tree,
+              capture: () =>
+                Effect.fail(new Git.OperationError({ operation: "write_tree", message: "injected capture failure" })),
+            },
+          })
+          const layer = AppNodeBuilder.build(Snapshot.node, [
+            Location.node.replace(Location.boundNode(Location.Ref.make({ directory: AbsolutePath.make(project) }))),
+            Global.node.replace(Global.layerWith({ data: tmp.path, config: path.join(tmp.path, "config") })),
+            Git.node.replace(Layer.succeed(Git.Service, instrumented)),
+          ])
+
+          const outcome = yield* Effect.gen(function* () {
+            const snapshot = yield* Snapshot.Service
+            return yield* snapshot.capture()
+          }).pipe(Effect.provide(layer))
+          expect(outcome).toBeUndefined()
+        }),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  testEffect(Layer.empty).live("fails restore with a typed Snapshot error when the snapshot restore fails", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          const project = path.join(tmp.path, "project")
+          yield* Effect.promise(async () => {
+            await fs.mkdir(project)
+            await fs.writeFile(path.join(project, "tracked.txt"), "one\n")
+            await initGit(project, true)
+          })
+
+          const git = yield* Git.Service.pipe(Effect.provide(AppNodeBuilder.build(Git.node)))
+          const instrumented = Git.Service.of({
+            ...git,
+            tree: {
+              ...git.tree,
+              restore: () =>
+                Effect.fail(new Git.OperationError({ operation: "restore", message: "injected restore failure" })),
+            },
+          })
+          const layer = AppNodeBuilder.build(Snapshot.node, [
+            Location.node.replace(Location.boundNode(Location.Ref.make({ directory: AbsolutePath.make(project) }))),
+            Global.node.replace(Global.layerWith({ data: tmp.path, config: path.join(tmp.path, "config") })),
+            Git.node.replace(Layer.succeed(Git.Service, instrumented)),
+          ])
+
+          const outcome = yield* Effect.gen(function* () {
+            const snapshot = yield* Snapshot.Service
+            const before = yield* snapshot.capture()
+            if (!before) return "capture-unavailable"
+            return yield* snapshot
+              .restore({ files: new Map([[RelativePath.make("tracked.txt"), before]]) })
+              .pipe(
+                Effect.map(() => "restored" as const),
+                Effect.catch((error) => Effect.succeed(error)),
+              )
+          }).pipe(Effect.provide(layer))
+          expect(outcome).not.toBe("restored")
+          expect(outcome).toBeInstanceOf(Snapshot.Error)
+          if (outcome instanceof Snapshot.Error) expect(outcome.operation).toBe("restore")
+        }),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
   testEffect(Layer.empty).live("captures a Location in a directory whose name starts with two dots", () =>
     Effect.acquireUseRelease(
       Effect.promise(() => tmpdir()),
