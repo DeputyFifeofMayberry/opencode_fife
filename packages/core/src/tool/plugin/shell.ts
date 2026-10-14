@@ -13,6 +13,7 @@ import { FileAccess } from "../../file-access.js"
 import { Permission } from "../../permission.js"
 import { NonNegativeInt } from "../../schema.js"
 import { Session } from "../../session.js"
+import { AutoBackground } from "../../session/auto-background.js"
 import { SessionSchema } from "../../session/schema.js"
 import { Shell } from "../../shell.js"
 import { shellParserWasm } from "#shell-parser-wasm"
@@ -43,6 +44,7 @@ const description = (shell?: string) =>
     "Rely on automatic truncation unless filtering the output is more useful.",
     "Commands accept an optional timeout, background commands have no timeout by default.",
     "Background commands return immediately, and you will be notified when they complete.",
+    "Long-running foreground commands are automatically moved to the background after a short delay; you will be notified when they complete.",
   ].join(" ")
 
 export const Input = Schema.Struct({
@@ -257,9 +259,15 @@ export const Plugin = {
                 return backgroundResult(info.id, info.file)
               }
 
-              const result = yield* jobs
-                .block({ id: job.id, sessionID: context.sessionID })
-                .pipe(Effect.onInterrupt(() => jobs.cancel(job.id).pipe(Effect.ignore)))
+              const thresholdMs = AutoBackground.threshold(yield* config.entries())
+              const result = yield* AutoBackground.block({
+                jobs,
+                sessions,
+                scope,
+                sessionID: context.sessionID,
+                jobID: job.id,
+                thresholdMs,
+              }).pipe(Effect.onInterrupt(() => jobs.cancel(job.id).pipe(Effect.ignore)))
               if (result?.type === "backgrounded") {
                 yield* shell.timeout(info.id, 0)
                 yield* notifyWhenDone(context.sessionID, job.id, info.id, info.command, settled)
