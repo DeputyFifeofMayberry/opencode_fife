@@ -139,6 +139,14 @@ export class ProviderNotFoundError extends Schema.TaggedError<ProviderNotFoundEr
 
 type CacheEntry = { fetchedAt: number; retryAfter?: number; snapshot: UsageSnapshot }
 
+// Cache/in-flight identity: one credential's quota snapshot must never serve another's.
+// Two locations (or a key rotation) can hold different credentials for the same providerID,
+// so the resolved key is part of the map key, not just the providerID. The pair is JSON-encoded
+// so an id containing the separator cannot impersonate a longer id.
+export function cacheScope(providerID: string, credential: string): string {
+  return JSON.stringify([providerID, credential])
+}
+
 const cache = new Map<string, CacheEntry>()
 const inFlight = new Map<string, Deferred.Deferred<UsageSnapshot>>()
 
@@ -162,20 +170,21 @@ export const snapshot = Effect.fn("ProviderUsage.snapshot")(
     const key = pickKey(credential, provider.settings)
     if (key === undefined) return bare(providerID, "not_signed_in", Date.now())
 
-    const cached = cache.get(providerID)
+    const scope = cacheScope(providerID, key)
+    const cached = cache.get(scope)
     if (cached !== undefined && !shouldRefetch(cached, Date.now(), options?.force === true)) return cached.snapshot
 
-    const running = inFlight.get(providerID)
+    const running = inFlight.get(scope)
     if (running !== undefined) return yield* Deferred.await(running)
 
     // One upstream fetch per burst: the winner publishes its exit through the deferred, joiners await it.
     // makeUnsafe keeps the get/set pair synchronous, so concurrent callers cannot both claim the slot.
     const deferred = Deferred.makeUnsafe<UsageSnapshot>()
-    inFlight.set(providerID, deferred)
-    return yield* fetchSnapshot(providerID, origin, key).pipe(
+    inFlight.set(scope, deferred)
+    return yield* fetchSnapshot(providerID, origin, key, scope).pipe(
       Effect.onExit((exit) =>
         Effect.sync(() => {
-          if (inFlight.get(providerID) === deferred) inFlight.delete(providerID)
+          if (inFlight.get(scope) === deferred) inFlight.delete(scope)
           Deferred.doneUnsafe(deferred, exit)
         }),
       ),
@@ -187,9 +196,9 @@ function bare(providerID: Provider.ID, state: UsageSnapshot["state"], fetchedAt:
   return { providerID, state, plan: {}, windows: [], fetchedAt }
 }
 
-const fetchSnapshot = Effect.fnUntraced(function* (providerID: Provider.ID, origin: string, key: string) {
+const fetchSnapshot = Effect.fnUntraced(function* (providerID: Provider.ID, origin: string, key: string, scope: string) {
   const http = yield* HttpClient.HttpClient
-  const last = cache.get(providerID)
+  const last = cache.get(scope)
   const quota = yield* quotaWithAuth(http, origin, key)
   const now = Date.now()
 
@@ -207,7 +216,7 @@ const fetchSnapshot = Effect.fnUntraced(function* (providerID: Provider.ID, orig
       ...(data.tools === undefined ? {} : { tools: data.tools }),
       fetchedAt: now,
     }
-    cache.set(providerID, { snapshot, fetchedAt: now })
+    cache.set(scope, { snapshot, fetchedAt: now })
     return snapshot
   }
 
@@ -217,14 +226,14 @@ const fetchSnapshot = Effect.fnUntraced(function* (providerID: Provider.ID, orig
       last === undefined
         ? { ...bare(providerID, "rate_limited", now), retryAfter }
         : { ...last.snapshot, state: "rate_limited", retryAfter }
-    cache.set(providerID, { snapshot, fetchedAt: now, retryAfter })
+    cache.set(scope, { snapshot, fetchedAt: now, retryAfter })
     return snapshot
   }
 
   if (quota.outcome.kind === "unavailable") {
     const snapshot: UsageSnapshot =
       last === undefined ? bare(providerID, "unavailable", now) : { ...last.snapshot, state: "unavailable" }
-    cache.set(providerID, { snapshot, fetchedAt: now })
+    cache.set(scope, { snapshot, fetchedAt: now })
     return snapshot
   }
 

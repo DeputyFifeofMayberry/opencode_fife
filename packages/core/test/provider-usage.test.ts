@@ -184,3 +184,16 @@ describe("ProviderUsage.shouldRefetch", () => {
     expect(ProviderUsage.shouldRefetch({ fetchedAt: now - 60_000, retryAfter: now - 1 }, now, false)).toBe(true)
   })
 })
+
+describe("ProviderUsage.cacheScope", () => {
+  test("cache identity includes the resolved credential, not just the providerID", () => {
+    // Two locations (or a key rotation) can hold different credentials for the same
+    // providerID; one credential's quota snapshot must never be served to the other.
+    expect(ProviderUsage.cacheScope("zai-coding-plan", "key-a")).toBe(ProviderUsage.cacheScope("zai-coding-plan", "key-a"))
+    expect(ProviderUsage.cacheScope("zai-coding-plan", "key-a")).not.toBe(ProviderUsage.cacheScope("zai-coding-plan", "key-b"))
+  })
+  test("the separator is unconditional, so id/key pairs cannot collide", () => {
+    expect(ProviderUsage.cacheScope("a", "b:c")).not.toBe(ProviderUsage.cacheScope("a:b", "c"))
+    expect(ProviderUsage.cacheScope("a", "")).not.toBe(ProviderUsage.cacheScope("", "a"))
+  })
+})
