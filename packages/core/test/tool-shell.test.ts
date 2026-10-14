@@ -1861,4 +1861,75 @@ describe("ShellTool", () => {
       (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]().then(() => undefined)),
     ),
   )
+
+  it.live("auto-backgrounds a foreground command after the configured threshold", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          reset()
+          yield* Effect.promise(() =>
+            Bun.write(path.join(tmp.path, "opencode.json"), JSON.stringify({ auto_background_ms: 100 })),
+          )
+          return yield* withSession(tmp.path, (registry) =>
+            Effect.gen(function* () {
+              const bus = yield* Bus.Service
+              const notifications = yield* bus.subscribe(SessionEvent.InboxEnqueued).pipe(
+                Stream.filter((event) => event.data.sessionID === sessionID && event.data.item.type === "synthetic"),
+                Stream.take(1),
+                Stream.runCollect,
+                Effect.forkScoped({ startImmediately: true }),
+              )
+
+              const settled = yield* executeTool(
+                registry,
+                call({ command: idleCommand, timeout: 60_000 }, "call-auto-background"),
+              )
+              const shellID = typeof settled.metadata?.shellID === "string" ? settled.metadata.shellID : undefined
+              expect(shellID).toStartWith("sh_")
+              if (!shellID) return yield* Effect.die("Expected a shell ID")
+              const shell = yield* Shell.Service
+              const id = ID.make(shellID)
+              const info = yield* shell.get(id)
+              expect(settled.content?.[0]).toEqual({
+                type: "text",
+                text: `Command moved to the background (shell ID: ${shellID}).\nOutput is streaming to: ${info.file}`,
+              })
+              expect((yield* shell.get(id)).status).toBe("running")
+
+              const admission = Array.from(yield* Fiber.join(notifications).pipe(Effect.timeout(Duration.seconds(5))))[0]
+              if (admission?.data.item.type !== "synthetic") return yield* Effect.die("Expected synthetic notification")
+              expect(admission.data.item.payload.text).toContain("automatically moved to the background")
+
+              yield* shell.remove(id)
+            }),
+          )
+        }),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]().then(() => undefined)),
+    ),
+  )
+
+  it.live("returns the output of a command that finishes before the threshold", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          reset()
+          yield* Effect.promise(() =>
+            Bun.write(path.join(tmp.path, "opencode.json"), JSON.stringify({ auto_background_ms: 5_000 })),
+          )
+          return yield* withSession(tmp.path, (registry) =>
+            Effect.gen(function* () {
+              const settled = yield* executeTool(registry, call({ command: helloCommand }, "call-under-threshold"))
+              expect(settled.status).toBe("completed")
+              expect(settled.metadata).not.toMatchObject({ status: "running" })
+              expect(settled.content).toEqual([
+                { type: "text", text: expect.stringContaining("hello") },
+              ])
+            }),
+          )
+        }),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]().then(() => undefined)),
+    ),
+  )
 })
