@@ -3,6 +3,7 @@ import PromptBtw from "../feature-plugins/prompt/btw"
 import PromptFooter from "../feature-plugins/prompt/footer"
 import SidebarContext from "../feature-plugins/sidebar/context"
 import SidebarFooter from "../feature-plugins/sidebar/footer"
+import SidebarGit from "../feature-plugins/sidebar/git"
 import SidebarMcp from "../feature-plugins/sidebar/mcp"
 import SidebarUsage from "../feature-plugins/sidebar/usage"
 import DiffViewer from "../feature-plugins/system/diff-viewer"
@@ -19,6 +20,7 @@ export const builtins = [
   PromptBtw,
   SidebarContext,
   SidebarUsage,
+  SidebarGit,
   SidebarMcp,
   SidebarFooter,
   Notifications,

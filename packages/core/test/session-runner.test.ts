@@ -2565,13 +2565,13 @@ describe("SessionRunnerLLM", () => {
           "tools",
           "generation",
           "providerOptions",
-          "toolChoice",
           "cache",
           "promptCacheKey",
           "http",
         ] as const)
           expect(compact[field]).toEqual(normal[field])
-        expect(compact.toolChoice).toBeUndefined()
+        // Compaction pins toolChoice to none so a tool call cannot leave the summary empty; parity holds for the rest.
+        expect(compact.toolChoice).toMatchObject({ type: "none" })
         expect(compact.system.map((part) => part.text)).toContain("Review the project carefully.")
         expect(requestAgents[2]).toBe(agentID)
         expect(s.executions).toEqual(["x".repeat(4_000)])
@@ -2587,8 +2587,10 @@ describe("SessionRunnerLLM", () => {
         const input = Schema.decodeUnknownSync(Schema.Array(Schema.Unknown))
         const prefix = input(before.body[key])
         expect(input(after.body[key]).slice(0, prefix.length)).toEqual([...prefix])
+        // tool_choice is excluded: compaction pins it to none so a tool call cannot leave the summary empty,
+        // and it is a request parameter, not cached prefix content.
         expect(after.body).toMatchObject(
-          Object.fromEntries(Object.entries(before.body).filter(([name]) => name !== key)),
+          Object.fromEntries(Object.entries(before.body).filter(([name]) => name !== key && name !== "tool_choice")),
         )
       })
     }
@@ -2626,7 +2628,8 @@ describe("SessionRunnerLLM", () => {
           expect(s.requests).toHaveLength(2)
           expect(s.requests[1].messages.slice(0, -1)).toEqual([...s.requests[0].messages])
           expect(userTexts(s.requests[1]).at(-1)).toContain("did not fill in the required summary template")
-          expect(s.requests.every((request) => request.toolChoice === undefined)).toBe(true)
+          // Compaction pins toolChoice to none: the model must answer the summary in text.
+          s.requests.forEach((request) => expect(request.toolChoice).toMatchObject({ type: "none" }))
           expect(s.executions).toEqual([])
           expect(JSON.stringify(yield* s.messages)).not.toContain("rejected-summary-state")
           expect((yield* s.messages).find((message) => message.id === compact.id)).toMatchObject(
@@ -2818,6 +2821,8 @@ describe("SessionRunnerLLM", () => {
   }
 
   scenario("stops after three smaller compaction inputs overflow", function* (s) {
+    const compactionService = yield* SessionCompaction.Service
+    yield* compactionService.transform((editor) => editor.configure({ keep: 0 }))
     // Large enough that the conversation, not the system prompt, is most of the request.
     const filler = "context ".repeat(1_000)
     yield* s.llm.push(...Array.from({ length: 8 }, (_, index) => TestLLM.text(`Answer ${index}`, `answer-${index}`)))
@@ -3254,6 +3259,61 @@ describe("SessionRunnerLLM", () => {
         error: expect.objectContaining({ message: "Unsupported parameter: max_output_tokens" }),
       }),
     )
+  })
+
+  scenario("continues after compacting an oversized latest exchange for a smaller model", function* (s) {
+    yield* s.llm.push(TestLLM.text("Earlier answer", "earlier"))
+    yield* s.runPrompt("Earlier question")
+    yield* s.llm.push(
+      TestLLM.stop(
+        LLMEvent.reasoningStart({ id: "analysis" }),
+        LLMEvent.reasoningDelta({ id: "analysis", text: "Earlier reasoning. ".repeat(4_000) }),
+        LLMEvent.reasoningEnd({ id: "analysis" }),
+        LLMEvent.textStart({ id: "answer" }),
+        LLMEvent.textDelta({ id: "answer", text: "The analysis is complete." }),
+        LLMEvent.textEnd({ id: "answer" }),
+      ),
+    )
+    yield* s.runPrompt("Investigate this regression")
+    s.currentModel = testModel("smaller-recent-window", { context: 16_000, output: 4_000 })
+    s.requests.length = 0
+    yield* s.llm.always(
+      Stream.suspend(() => {
+        const request = s.requests.at(-1)
+        if (!request) return Stream.die("Missing model request")
+        const text = request.messages
+          .flatMap((message) =>
+            message.content.flatMap((part) => (part.type === "text" || part.type === "reasoning" ? [part.text] : [])),
+          )
+          .join("\n")
+        if (text.length > 64_000)
+          return Stream.fail(
+            new AIError({
+              reason: new InvalidRequestError({ message: "Too long", classification: "context-overflow" }),
+            }),
+          )
+        return Stream.fromIterable(
+          TestLLM.text(
+            text.includes("Summarize only what") ? "## Objective\n- Investigate the regression" : "Continued",
+            "answer",
+          ),
+        )
+      }),
+    )
+
+    yield* s.session.compact({ sessionID })
+    yield* s.resume
+    yield* s.runPrompt("Continue")
+
+    expect(s.requests).toHaveLength(2)
+    expect(yield* s.context).toMatchObject([
+      { type: "compaction", status: "completed", recent: "" },
+      { type: "user", text: "Continue" },
+      { type: "assistant", finish: "stop", content: [{ type: "text", text: "Continued" }] },
+    ])
+    expect(
+      (yield* s.messages).some((message) => message.type === "user" && message.text === "Investigate this regression"),
+    ).toBe(true)
   })
 
   scenario("forces one compaction and retries after provider context overflow", function* (s) {
