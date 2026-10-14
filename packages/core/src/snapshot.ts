@@ -100,18 +100,16 @@ const layer = Layer.effect(
         // The snapshot git directory is keyed by project + worktree, so every OpenCode
         // instance open on the same project shares it; the flock serializes the seed
         // across processes so concurrent instances cannot race the shared git index.
-        const snapshotRepository = yield* flock
-          .withLock(
-            Effect.gen(function* () {
-              return (yield* fs.existsSafe(path.join(gitDirectory, "HEAD")))
-                ? new Git.Repository({ worktree, gitDirectory, commonDirectory: gitDirectory })
-                : yield* git.repo
-                    .create({ worktree, gitDirectory, seed: source })
-                    .pipe(Effect.mapError((cause) => failure("capture", cause)))
-            }),
-            `snapshot:${gitDirectory}`,
-          )
-          .pipe(Effect.orDie)
+        const snapshotRepository = yield* flock.withLock(
+          Effect.gen(function* () {
+            return (yield* fs.existsSafe(path.join(gitDirectory, "HEAD")))
+              ? new Git.Repository({ worktree, gitDirectory, commonDirectory: gitDirectory })
+              : yield* git.repo
+                  .create({ worktree, gitDirectory, seed: source })
+                  .pipe(Effect.mapError((cause) => failure("capture", cause)))
+          }),
+          `snapshot:${gitDirectory}`,
+        )
         return { source, worktree, gitDirectory, snapshotRepository }
       }).pipe(Effect.forkIn(lifetime)),
     )
@@ -137,7 +135,6 @@ const layer = Layer.effect(
       yield* flock
         .withLock(git.objects.pack(repo.snapshotRepository), `snapshot:${repo.gitDirectory}`)
         .pipe(
-          Effect.orDie,
           Effect.catch((cause) => Effect.logWarning("failed to pack snapshot objects", { cause })),
           Effect.forkIn(lifetime),
         )
@@ -147,17 +144,15 @@ const layer = Layer.effect(
       if (!enabled()) return undefined
       return yield* Effect.gen(function* () {
         const repo = yield* repository
-        const tree = yield* flock
-          .withLock(
-            git.tree.capture({
-              repository: repo.snapshotRepository,
-              scopes: [yield* scope(repo.worktree)],
-              ignores: repo.source,
-              maximumUntrackedFileBytes: 2 * 1024 * 1024,
-            }),
-            `snapshot:${repo.gitDirectory}`,
-          )
-          .pipe(Effect.orDie)
+        const tree = yield* flock.withLock(
+          git.tree.capture({
+            repository: repo.snapshotRepository,
+            scopes: [yield* scope(repo.worktree)],
+            ignores: repo.source,
+            maximumUntrackedFileBytes: 2 * 1024 * 1024,
+          }),
+          `snapshot:${repo.gitDirectory}`,
+        )
         yield* packWhenDue(repo)
         return ID.make(tree)
       }).pipe(
@@ -235,7 +230,7 @@ const layer = Layer.effect(
           git.tree.restore({ repository: repo.snapshotRepository, files: yield* plan(repo.worktree, input) }),
           `snapshot:${repo.gitDirectory}`,
         )
-        .pipe(Effect.orDie, Effect.mapError((cause) => failure("restore", cause)))
+        .pipe(Effect.mapError((cause) => failure("restore", cause)))
     })
 
     return Service.of({ transform: state.transform, reload: state.reload, capture, files, diff, restore })
