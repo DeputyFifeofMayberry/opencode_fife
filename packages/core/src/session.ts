@@ -214,7 +214,10 @@ export interface Interface {
   ) => Effect.Effect<SessionInbox.Compaction, NotFoundError | CompactionConflictError>
   readonly wait: (id: SessionSchema.ID) => Effect.Effect<void, NotFoundError>
   readonly active: Effect.Effect<ReadonlySet<SessionSchema.ID>>
-  readonly background: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError>
+  readonly background: (
+    sessionID: SessionSchema.ID,
+    options?: { reason?: "user" | "auto" },
+  ) => Effect.Effect<void, NotFoundError>
   readonly resume: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError | SessionRunner.RunError>
   readonly interrupt: (sessionID: SessionSchema.ID, options?: { readonly resume?: boolean }) => Effect.Effect<boolean>
   readonly synthetic: (
@@ -439,7 +442,7 @@ const layer = Layer.effect(
       compact: (input) => sessions.forSession(input.sessionID).compact(input),
       wait: (sessionID) => sessions.forSession(sessionID).wait(),
       active: execution.active,
-      background: Effect.fn("Session.background")(function* (sessionID) {
+      background: Effect.fn("Session.background")(function* (sessionID, options) {
         yield* result.get(sessionID)
         const backgrounded = yield* jobs.backgroundAll({ sessionID })
         if (backgrounded.length === 0) return
@@ -447,7 +450,9 @@ const layer = Layer.effect(
           .synthetic({
             sessionID,
             text: [
-              "User requested that active blocking work be moved to the background.",
+              options?.reason === "auto"
+                ? "Blocking work was automatically moved to the background."
+                : "User requested that active blocking work be moved to the background.",
               "",
               "Backgrounded work:",
               ...backgrounded.map((job) => `- ${job.type}: ${job.title && job.title.length > 0 ? job.title : job.id}`),

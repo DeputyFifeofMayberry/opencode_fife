@@ -3,13 +3,14 @@ export * as SubagentTool from "./subagent.js"
 import { ToolFailure } from "@opencode/ai"
 import type { Context } from "@opencode/plugin/effect/plugin"
 import type { SessionHooks } from "@opencode/plugin/effect/session"
-import { Effect, Predicate, Schema } from "effect"
+import { Effect, Predicate, Schema, Scope } from "effect"
 import { Agent } from "../../agent.js"
 import { Config } from "../../config.js"
 import { Job } from "../../job.js"
 import { Model } from "../../model.js"
 import { Permission } from "../../permission.js"
 import { Session } from "../../session.js"
+import { AutoBackground } from "../../session/auto-background.js"
 import { SessionSchema } from "../../session/schema.js"
 import { SubagentCompletion } from "../../session/subagent-completion.js"
 import { SubagentJob } from "../../session/subagent-job.js"
@@ -43,7 +44,7 @@ export const Input = Schema.Struct({
   }),
   background: Schema.optionalKey(Schema.Boolean).annotate({
     description:
-      "Run the subagent in the background and return immediately. You will be notified when it completes. DO NOT sleep, poll, or proactively check on its progress.",
+      "Run the subagent in the background (the default) and return immediately. You will be notified when it completes. Pass false to block in the foreground until it finishes. DO NOT sleep, poll, or proactively check on background subagents.",
   }),
 })
 
@@ -56,9 +57,8 @@ export const description = [
   "Spawns an agent in a child session to work on the specified task.",
   "The output includes a sessionID you can pass back later to continue that specific conversation with the subagent.",
   "New child sessions start with fresh context, so include all relevant context and instructions when you don't pass a sessionID.",
-  "Foreground (default) runs the subagent to completion and returns its final response.",
-  "Background mode (background=true) launches it asynchronously and returns immediately; you are notified when it finishes.",
-  "Use background only for independent work that can run while you continue elsewhere.",
+  "By default the subagent runs in the background: the call returns immediately and you are notified automatically when it finishes.",
+  "Pass background=false to run it in the foreground and wait for its final response; use this only when you cannot continue without the result.",
 ].join("\n")
 
 export const Plugin = {
@@ -71,6 +71,7 @@ export const Plugin = {
     const permission = yield* Permission.Service
     const models = yield* Model.Service
     const subagents = yield* SubagentJob.Service
+    const scope = yield* Scope.Scope
 
     const resolveModel = Effect.fn("SubagentTool.resolveModel")(function* (input: string) {
       const ref = yield* Effect.try({
@@ -197,7 +198,7 @@ export const Plugin = {
                     ),
                   ))
 
-              const background = input.background === true
+              const background = input.background ?? AutoBackground.threshold(yield* config.entries()) > 0
               yield* context.progress({ sessionID: child.id, status: "running" })
 
               // Standard prompt admission outside the job: Job.start joining a running child skips
@@ -231,7 +232,14 @@ export const Plugin = {
                 return backgroundResult(child.id)
               }
 
-              const result = yield* jobs.block({ id: child.id, sessionID: context.sessionID }).pipe(
+              const result = yield* AutoBackground.block({
+                jobs,
+                sessions,
+                scope,
+                sessionID: context.sessionID,
+                jobID: child.id,
+                thresholdMs: AutoBackground.threshold(yield* config.entries()),
+              }).pipe(
                 Effect.onInterrupt(() =>
                   Effect.all([sessions.interrupt(child.id), jobs.cancel(child.id)], {
                     discard: true,
