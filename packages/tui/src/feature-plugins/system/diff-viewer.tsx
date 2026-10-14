@@ -338,6 +338,12 @@ export function DiffViewerContent(props: {
     Math.max(FILE_TREE_MIN_WIDTH, Math.min(FILE_TREE_MAX_WIDTH, Math.floor(width() / 4))),
   )
   const patchPaneWidth = createMemo(() => width() - (showFileTree() ? fileTreeWidth() : 0) - (docked() ? 2 : 4))
+  const totals = createMemo(() =>
+    files().reduce(
+      (sum, file) => ({ additions: sum.additions + file.additions, deletions: sum.deletions + file.deletions }),
+      { additions: 0, deletions: 0 },
+    ),
+  )
   const splitAvailable = createMemo(() => patchPaneWidth() >= MIN_SPLIT_WIDTH)
   const [viewOverride, setViewOverride] = createSignal<DiffView | undefined>(storedView(props.preferences?.view))
   const view = createMemo(() =>
@@ -1126,6 +1132,34 @@ export function DiffViewerContent(props: {
               <span>{props.context.keymap.shortcuts("pane.focus.left")[0] ?? ""}</span>
               <span style={props.panel?.focused ? { fg: theme.text.muted } : {}}> focus prompt</span>
             </text>
+            <Show when={files().length > 0}>
+              <box flexShrink={0} flexDirection="row" gap={1} marginRight={2}>
+                <text
+                  fg={theme.text.muted}
+                  attributes={props.panel?.focused ? 0 : TextAttributes.DIM}
+                  selectable={false}
+                  wrapMode="none"
+                >
+                  {`${files().length} file${files().length === 1 ? "" : "s"}`}
+                </text>
+                <text
+                  fg={theme.diff.text.added}
+                  attributes={props.panel?.focused ? 0 : TextAttributes.DIM}
+                  selectable={false}
+                  wrapMode="none"
+                >
+                  {`+${totals().additions}`}
+                </text>
+                <text
+                  fg={theme.diff.text.removed}
+                  attributes={props.panel?.focused ? 0 : TextAttributes.DIM}
+                  selectable={false}
+                  wrapMode="none"
+                >
+                  {`-${totals().deletions}`}
+                </text>
+              </box>
+            </Show>
             <box flexShrink={0}>
               <HelpShortcut label="see all" muted={!props.panel?.focused} />
             </box>

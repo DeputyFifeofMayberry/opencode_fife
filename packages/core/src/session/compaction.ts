@@ -10,6 +10,7 @@ import {
   LLMEvent,
   LLMRequest,
   Message,
+  ToolChoice,
   type ToolEntry,
   UnknownProviderError,
   type Usage,
@@ -285,10 +286,14 @@ export const layer = Layer.effect(
       const prepared = yield* prepare(context, split.older, budget)
 
       // Hooks saw the request without the summary prompt, so it is appended here. A reply that ignores the
-      // template gets one reminder before it counts as a failure.
+      // template gets one reminder before it counts as a failure. The tools stay in the request so the history
+      // and prompt cache still match, but the model must answer in text: a tool call leaves the summary empty.
       const send = (request: LLMRequest) =>
         Effect.gen(function* () {
-          const prompted = LLMRequest.update(request, { messages: [...request.messages, Message.user(prompt)] })
+          const prompted = LLMRequest.update(request, {
+            messages: [...request.messages, Message.user(prompt)],
+            toolChoice: ToolChoice.make("none"),
+          })
           const reply = yield* stream(context, prompted, prepared.options)
           if (filled(reply.text)) return { ...reply, recent: split.recent }
 
@@ -718,15 +723,14 @@ const recentStart = (
   keep: number,
   previous: SessionMessage.CompactionCompleted | undefined,
 ) => {
-  // Drop the oldest entries until the rest fit the allowance, but always keep the newest one.
-  const dropped = Math.min(
-    oldestToDrop(entries, (entry) => Token.estimate(entry.text), keep),
-    entries.length - 1,
-  )
+  // Include the separators between entries and the estimate's per-entry rounding.
+  const dropped = oldestToDrop(entries, (entry) => Token.estimate(entry.text) + 1, keep)
 
-  // Start at a user message so an assistant's tool calls and results stay together.
-  const userBoundary = entries.findLastIndex((entry, index) => index <= dropped && entry.message.type === "user")
+  // Keep whole exchanges within the allowance. An oversized latest exchange must be summarized;
+  // retaining it verbatim can leave even the completed checkpoint larger than the model's window.
+  const userBoundary = entries.findIndex((entry, index) => index >= dropped && entry.message.type === "user")
   if (userBoundary > 0) return userBoundary
+  if (dropped > 0) return entries.length
 
   // Everything fits. Keep only the latest exchange so there is an older part left to summarize.
   const latestUser = entries.findLastIndex((entry) => entry.message.type === "user")
