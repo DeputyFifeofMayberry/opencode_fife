@@ -20257,6 +20257,9 @@
           "status": {
             "type": "string",
             "enum": ["added", "deleted", "modified"]
+          },
+          "code": {
+            "type": "string"
           }
         },
         "required": ["file", "additions", "deletions", "status"],
@@ -20270,6 +20273,14 @@
           },
           "branch": {
             "$ref": "#/components/schemas/Vcs.Branch"
+          },
+          "ahead": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "behind": {
+            "type": "integer",
+            "minimum": 0
           }
         },
         "required": ["branch"],
