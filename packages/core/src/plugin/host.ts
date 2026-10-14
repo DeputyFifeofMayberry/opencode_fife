@@ -7,6 +7,7 @@ import type { Event } from "@opencode/schema/event"
 import { ServerConfig } from "@opencode/schema/mcp"
 import { App } from "../app.js"
 import { Effect, Schema, Stream } from "effect"
+import { HttpClient } from "effect/http"
 import { Agent } from "../agent.js"
 import { AISDK } from "../aisdk.js"
 import { Command } from "../command.js"
@@ -21,6 +22,7 @@ import { Mcp } from "../mcp/index.js"
 import { Session } from "../session.js"
 import { PersistentPty } from "../persistent-pty.js"
 import { Provider } from "../provider.js"
+import { ProviderUsage } from "../provider-usage.js"
 import { Reference } from "../reference.js"
 import { Rpc } from "../rpc.js"
 import { AbsolutePath, type DeepMutable } from "../schema.js"
@@ -35,6 +37,7 @@ import { Generate } from "../generate.js"
 import { Permission } from "../permission.js"
 import { PluginHooks } from "./hooks.js"
 import type { Interface } from "../plugin.js"
+import { httpClient } from "@opencode/util/effect/app-node-platform"
 import { LayerNode } from "@opencode/util/effect/layer-node"
 
 const mutable = <T>(value: T) => value as DeepMutable<T>
@@ -73,6 +76,9 @@ export const make = Effect.fn("PluginHost.make")(function* (
   const locations = yield* LocationServiceMap.Service
   const worktrees = yield* Worktree.Service
   const worktreeStrategies = yield* WorktreeStrategies.Service
+  // Snapshot pulls its services from context rather than taking them as arguments; keep the
+  // host's own environment so the provider domain member can discharge them without a Layer.
+  const usageEnvironment = yield* Effect.context<Provider.Service | Integration.Service | HttpClient.HttpClient>()
   const currentWorktreeStrategies = location.workspaceID ? undefined : worktreeStrategies
   const locationInfo = () =>
     new Location.Info({
@@ -198,6 +204,10 @@ export const make = Effect.fn("PluginHost.make")(function* (
                 : response(Effect.succeed(provider)),
             ),
           ),
+      usage: (input) =>
+        response(
+          ProviderUsage.snapshot(Provider.ID.make(input.providerID)).pipe(Effect.provide(usageEnvironment)),
+        ),
       reload: providers.reload,
       transform: (callback) =>
         providers.transform((editor) => {
@@ -607,6 +617,7 @@ export const requirements = LayerNode.group([
   Session.node,
   PersistentPty.node,
   LocationServiceMap.node,
+  httpClient,
 ])
 
 export function storage(kv: KV.Interface, pluginID: string): Plugin.Context["storage"] {

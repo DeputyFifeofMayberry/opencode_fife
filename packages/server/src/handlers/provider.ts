@@ -1,4 +1,5 @@
 import { Provider } from "@opencode/core/provider"
+import { ProviderUsage } from "@opencode/core/provider-usage"
 import { ProviderNotFoundError } from "@opencode/protocol/errors"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/http-api"
@@ -26,6 +27,21 @@ export const ProviderHandler = HttpApiBuilder.group(Api, "server.provider", (han
               message: `Provider not found: ${ctx.params.providerID}`,
             })
           return yield* response(Effect.succeed(provider))
+        }),
+      )
+      .handle(
+        "provider.usage",
+        Effect.fn(function* (ctx) {
+          return yield* response(
+            ProviderUsage.snapshot(ctx.params.providerID).pipe(
+              Effect.catchTag("ProviderUsage.ProviderNotFound", (error) =>
+                new ProviderNotFoundError({
+                  providerID: error.providerID,
+                  message: error.message,
+                }),
+              ),
+            ),
+          )
         }),
       )
   }),

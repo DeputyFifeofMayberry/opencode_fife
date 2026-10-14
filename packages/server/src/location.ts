@@ -6,16 +6,18 @@ import { AbsolutePath } from "@opencode/core/schema"
 import { Session } from "@opencode/core/session"
 import { LocationNotFoundError, InvalidRequestError, ServiceUnavailableError } from "@opencode/protocol/errors"
 import { Effect, Layer, Schema } from "effect"
-import { HttpServerRequest } from "effect/http"
+import { HttpClient, HttpServerRequest } from "effect/http"
 import { HttpApiMiddleware } from "effect/http-api"
 import { missingSession } from "./handlers/session-error"
 
 export type LocationServices = Layer.Success<ReturnType<(typeof LocationServiceMap.Service)["get"]>>
 
-export class LocationMiddleware extends HttpApiMiddleware.Service<LocationMiddleware, { provides: LocationServices }>()(
-  "@opencode/HttpApiLocation",
-  { error: [LocationNotFoundError] },
-) {}
+export class LocationMiddleware extends HttpApiMiddleware.Service<
+  LocationMiddleware,
+  // HttpClient comes from the application graph and is re-provided per request so handlers
+  // can take it (e.g. provider usage snapshots) without an unmet requirement.
+  { provides: LocationServices | HttpClient.HttpClient }
+>()("@opencode/HttpApiLocation", { error: [LocationNotFoundError] }) {}
 
 export function locationErrors<A, E, R>(effect: Effect.Effect<A, E, R>) {
   return effect.pipe(
@@ -90,10 +92,15 @@ export const layer = Layer.effect(
   LocationMiddleware,
   Effect.gen(function* () {
     const locations = yield* LocationServiceMap.Service
+    const http = yield* HttpClient.HttpClient
     return LocationMiddleware.of((effect) =>
       Effect.gen(function* () {
         const request = yield* HttpServerRequest.HttpServerRequest
-        return yield* effect.pipe(Effect.provide(locations.get(requestRef(request))), locationErrors)
+        return yield* effect.pipe(
+          Effect.provide(locations.get(requestRef(request))),
+          Effect.provideService(HttpClient.HttpClient, http),
+          locationErrors,
+        )
       }),
     )
   }),
