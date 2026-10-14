@@ -2,13 +2,14 @@ import { $ } from "bun"
 import { describe, expect } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
-import { Deferred, Effect, Fiber, Layer } from "effect"
+import { Deferred, Effect, Fiber, Function, Layer } from "effect"
 import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
 import { Git } from "@opencode/core/git"
 import { Global } from "@opencode/util/global"
 import { Location } from "@opencode/core/location"
 import { AbsolutePath, RelativePath } from "@opencode/core/schema"
 import { Snapshot } from "@opencode/core/snapshot"
+import { EffectFlock } from "@opencode/util/effect-flock"
 import { Hash } from "@opencode/util/hash"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
@@ -187,6 +188,61 @@ describe("Snapshot", () => {
             }).pipe(Effect.provide(snapshotLayer(tmp.path, project)))
           const results = yield* Effect.all([writer(0), writer(1), writer(2)], { concurrency: "unbounded" })
           expect(results.flat().every((tree) => tree !== undefined)).toBe(true)
+        }),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+    // The cross-process flock serializes these writers on the shared snapshot git
+    // directory, so the suite's wall time is the sum of all captures, not the max.
+    { timeout: 30_000 },
+  )
+
+  testEffect(Layer.empty).live("serializes shared-repository writes through the cross-process flock", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          const project = path.join(tmp.path, "project")
+          yield* Effect.promise(async () => {
+            await fs.mkdir(project)
+            await fs.writeFile(path.join(project, "tracked.txt"), "one\n")
+            await initGit(project, true)
+          })
+
+          const lockedKeys: string[] = []
+          const flock: EffectFlock.Interface = {
+            acquire: () => Effect.die("unexpected acquire"),
+            withLock: Function.dual(
+              (args) => Effect.isEffect(args[0]),
+              <A, E, R>(body: Effect.Effect<A, E, R>, key: string) => {
+                lockedKeys.push(key)
+                return body
+              },
+            ),
+          }
+          const layer = AppNodeBuilder.build(Snapshot.node, [
+            Location.node.replace(Location.boundNode(Location.Ref.make({ directory: AbsolutePath.make(project) }))),
+            Global.node.replace(Global.layerWith({ data: tmp.path, config: path.join(tmp.path, "config") })),
+            EffectFlock.node.replace(Layer.succeed(EffectFlock.Service, flock)),
+          ])
+
+          yield* Effect.gen(function* () {
+            const snapshot = yield* Snapshot.Service
+            const before = yield* snapshot.capture()
+            expect(before).toBeDefined()
+            if (!before) return
+            yield* snapshot.restore({ files: new Map([[RelativePath.make("tracked.txt"), before]]) })
+          }).pipe(Effect.provide(layer))
+
+          const projectID = yield* Effect.gen(function* () {
+            return (yield* Location.Service).project.id
+          }).pipe(
+            Effect.provide(
+              AppNodeBuilder.build(Location.boundNode(Location.Ref.make({ directory: AbsolutePath.make(project) }))),
+            ),
+          )
+          const sharedGitDirectory = path.join(tmp.path, "snapshot", projectID, Hash.fast(project))
+          expect(lockedKeys.length).toBeGreaterThan(0)
+          expect(new Set(lockedKeys)).toEqual(new Set([`snapshot:${sharedGitDirectory}`]))
         }),
       (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
     ),
