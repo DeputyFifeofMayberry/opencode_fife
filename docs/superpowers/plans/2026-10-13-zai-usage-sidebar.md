@@ -53,33 +53,35 @@ Append at end of file (same style as `Info` above it):
 ```ts
 export interface UsageWindow extends Schema.Schema.Type<typeof UsageWindow> {}
 export const UsageWindow = Schema.Struct({
-  kind: Schema.Literal("five_hour", "weekly"),
+  kind: Schema.Literals(["five_hour", "weekly"]),
   percent: Schema.Number,
   used: Schema.Number,
   total: Schema.Number,
-  resetsAt: Schema.optional(Schema.Number), // epoch ms
+  resetsAt: Schema.Number.pipe(optional), // epoch ms
 }).annotate({ identifier: "Provider.UsageWindow" })
 
 export interface UsageSnapshot extends Schema.Schema.Type<typeof UsageSnapshot> {}
 export const UsageSnapshot = Schema.Struct({
   providerID: ID,
-  state: Schema.Literal(
-    "ok",
-    "no_plan",
-    "key_rejected",
-    "rate_limited",
-    "unavailable",
-    "not_signed_in",
-    "unsupported_endpoint",
+  state: Schema.Literals(
+    [
+      "ok",
+      "no_plan",
+      "key_rejected",
+      "rate_limited",
+      "unavailable",
+      "not_signed_in",
+      "unsupported_endpoint",
+    ],
   ),
   plan: Schema.Struct({
-    level: Schema.optional(Schema.String),
-    name: Schema.optional(Schema.String),
+    level: Schema.String.pipe(optional),
+    name: Schema.String.pipe(optional),
   }),
   windows: Schema.Array(UsageWindow),
-  tools: Schema.optional(Schema.Struct({ used: Schema.Number, limit: Schema.Number })),
+  tools: Schema.Struct({ used: Schema.Number, limit: Schema.Number }).pipe(optional),
   fetchedAt: Schema.Number, // epoch ms of the upstream data; may be older than the request when served from cache
-  retryAfter: Schema.optional(Schema.Number), // epoch ms; present only for "rate_limited"
+  retryAfter: Schema.Number.pipe(optional), // epoch ms; present only for "rate_limited"
 }).annotate({ identifier: "Provider.UsageSnapshot" })
 ```
 
