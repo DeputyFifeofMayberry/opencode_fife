@@ -18,6 +18,7 @@ import { Context, Effect, Result, Schema, SchemaGetter, SchemaParser, Struct } f
 import { Base64Url } from "effect/encoding"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiMiddleware, HttpApiSchema, OpenApi } from "effect/http-api"
 import {
+  AgentNotFoundError,
   ConflictError,
   LocationNotFoundError,
   CommandExecutionError,
@@ -331,7 +332,7 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S, FormI ext
         params: { sessionID: Session.ID },
         payload: Schema.Struct({ agent: Agent.ID }),
         success: HttpApiSchema.NoContent,
-        error: SessionNotFoundError,
+        error: [SessionNotFoundError, AgentNotFoundError],
       })
         .middleware(sessionLocationMiddleware)
         .annotateMerge(

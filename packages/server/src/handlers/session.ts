@@ -1,3 +1,4 @@
+import { Agent } from "@opencode/core/agent"
 import { Session } from "@opencode/core/session"
 import { SessionStats } from "@opencode/core/session/stats"
 import { SessionTitle } from "@opencode/core/session/title"
@@ -9,6 +10,7 @@ import { HttpApiBuilder, HttpApiSchema } from "effect/http-api"
 import { Api } from "../api"
 import { SessionsCursor } from "@opencode/protocol/groups/session"
 import {
+  AgentNotFoundError,
   ConflictError,
   CommandExecutionError,
   CommandNotFoundError,
@@ -36,6 +38,22 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
   Effect.gen(function* () {
     const session = yield* Session.Service
     const transfer = yield* SessionTransfer.Service
+    // Clients may send an agent display name ("Build"/"Plan") where the id is
+    // expected; store the id so session agent selection always resolves.
+    const resolveAgentID = (input: Agent.ID) =>
+      Agent.Service.use((agents) =>
+        Effect.gen(function* () {
+          const list = yield* agents.list()
+          if (list.some((agent) => agent.id === input)) return input
+          const name: string = input
+          const lowered = name.toLowerCase()
+          const byName =
+            list.find((agent) => agent.name === name) ??
+            list.find((agent) => agent.name.toLowerCase() === lowered || agent.id.toLowerCase() === lowered)
+          if (byName) return byName.id
+          return yield* new AgentNotFoundError({ agentID: input, message: `Agent not found: ${input}` })
+        }),
+      )
     const requireOwnedForm = Effect.fnUntraced(function* (sessionID: Form.Info["sessionID"], formID: Form.ID) {
       const form = yield* Form.Service
       const info = yield* form.get(formID).pipe(Effect.catchTag("Form.NotFoundError", () => missingForm(formID)))
@@ -240,8 +258,9 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
       .handle(
         "session.switchAgent",
         Effect.fn(function* (ctx) {
+          const agent = yield* resolveAgentID(ctx.payload.agent)
           yield* session
-            .switchAgent({ sessionID: ctx.params.sessionID, agent: ctx.payload.agent })
+            .switchAgent({ sessionID: ctx.params.sessionID, agent })
             .pipe(Effect.catchTag("Session.NotFoundError", missingSession))
           return HttpApiSchema.NoContent.make()
         }),

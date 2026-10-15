@@ -1866,13 +1866,16 @@
             }
           },
           "404": {
-            "description": "SessionNotFoundError | LocationNotFoundError",
+            "description": "SessionNotFoundError | AgentNotFoundError | LocationNotFoundError",
             "content": {
               "application/json": {
                 "schema": {
                   "anyOf": [
                     {
                       "$ref": "#/components/schemas/SessionNotFoundErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AgentNotFoundErrorEncoded"
                     },
                     {
                       "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
@@ -16685,6 +16688,14 @@
         "properties": {
           "reasoningField": {
             "$ref": "#/components/schemas/Model.ReasoningField"
+          },
+          "extractReasoning": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["think-tags"]
+              }
+            ]
           },
           "requireReasoning": {
             "type": "boolean"
