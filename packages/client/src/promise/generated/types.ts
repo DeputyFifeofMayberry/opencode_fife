@@ -295,6 +295,8 @@ export type WebSearchID = string
 
 export type WebSearchResult = { url: string; title?: string; content?: string; time: { published?: number } }
 
+export type ConfigHooksEntry = { matcher?: string; command: string }
+
 export type McpProtocol = "legacy" | "auto" | "2026-07-28"
 
 export type ConfigWorktree = { directory: string }
@@ -630,6 +632,7 @@ export type FormAnswer = { [x: string]: FormValue }
 
 export type ModelCompatibility = {
   reasoningField?: ModelReasoningField
+  extractReasoning?: "think-tags"
   requireReasoning?: boolean
   maxTokensField?: ModelMaxTokensField
   requireFinishReason?: boolean
@@ -846,6 +849,8 @@ export type FormAnswer2 = { [x: string]: FormValue1 }
 export type VcsInfo = { provider?: string; branch: VcsBranch; ahead?: number; behind?: number }
 
 export type WebSearchProvider = { id: WebSearchID; name: string }
+
+export type ConfigHooks = Array<ConfigHooksEntry>
 
 export type SessionMessageLocationSwitched = {
   id: SessionMessageID
@@ -2155,6 +2160,7 @@ export type ConfigEntry =
         enterprise?: { url?: string }
         username?: string
         permissions?: PermissionRuleset
+        hooks?: ConfigHooks
         policies?: Array<{
           action: "provider.use" | "tool.use" | "integration.use"
           resource: string
@@ -2261,6 +2267,7 @@ export type ConfigEntry =
         plugins?: Array<string | { package: string; options?: { [x: string]: JsonValue } }>
         worktree?: ConfigWorktree
         warming?: boolean | { prompt?: string; interval?: string; duration?: string }
+        auto_background_ms?: number
         providers?: {
           [x: string]: {
             canonical?: ProviderID
