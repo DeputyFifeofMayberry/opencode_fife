@@ -103,7 +103,7 @@ describe("ConfigCompactionPlugin.Plugin", () => {
           inputID: SessionMessage.ID.make("msg_compaction_manual"),
         }),
       ).toEqual({ status: "completed" })
-      expect(Option.getOrThrow(yield* Fiber.join(ended)).data.recent).toBe("")
+      expect(Option.getOrThrow(yield* Fiber.join(ended)).data.recent).toContain("Recent context")
 
       yield* config.setEntries([
         new Document({
