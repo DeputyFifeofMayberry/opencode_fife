@@ -17,4 +17,23 @@ if (process.versions.bun !== expectedBunVersion) {
   console.warn(`Warning: Bun version ${process.versions.bun} differs from expected ${expectedBunVersion}`);
 }
 '
-bun run check
+
+# git passes one "<local-ref> <local-sha> <remote-ref> <remote-sha>" line per
+# pushed ref, so check every line instead of only the first.
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$local_sha" in
+    0000000000000000000000000000000000000000)
+      # branch deletion: nothing to typecheck
+      continue
+      ;;
+  esac
+  case "$remote_sha" in
+    0000000000000000000000000000000000000000)
+      # new branch: no baseline, run the full check
+      bun run check
+      ;;
+    *)
+      env TURBO_SCM_BASE="$remote_sha" TURBO_SCM_HEAD="$local_sha" bun turbo typecheck --affected --concurrency=3
+      ;;
+  esac
+done

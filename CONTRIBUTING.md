@@ -69,7 +69,7 @@ bun run test
 bun typecheck
 ```
 
-Follow package-specific instructions in nearby `AGENTS.md` files. After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`; never edit generated client files directly.
+Follow package-specific instructions in nearby `AGENTS.md` files. After changing the public Protocol or Server `HttpApi`, run `bun run generate` from the repo root; never edit generated client files directly.
 
 Follow the repository [style guide](./AGENTS.md).
 
