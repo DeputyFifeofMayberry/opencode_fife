@@ -180,6 +180,14 @@ export type VoiceWebSocketTransport = { type: "websocket"; url: string; token: s
 
 export type IntegrationID = string
 
+export type ProviderUsageWindow = {
+  kind: "five_hour" | "weekly"
+  percent: number | "Infinity" | "-Infinity" | "NaN"
+  used: number | "Infinity" | "-Infinity" | "NaN"
+  total: number | "Infinity" | "-Infinity" | "NaN"
+  resetsAt?: number | "Infinity" | "-Infinity" | "NaN"
+}
+
 export type IntegrationMethodID = string
 
 export type IntegrationEnvMethod = { type: "env"; names: Array<string> }
@@ -667,6 +675,16 @@ export type ModelCost = {
 }
 
 export type VoiceTransport = VoiceWebRTCTransport | VoiceWebSocketTransport
+
+export type ProviderUsageSnapshot = {
+  providerID: ProviderID
+  state: "ok" | "no_plan" | "key_rejected" | "rate_limited" | "unavailable" | "not_signed_in" | "unsupported_endpoint"
+  plan: { level?: string; name?: string }
+  windows: Array<ProviderUsageWindow>
+  tools?: { used: number | "Infinity" | "-Infinity" | "NaN"; limit: number | "Infinity" | "-Infinity" | "NaN" }
+  fetchedAt: number | "Infinity" | "-Infinity" | "NaN"
+  retryAfter?: number | "Infinity" | "-Infinity" | "NaN"
+}
 
 export type IntegrationCommandMethod = {
   id: IntegrationMethodID
@@ -2354,6 +2372,7 @@ export type ConfigEntry =
         }
         experimental?: {
           portable_shell_scanner?: boolean
+          zai_usage?: boolean
           subagent_depth?: number
           policies?: Array<{
             action: "provider.use" | "tool.use" | "integration.use"
@@ -5900,6 +5919,13 @@ export type ProviderGetInput = {
 }
 
 export type ProviderGetOutput = { location: LocationPublicRef; data: ProviderInfo }
+
+export type ProviderUsageInput = {
+  readonly providerID: { readonly providerID: string }["providerID"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ProviderUsageOutput = { location: LocationPublicRef; data: ProviderUsageSnapshot }
 
 export type IntegrationListInput = {
   readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
