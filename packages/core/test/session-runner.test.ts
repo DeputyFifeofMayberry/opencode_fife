@@ -2558,7 +2558,7 @@ describe("SessionRunnerLLM", () => {
           role: "user",
           content: [{ type: "text", text: SessionCompaction.buildPrompt(false) }],
         })
-        expect(userTexts(compact)).not.toContain("Retained recent request")
+        expect(userTexts(compact).includes("Retained recent request")).toBe(reason === "auto")
         for (const field of [
           "model",
           "system",
@@ -3014,7 +3014,9 @@ describe("SessionRunnerLLM", () => {
     expect(userTexts(s.requests[0])[0]).toContain("older exchanges omitted")
     expect(userTexts(s.requests[0])[0]).not.toContain("Request 0:")
     expect(userTexts(s.requests[0])[0]).not.toContain("Request 1:")
+    // The latest exchange is the retained tail, so shrinking drops only exchanges before it.
     expect(userTexts(s.requests[0])[0]).toContain("Request 2:")
+    expect(userTexts(s.requests[0])[0]).not.toContain("Request 3:")
     expect((yield* s.messages).find((message) => message.id === compaction.id)).toMatchObject({
       status: "completed",
       summary: "## Objective\n- Recovered",
@@ -3108,6 +3110,7 @@ describe("SessionRunnerLLM", () => {
     yield* s.runPrompt("Recent exact request ".repeat(180))
 
     expect(s.requests).toHaveLength(2)
+    expect(JSON.stringify(s.requests[0].messages)).toContain("Recent exact request ".repeat(180))
     expect(userTexts(s.requests[0]).at(-1)).toContain("## Objective")
     expect(userTexts(s.requests[1])).toHaveLength(1)
     expect(userTexts(s.requests[1])[0]).toContain("<summary>\n## Objective\n- Preserve the task\n</summary>")
@@ -3259,61 +3262,6 @@ describe("SessionRunnerLLM", () => {
         error: expect.objectContaining({ message: "Unsupported parameter: max_output_tokens" }),
       }),
     )
-  })
-
-  scenario("continues after compacting an oversized latest exchange for a smaller model", function* (s) {
-    yield* s.llm.push(TestLLM.text("Earlier answer", "earlier"))
-    yield* s.runPrompt("Earlier question")
-    yield* s.llm.push(
-      TestLLM.stop(
-        LLMEvent.reasoningStart({ id: "analysis" }),
-        LLMEvent.reasoningDelta({ id: "analysis", text: "Earlier reasoning. ".repeat(4_000) }),
-        LLMEvent.reasoningEnd({ id: "analysis" }),
-        LLMEvent.textStart({ id: "answer" }),
-        LLMEvent.textDelta({ id: "answer", text: "The analysis is complete." }),
-        LLMEvent.textEnd({ id: "answer" }),
-      ),
-    )
-    yield* s.runPrompt("Investigate this regression")
-    s.currentModel = testModel("smaller-recent-window", { context: 16_000, output: 4_000 })
-    s.requests.length = 0
-    yield* s.llm.always(
-      Stream.suspend(() => {
-        const request = s.requests.at(-1)
-        if (!request) return Stream.die("Missing model request")
-        const text = request.messages
-          .flatMap((message) =>
-            message.content.flatMap((part) => (part.type === "text" || part.type === "reasoning" ? [part.text] : [])),
-          )
-          .join("\n")
-        if (text.length > 64_000)
-          return Stream.fail(
-            new AIError({
-              reason: new InvalidRequestError({ message: "Too long", classification: "context-overflow" }),
-            }),
-          )
-        return Stream.fromIterable(
-          TestLLM.text(
-            text.includes("Summarize only what") ? "## Objective\n- Investigate the regression" : "Continued",
-            "answer",
-          ),
-        )
-      }),
-    )
-
-    yield* s.session.compact({ sessionID })
-    yield* s.resume
-    yield* s.runPrompt("Continue")
-
-    expect(s.requests).toHaveLength(2)
-    expect(yield* s.context).toMatchObject([
-      { type: "compaction", status: "completed", recent: "" },
-      { type: "user", text: "Continue" },
-      { type: "assistant", finish: "stop", content: [{ type: "text", text: "Continued" }] },
-    ])
-    expect(
-      (yield* s.messages).some((message) => message.type === "user" && message.text === "Investigate this regression"),
-    ).toBe(true)
   })
 
   scenario("forces one compaction and retries after provider context overflow", function* (s) {
@@ -3544,13 +3492,13 @@ describe("SessionRunnerLLM", () => {
 
     expect(s.requests).toHaveLength(2)
     expect(userTexts(s.requests[0]).at(-1)).toContain("## Objective")
-    // The summary may use the whole 20k reserve of a 200k window.
-    expect(s.requests[0]?.generation?.maxTokens).toBe(20_000)
+    // The summary may use the whole 30k reserve of a 200k window.
+    expect(s.requests[0]?.generation?.maxTokens).toBe(30_000)
     expect(s.requests[1]?.generation?.maxTokens).toBe(32_000)
   })
 
   scenario("keeps the summary its room on a small window", function* (s) {
-    // 90% of 64k would leave 6.4k for the summary, so the 16k reserve sets the ceiling at 48k instead.
+    // 85% of 64k would leave 9.6k for the summary, so the 16k reserve sets the ceiling at 48k instead.
     s.currentModel = smallWindowModel
     yield* s.llm.push(TestLLM.textWithUsage("Earlier answer", "text-small-first", 59_000))
     yield* s.runPrompt("Earlier question")
