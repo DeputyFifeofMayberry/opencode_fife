@@ -24,6 +24,7 @@ export const experiments: Experiment[] = [
     id: "new-designs",
     title: "New designs",
     description: "Preview the new TUI designs",
+  },
 ]
 
 export function DialogExperiments() {
