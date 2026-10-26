@@ -28,12 +28,12 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Description:** Add `packages/schema/src/config/effort.ts` with `verification_commands: string[]`, `base_level` (optional `low | standard | deep`, default `standard`), `mutating_tools` (default `write/edit/multiedit/patch`), `agent_operations` (record of agent id → operation). Wire the self-export and field into `Config.Info`; consumer-side defaults read via the `Config.latest(...) ?? default` pattern.
 
 **Acceptance criteria:**
-- [ ] Config decodes with the new section, defaults apply when absent
-- [ ] Unknown operation names rejected at the schema boundary
+- [x] Config decodes with the new section, defaults apply when absent
+- [x] Unknown operation names rejected at the schema boundary
 
 **Verification:**
-- [ ] Config decode test in `packages/core` config tests
-- [ ] `bun run check`
+- [x] Config decode test in `packages/core` config tests
+- [x] `bun run check`
 
 **Dependencies:** None
 
@@ -48,13 +48,13 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Description:** New `session_effort` table (session id key; `base_level`, `open_failure` JSON, `revision` counter, `last_applied_variant` JSON) with one additive `DatabaseMigration`, registered in `migration.gen.ts`. Helpers in `packages/core/src/effort/state.ts` for transactional read/update as the single writer.
 
 **Acceptance criteria:**
-- [ ] Migration applies cleanly to a database with existing sessions
-- [ ] Roundtrip read/update test passes against real SQLite
-- [ ] Concurrent update serialized through the helper (no lost update in tests)
+- [x] Migration applies cleanly to a database with existing sessions
+- [x] Roundtrip read/update test passes against real SQLite
+- [x] Concurrent update serialized through the helper (no lost update in tests)
 
 **Verification:**
-- [ ] `cd packages/core && bun test test/effort test/database`
-- [ ] `bun run check`
+- [x] `cd packages/core && bun test test/effort test/database`
+- [x] `bun run check`
 
 **Dependencies:** None (parallel with Tasks 1-2)
 

@@ -19,13 +19,13 @@ Integrate the vendored `effort-policy-core` decision rules into `packages/core` 
 ### Phase 1: Foundation
 
 - [x] Task 1: Vendor the decision core and port its suites
-- [ ] Task 2: Config section (`ConfigEffort`)
-- [ ] Task 3: Durable state store (`session_effort` table + helpers)
+- [x] Task 2: Config section (`ConfigEffort`)
+- [x] Task 3: Durable state store (`session_effort` table + helpers)
 
 ### Checkpoint: Foundation
-- [ ] Ported core suites pass unchanged against vendored sources
-- [ ] Boundary test proves the vendored directory imports nothing from the host
-- [ ] `bun run check` clean; `session_effort` migration applies on a real database
+- [x] Ported core suites pass unchanged against vendored sources
+- [x] Boundary test proves the vendored directory imports nothing from the host
+- [x] `bun run check` clean; `session_effort` migration applies on a real database
 
 ### Phase 2: Escalation loop
 
