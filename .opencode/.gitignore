@@ -4,4 +4,3 @@ package.json
 bun.lock
 .gitignore
 package-lock.json
-references/
