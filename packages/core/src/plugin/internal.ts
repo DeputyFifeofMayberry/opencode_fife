@@ -109,6 +109,7 @@ import { VcsGitPlugin } from "./vcs/git.js"
 import { VerbosityPlugin } from "./verbosity.js"
 import { WarmingPlugin } from "./warming.js"
 import { WellKnownPlugin } from "../wellknown/plugin.js"
+import { EffortStore } from "../effort/store.js"
 
 const services = [
   Agent.Service,
@@ -151,6 +152,7 @@ const services = [
   SessionCompaction.Service,
   SessionInstructions.Service,
   SubagentJob.Service,
+  EffortStore.Service,
   Shell.Service,
   ShellSelect.Service,
   Snapshot.Service,
@@ -207,6 +209,7 @@ export const requirements = LayerNode.group([
   SessionCompaction.node,
   SessionInstructions.node,
   SubagentJob.node,
+  EffortStore.node,
   Shell.node,
   ShellSelect.node,
   Snapshot.node,

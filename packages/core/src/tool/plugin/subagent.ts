@@ -14,6 +14,8 @@ import { AutoBackground } from "../../session/auto-background.js"
 import { SessionSchema } from "../../session/schema.js"
 import { SubagentCompletion } from "../../session/subagent-completion.js"
 import { SubagentJob } from "../../session/subagent-job.js"
+import { EffortDelegation } from "../../effort/delegation.js"
+import { EffortStore } from "../../effort/store.js"
 
 export const name = "subagent"
 
@@ -71,6 +73,7 @@ export const Plugin = {
     const permission = yield* Permission.Service
     const models = yield* Model.Service
     const subagents = yield* SubagentJob.Service
+    const efforts = yield* EffortStore.Service
     const scope = yield* Scope.Scope
 
     const resolveModel = Effect.fn("SubagentTool.resolveModel")(function* (input: string) {
@@ -197,6 +200,21 @@ export const Plugin = {
                       (error) => new ToolFailure({ message: `Parent session not found: ${context.sessionID}`, error }),
                     ),
                   ))
+
+              // The delegation's operation seeds the child's effort base unless a pick was
+              // explicit or inherited; continue-mode keeps the child's existing state.
+              if (existing === undefined)
+                yield* EffortDelegation.seed(
+                  {
+                    efforts,
+                    overrides: Config.latest(yield* config.entries(), "effort_policy")?.agent_operations,
+                  },
+                  {
+                    sessionID: child.id,
+                    agent: agent.id,
+                    inheritedVariants: [override?.variant, agent.model?.variant, parent.model?.variant],
+                  },
+                )
 
               const background = input.background ?? AutoBackground.threshold(yield* config.entries()) > 0
               yield* context.progress({ sessionID: child.id, status: "running" })
