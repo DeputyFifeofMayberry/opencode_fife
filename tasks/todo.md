@@ -118,9 +118,9 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Description:** Classify settled tool calls at the settlement point (tool name, call input, `result.metadata` in scope): configured verifier + `exit !== 0` → `verification-failure`; `exit === 0` → `verification-pass`; spawn/cancel/timeout and all non-verifier calls → no state change (infrastructure/undefined). Apply via `applyEvidence()` with sequence = session bus `seq`; bump `revision` when a configured mutating tool settles successfully. This closes the loop end to end.
 
 **Acceptance criteria:**
-- [ ] Non-zero exit on a configured verifier opens escalation; exit 0 on the same verifier clears it at later sequence and not-older revision
-- [ ] Stale pass (earlier sequence or older revision) never clears; unconfigured commands never touch state
-- [ ] Mutating tool settlement bumps revision; shell timeout/cancel classifies as infrastructure
+- [x] Non-zero exit on a configured verifier opens escalation; exit 0 on the same verifier clears it at later sequence and not-older revision
+- [x] Stale pass (earlier sequence or older revision) never clears; unconfigured commands never touch state
+- [x] Mutating tool settlement bumps revision; shell timeout/cancel classifies as infrastructure
 
 **Verification:**
 - [ ] `cd packages/core && bun test test/effort test/tool-shell`

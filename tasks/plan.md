@@ -31,11 +31,11 @@ Integrate the vendored `effort-policy-core` decision rules into `packages/core` 
 
 - [x] Task 4: Capability lookup + `decide()` at request prepare (no writes yet; plan pin included)
 - [x] Task 5: Transition write-through (`switchModel`, user-pick classification, `session.effort.transitioned` event)
-- [ ] Task 6: Evidence classification at tool settlement (sequence + revision), closing the loop
+- [x] Task 6: Evidence classification at tool settlement (sequence + revision), closing the loop
 
 ### Checkpoint: Escalation loop
-- [ ] End-to-end test passes: configured verifier fails → next request escalated → same verifier passes → back to base; stale pass does not clear
-- [ ] Exact-pick suppression and untouched-route criteria demonstrated in tests
+- [x] End-to-end test passes: configured verifier fails → next request escalated → same verifier passes → back to base; stale pass does not clear
+- [x] Exact-pick suppression and untouched-route criteria demonstrated in tests
 
 ### Phase 3: Full surface + polish
 
