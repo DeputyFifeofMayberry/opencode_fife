@@ -1,8 +1,8 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "b32b57e8-0cad-4880-b63a-de0b82029ae7",
-  "prevIds": ["44bd8ca5-689a-410e-a46a-958eb5accd97"],
+  "id": "76ec6c77-7735-4932-842f-2c7427afe36d",
+  "prevIds": ["b32b57e8-0cad-4880-b63a-de0b82029ae7"],
   "ddl": [
     {
       "name": "account_state",
@@ -62,6 +62,10 @@
     },
     {
       "name": "instruction_state",
+      "entityType": "tables"
+    },
+    {
+      "name": "session_effort",
       "entityType": "tables"
     },
     {
@@ -994,6 +998,56 @@
       "autoincrement": false,
       "default": null,
       "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "base_level",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "open_failure",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_applied_variant",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
       "name": "id",
       "entityType": "columns",
       "table": "session_inbox"
@@ -1733,6 +1787,17 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
+      "name": "fk_session_effort_session_id_session_v2_id_fk",
+      "entityType": "fks",
+      "table": "session_effort"
+    },
+    {
+      "columns": ["session_id"],
+      "tableTo": "session_v2",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
       "name": "fk_session_inbox_session_id_session_v2_id_fk",
       "entityType": "fks",
       "table": "session_inbox"
@@ -1902,6 +1967,13 @@
       "nameExplicit": false,
       "name": "instruction_state_pk",
       "table": "instruction_state",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["session_id"],
+      "nameExplicit": false,
+      "name": "session_effort_pk",
+      "table": "session_effort",
       "entityType": "pks"
     },
     {
