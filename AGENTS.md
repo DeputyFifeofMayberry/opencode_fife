@@ -3,6 +3,13 @@
 - This repository does not use Changesets. Do not add `.changeset` files; follow the existing release workflow instead.
 - The default branch is `dev`. Base branches and worktrees on `origin/dev`, target PRs at `dev`, and diff against `origin/dev` unless told otherwise.
 
+## Agent Skills
+
+- Skills live in `.opencode/skills/<name>/SKILL.md`; shared checklists live in `.opencode/references/` (Definition of Done, testing patterns, security, performance, accessibility, observability, orchestration).
+- If a task matches a skill, invoke it and follow it exactly — do not partially apply it or reimplement it from memory. Never skip a matching skill because the task seems small or quick; if routing is unclear, read `using-agent-skills`.
+- Route intent to skills: feature or significant change → `spec-driven-development`, then `incremental-implementation` + `test-driven-development` (plan first with `planning-and-task-breakdown` when multi-step); bug or unexpected behavior → `debugging-and-error-recovery`; review before merge → `code-review-and-quality`; refactor for clarity → `code-simplification`; API/interface design → `api-and-interface-design`; UI work → `frontend-ui-engineering`; security → `security-and-hardening`; performance → `performance-optimization`; launch → `shipping-and-launch`.
+- The Definition of Done (`.opencode/references/definition-of-done.md`) is the project-wide completion bar for every change, on top of per-task acceptance criteria.
+
 ## Live TUI Testing
 
 - Run `bun run dev:live` from a development worktree to test its TUI against the currently elected `opencode` background server and live sessions.
