@@ -28,6 +28,8 @@ export interface Info {
 export interface Interface {
   readonly get: (sessionID: SessionSchema.ID) => Effect.Effect<Info | undefined>
   readonly set: (info: Info) => Effect.Effect<void>
+  /** Replaces only the open failure; the revision column is untouched, so concurrent bumps never race this write. */
+  readonly setOpenFailure: (sessionID: SessionSchema.ID, openFailure: OpenFailure | undefined) => Effect.Effect<void>
   /** Advances the workspace revision by one; atomic, so concurrent bumps all land. */
   readonly bumpRevision: (sessionID: SessionSchema.ID) => Effect.Effect<void>
 }
@@ -76,6 +78,14 @@ export const layer = Layer.effect(
               last_applied_variant: info.lastAppliedVariant ?? null,
             },
           })
+          .run()
+          .pipe(Effect.orDie)
+      }),
+      setOpenFailure: Effect.fnUntraced(function* (sessionID, openFailure) {
+        yield* db
+          .update(SessionEffortTable)
+          .set({ open_failure: openFailure ?? null })
+          .where(eq(SessionEffortTable.session_id, sessionID))
           .run()
           .pipe(Effect.orDie)
       }),

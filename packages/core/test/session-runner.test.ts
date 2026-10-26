@@ -83,6 +83,7 @@ import { testEffect } from "./lib/effect"
 import { promptLocationNode } from "./fixture/prompt-location"
 import { LocationServiceMap } from "@opencode/core/location-service-map"
 import { EffortStore } from "@opencode/core/effort/store"
+import { ConfigEffort } from "@opencode/schema/config/effort"
 import { Expected } from "./lib/session-message"
 import { permissionLayer } from "./lib/permission"
 import { agentHost, modelHost, host, noProviders } from "./plugin/host"
@@ -112,6 +113,8 @@ const defaultModelLimit = { context: 200_000, output: 32_000 }
 const modelLimits = new Map<string, ModelLimit>()
 /** Catalog infos served by the prompt Model.Service mock; policy scenarios register effort variants here. */
 const modelInfos = new Map<string, Model.Info>()
+/** Exit codes the stub shell tool settles with, popped per execution; policy scenarios queue them. */
+const verifierExits: number[] = []
 const testModel = (id: string, limit: ModelLimit = defaultModelLimit) => {
   modelLimits.set(id, limit)
   return LanguageModel.make({ id, provider: "fake", route: OpenAIChat.route })
@@ -400,6 +403,7 @@ const layer = Layer.unwrap(
       new Document({
         type: "document",
         info: new Info({
+          effort_policy: new ConfigEffort.Info({ verification_commands: ["pnpm typecheck"] }),
           compaction: new ConfigCompaction.Info({
             buffer: 3_000,
             keep: new ConfigCompaction.Keep({ tokens: 1_000 }),
@@ -2204,6 +2208,60 @@ describe("SessionRunnerLLM", () => {
     expect((yield* efforts.get(sessionID))?.lastAppliedVariant).toBeUndefined()
     yield* Queue.take(seen)
     expect(yield* Queue.isFull(seen)).toBe(false)
+  })
+
+  scenario("escalates while a configured verifier fails and returns when it passes", function* (s) {
+    effortModelInfo()
+    // The stub verifier tool registers only for this scenario so shared tool-list assertions stay clean.
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) =>
+      editor.add({
+        name: "shell",
+        description: "Stub shell: settles with the next queued verifier exit code",
+        input: Schema.Struct({ command: Schema.String }),
+        output: Schema.Struct({}),
+        options: { codemode: false },
+        execute: () =>
+          Effect.succeed({
+            output: {},
+            content: [{ type: "text" as const, text: "" }],
+            metadata: { exit: verifierExits.shift() ?? 0 },
+          }),
+      }),
+    )
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "standard", revision: 0 })
+    const seen = yield* subscribeEffortTransitions(s)
+    verifierExits.push(1)
+
+    // The verifier fails; the continuation step decides one level above standard: deep, the max variant.
+    yield* s.llm.push(TestLLM.tool("verify-fail", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.text("Answer after failing verifier", "effort-loop-fail"))
+    yield* s.runPrompt("First")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("max" as Model.VariantID)
+    const escalated = yield* Queue.take(seen)
+    expect(escalated.decision).toEqual({ rule: "escalated", level: "deep", effort: "max" })
+    const row = yield* efforts.get(sessionID)
+    expect(row?.openFailure?.verifier).toBe("pnpm typecheck")
+
+    // The escalated level holds without re-transitioning while the failure stays open.
+    yield* s.llm.push(TestLLM.text("Answer while escalated", "effort-loop-escalated"))
+    yield* s.runPrompt("Second")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("max" as Model.VariantID)
+    expect(yield* Queue.isFull(seen)).toBe(false)
+
+    // The same verifier passes: the failure clears; the variant drops next step.
+    verifierExits.push(0)
+    yield* s.llm.push(TestLLM.tool("verify-pass", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.text("Answer after passing verifier", "effort-loop-pass"))
+    yield* s.runPrompt("Third")
+    expect((yield* efforts.get(sessionID))?.openFailure).toBeUndefined()
+
+    yield* s.llm.push(TestLLM.text("Answer back at base", "effort-loop-base"))
+    yield* s.runPrompt("Fourth")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("default" as Model.VariantID)
+    const returned = yield* Queue.take(seen)
+    expect(returned.decision).toEqual({ rule: "base", level: "standard" })
   })
 
   scenario("preserves instruction values while a source is temporarily unavailable", function* (s) {
