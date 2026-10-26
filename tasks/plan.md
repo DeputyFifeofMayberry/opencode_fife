@@ -29,8 +29,8 @@ Integrate the vendored `effort-policy-core` decision rules into `packages/core` 
 
 ### Phase 2: Escalation loop
 
-- [ ] Task 4: Capability lookup + `decide()` at request prepare (no writes yet; plan pin included)
-- [ ] Task 5: Transition write-through (`switchModel`, user-pick classification, `session.effort.transitioned` event)
+- [x] Task 4: Capability lookup + `decide()` at request prepare (no writes yet; plan pin included)
+- [x] Task 5: Transition write-through (`switchModel`, user-pick classification, `session.effort.transitioned` event)
 - [ ] Task 6: Evidence classification at tool settlement (sequence + revision), closing the loop
 
 ### Checkpoint: Escalation loop

@@ -74,9 +74,9 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Description:** Build `EffortCapability` from the resolved model's effort variants (validated against `Model.Info.variants`, ordered by `ReasoningEfforts`, `defaultEffort` from the model default). Assemble `EffortState { base, exact (variant set?), pin (agent === "plan" → deep), openFailure }` from session + state row, call `decide()`, and resolve `Decision.effort` to a concrete variant id. No writes yet — the decision is computed and observable. Assert `EFFORT_POLICY_PROTOCOL_VERSION` and refuse unknown versions.
 
 **Acceptance criteria:**
-- [ ] Auto session at base `standard` with no open failure decides `untouched`
-- [ ] Open failure escalates one level, resolving to a real variant id or `untouched` when unresolvable
-- [ ] Exact pick returns `exact-base` verbatim; plan agent pins `deep`; no-reasoning route stays untouched
+- [x] Auto session at base `standard` with no open failure decides `untouched`
+- [x] Open failure escalates one level, resolving to a real variant id or `untouched` when unresolvable
+- [x] Exact pick returns `exact-base` verbatim; plan agent pins `deep`; no-reasoning route stays untouched
 
 **Verification:**
 - [ ] `cd packages/core && bun test test/effort`
@@ -96,9 +96,9 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Description:** When `decide()` yields an effort different from the request's current one, the adapter calls `Session.switchModel` (same model, new variant). Maintain `last_applied_variant`: a `ModelSelected` matching it is a policy echo; anything else is a user pick and becomes the session's `exact` baseline (recorded via state update). Add the `session.effort.transitioned { decision }` durable event in `packages/schema/src/session-event.ts`, published edge-triggered.
 
 **Acceptance criteria:**
-- [ ] Escalation writes the raised variant; clear restores the base variant (or unsets to auto)
-- [ ] A user pick mid-escalation suppresses further escalation (exact wins) in the same session
-- [ ] Event publishes on open and clear only — repeated identical decisions publish nothing
+- [x] Escalation writes the raised variant; clear restores the base variant (or unsets to auto)
+- [x] A user pick mid-escalation suppresses further escalation (exact wins) in the same session
+- [x] Event publishes on open and clear only — repeated identical decisions publish nothing
 
 **Verification:**
 - [ ] `cd packages/core && bun test test/effort test/session-runner`
