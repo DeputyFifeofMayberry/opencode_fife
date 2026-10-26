@@ -1,0 +1,4 @@
+interface:
+  display_name: "CRAFT Prompting"
+  short_description: "Write, improve, and audit prompts using CRAFT"
+  default_prompt: "Use $craft-prompting to turn my request into a clear, reliable CRAFT prompt."
