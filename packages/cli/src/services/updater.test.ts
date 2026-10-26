@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { action } from "./updater-action"
-import { decodePolicy } from "./updater"
+import { decodePolicy, missingMethodMessage } from "./updater"
 
 describe("updater", () => {
   test("reads update policy from JSONC", () => {
@@ -38,6 +38,14 @@ describe("updater", () => {
 
   test("reports when latest is lower (rollback)", () => {
     expect(action("1.2.4", "1.2.3", "notify")).toBe("notify")
+  })
+
+  test("points a locally built dev install at a rebuild", () => {
+    expect(missingMethodMessage("latest")).toBe(
+      "Could not detect the installation method. Update with your package manager or download the latest release.",
+    )
+    expect(missingMethodMessage("dev")).toContain("dev build")
+    expect(missingMethodMessage("dev")).toContain("Rebuild and reinstall")
   })
 
   test("accepts strict release version variants", () => {

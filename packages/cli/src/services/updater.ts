@@ -56,6 +56,16 @@ const installNames: Record<Method, string> = {
   winget: "WinGet",
 }
 
+// Released channels publish installs the updater can replace. A dev build has no
+// published install, so an undetected method means it was built and copied locally.
+const releasedChannels = new Set(["latest", "beta", "next", "prod"])
+
+export function missingMethodMessage(channel: string) {
+  if (releasedChannels.has(channel))
+    return "Could not detect the installation method. Update with your package manager or download the latest release."
+  return "This dev build was installed without a package manager, so OpenCode cannot update it. Rebuild and reinstall it from the repository, or install a release from opencode.ai."
+}
+
 const wingetPackage = "Anomaly.OpenCode"
 const wingetArgs = [
   "--id",
@@ -574,12 +584,7 @@ const make = Effect.gen(function* () {
   })
 
   const apply = Effect.fn("cli.updater.apply")(function* (version: string) {
-    if (!(yield* install(version)))
-      return yield* Effect.fail(
-        new Error(
-          "Could not detect the installation method. Update with your package manager or download the latest release.",
-        ),
-      )
+    if (!(yield* install(version))) return yield* Effect.fail(new Error(missingMethodMessage(channel)))
   })
 
   const check = Effect.fn("cli.updater.check")(function* () {
@@ -589,12 +594,7 @@ const make = Effect.gen(function* () {
         message: "This build runs from a source checkout. Use an installed OpenCode release to check for updates.",
       }
     const detected = yield* method()
-    if (!detected)
-      return {
-        type: "unavailable" as const,
-        message:
-          "Could not detect the installation method. Update with your package manager or download the latest release.",
-      }
+    if (!detected) return { type: "unavailable" as const, message: missingMethodMessage(channel) }
     const version = yield* latest(detected)
     if (!parseReleaseVersion(version)) return yield* Effect.fail(new Error(`Invalid version: ${version}`))
     const current = yield* Ref.get(installedVersion)

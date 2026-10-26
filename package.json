@@ -30,6 +30,7 @@
     "typecheck:profile": "bun script/profile-typecheck.ts",
     "typecheck:profile:packages": "bun script/profile-typecheck-packages.ts",
     "upgrade-opentui": "bun run script/upgrade-opentui.ts",
+    "install:local": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File script/install-local.ps1",
     "postinstall": "bun run --cwd packages/core fix-node-pty",
     "prepare": "husky",
     "sso": "aws sso login --sso-session=opencode --no-browser",
