@@ -18,7 +18,7 @@ Integrate the vendored `effort-policy-core` decision rules into `packages/core` 
 
 ### Phase 1: Foundation
 
-- [ ] Task 1: Vendor the decision core and port its suites
+- [x] Task 1: Vendor the decision core and port its suites
 - [ ] Task 2: Config section (`ConfigEffort`)
 - [ ] Task 3: Durable state store (`session_effort` table + helpers)
 

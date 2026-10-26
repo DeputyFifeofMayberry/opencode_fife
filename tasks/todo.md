@@ -7,13 +7,13 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Description:** Copy `levels.ts`, `policy.ts`, `types.ts`, `index.ts` verbatim from `DeputyFifeofMayberry/effort-policy-core` into `packages/core/src/effort/policy/`. Port the upstream level, policy, and import-boundary suites into `packages/core/test/effort/`, adapting the boundary guard to assert the vendored directory imports only from within itself.
 
 **Acceptance criteria:**
-- [ ] Vendored sources are byte-identical to upstream (no re-formatting, no host imports)
-- [ ] Ported suites pass unchanged in behavior
-- [ ] Boundary test fails if a host import is added under `src/effort/policy/`
+- [x] Vendored sources are byte-identical to upstream (no re-formatting, no host imports)
+- [x] Ported suites pass unchanged in behavior
+- [x] Boundary test fails if a host import is added under `src/effort/policy/`
 
 **Verification:**
-- [ ] `cd packages/core && bun test test/effort`
-- [ ] `bun run check` (repo root)
+- [x] `cd packages/core && bun test test/effort`
+- [x] `bun run check` (repo root) — red only in `@opencode/app#typecheck`: pre-existing Windows checkout artifact (43 git symlinks materialized as text files under `core.symlinks=false`; `packages/app/src/custom-elements.d.ts` contains its target path and fails parsing before any package code). Unrelated to this branch; all other 26 turbo tasks pass.
 
 **Dependencies:** None
 
