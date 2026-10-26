@@ -1,85 +1,85 @@
-- After changing the public Protocol or Server `HttpApi`, run `bun run generate` from the repository root. Do not edit generated client files directly.
-- Keep runtime dependencies directed from Schema to Core and Protocol, then from Core and Protocol to Server. Client runtime code may depend on Schema and Protocol but never Core or Server; `sdk` composes Client, Core, and Server.
-- This repository does not use Changesets. Do not add `.changeset` files; follow the existing release workflow instead.
-- The default branch is `dev`. Base branches and worktrees on `origin/dev`, target PRs at `dev`, and diff against `origin/dev` unless told otherwise.
+- After changing public Protocol/Server `HttpApi`: run `bun run generate` from repo root; never edit generated client files directly.
+- Dependency direction: Schema → Core and Protocol → Server. Client runtime may depend on Schema and Protocol only, never Core or Server; `sdk` composes Client, Core, Server.
+- No Changesets: never add `.changeset` files; use the existing release workflow.
+- Default branch `dev`: base branches/worktrees on `origin/dev`, target PRs at `dev`, diff against `origin/dev` unless told otherwise.
 
 ## Agent Skills
 
-- Skills live in `.opencode/skills/<name>/SKILL.md`; shared checklists live in `.opencode/references/` (`definition-of-done`, testing, security, performance, accessibility, observability, orchestration).
-- If a task matches a skill, invoke it and follow it exactly — do not partially apply it or reimplement it from memory. Never skip a matching skill because the task seems small or quick; if routing is unclear, read `using-agent-skills`.
-- Route intent to skills: feature or significant change → `spec-driven-development`, then `incremental-implementation` + `test-driven-development` (plan first with `planning-and-task-breakdown` when multi-step); bug or unexpected behavior → `debugging-and-error-recovery`; review before merge → `code-review-and-quality`; refactor for clarity → `code-simplification`; API/interface design → `api-and-interface-design`; UI work → `frontend-ui-engineering`; security → `security-and-hardening`; performance → `performance-optimization`; launch → `shipping-and-launch`.
-- The Definition of Done (`.opencode/references/definition-of-done.md`) is the project-wide completion bar for every change, on top of per-task acceptance criteria.
-- Skill and reference docs guide but do not override explicit requirements in this file; read only the sections relevant to the task.
+- Skills: `.opencode/skills/<name>/SKILL.md`; shared checklists: `.opencode/references/` (`definition-of-done`, testing, security, performance, accessibility, observability, orchestration).
+- Task matches a skill → invoke it, follow it exactly: no partial application, no reimplementing from memory. Never skip because the task seems small or quick; routing unclear → read `using-agent-skills`.
+- Intent routing: feature or significant change → `spec-driven-development`, then `incremental-implementation` + `test-driven-development` (plan first with `planning-and-task-breakdown` when multi-step); bug or unexpected behavior → `debugging-and-error-recovery`; review before merge → `code-review-and-quality`; refactor for clarity → `code-simplification`; API/interface design → `api-and-interface-design`; UI work → `frontend-ui-engineering`; security → `security-and-hardening`; performance → `performance-optimization`; launch → `shipping-and-launch`.
+- Definition of Done (`.opencode/references/definition-of-done.md`): project-wide completion bar for every change, on top of per-task acceptance criteria.
+- Skill/reference docs guide, never override this file; read only task-relevant sections.
 
 ## Workflow
 
-- **Inspect:** read the relevant code, tests, and callers; check branch and worktree state; preserve existing changes and untracked files. For nontrivial tasks, define scope and acceptance criteria and clarify consequential ambiguity.
-- **Implement:** the simplest correct change. Preserve interfaces, module boundaries, compatibility, and data; keep unrelated work and speculative abstraction out of scope.
-- **Protect:** handle meaningful failures, edge cases, permissions, and security risks. Never conceal errors.
-- **Verify:** run the relevant checks, fix failures and rerun them, inspect the final diff, and update affected docs.
+- **Inspect:** read relevant code, tests, callers; check branch/worktree state; preserve existing changes and untracked files. Nontrivial task → define scope + acceptance criteria, clarify consequential ambiguity.
+- **Implement:** simplest correct change. Preserve interfaces, module boundaries, compatibility, data; no unrelated work, no speculative abstraction.
+- **Protect:** handle meaningful failures, edge cases, permissions, security risks. Never conceal errors.
+- **Verify:** run relevant checks; fix failures and rerun; inspect final diff; update affected docs.
 
 ## Live TUI Testing
 
-- Run `bun run dev:live` from a development worktree to test its TUI against the currently elected `opencode` background server and live sessions; pass a directory after the script when needed (`bun run dev:live /path/to/project`).
-- The script discovers the server with `opencode service status`, injects its private local credential from `opencode service get password`, and uses the `dev` TUI storage channel so tabs and other client-local state match the installed client.
-- Prefer `dev:live` over plain `bun run dev` for this workflow. An implicit managed-service connection may replace the live server when the worktree client version differs; explicit `--server` warns and continues without replacing it.
+- `bun run dev:live` from a development worktree tests its TUI against the currently elected `opencode` background server and live sessions; pass a directory when needed (`bun run dev:live /path/to/project`).
+- Script discovers server via `opencode service status`, injects its private local credential (`opencode service get password`), uses the `dev` TUI storage channel so tabs and client-local state match the installed client.
+- Prefer `dev:live` over plain `bun run dev`. Implicit managed-service connection may replace the live server when worktree client version differs; explicit `--server` warns and continues without replacing it.
 
 ## TUI Stories
 
-- When a user asks for a TUI story, add a fixture-driven story under `packages/tui/src/feature-plugins/system/storybook` and register it in `index.tsx`.
-- Render the real production component rather than a visual copy. Keep submissions and other side effects local to the story so it is safe to explore repeatedly.
-- Expose the meaningful state dimensions through story keybindings and list them in `StoryFooter`; include a reset command when combinations can leave the fixture in a confusing state.
-- Run a specific story with `OPENCODE_STORY=<story-id> bun run dev:live` from the development worktree, and exercise narrow and wide terminal sizes when layout is relevant.
+- TUI story request → fixture-driven story under `packages/tui/src/feature-plugins/system/storybook`, registered in `index.tsx`.
+- Render the real production component, not a visual copy; keep submissions and side effects local so the story is safe to explore repeatedly.
+- Expose state dimensions via story keybindings, listed in `StoryFooter`; include a reset command when combinations can leave the fixture confusing.
+- Run one story: `OPENCODE_STORY=<story-id> bun run dev:live` from the development worktree; exercise narrow + wide terminal sizes when layout matters.
 
 ## TUI Theme Tokens
 
-- Choose theme tokens by semantic role, not by their current color. Do not use raw `theme.hue` values or borrow an unrelated semantic token to achieve a preferred appearance.
-- Use `text.feedback` and `background.feedback` only for outcome or status feedback such as errors, warnings, success messages, and informational messages. Use `formfield` states for form-control text, ordinals, and selection markers, and `action` states for actions.
-- If the theme does not expose a token for the required semantic role, extend the theme schema, defaults, resolution, and types with that role before using it in a component. Do not repurpose the nearest-looking existing token.
-- When changing the public theme token surface, verify the built-in light and dark defaults and the custom-theme fallback path in addition to the affected TUI component.
+- Choose tokens by semantic role, never current color: no raw `theme.hue`, no borrowing unrelated semantic tokens for a preferred appearance.
+- `text.feedback`/`background.feedback`: outcome/status feedback only (errors, warnings, success, informational). `formfield` states: form-control text, ordinals, selection markers. `action` states: actions.
+- Missing semantic role → extend theme schema, defaults, resolution, types before component use; never repurpose the nearest-looking token.
+- Changing the public token surface → verify built-in light + dark defaults and the custom-theme fallback path, plus the affected component.
 
 ## Branch Names
 
-Branch names are at most three short words, hyphen-separated — no slashes or type prefixes such as `feat/`. Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
+Branch names: at most three short words, hyphen-separated, no slashes or type prefixes (`feat/`). Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
 
 ## Worktrees
 
-- Before starting work that will produce commits, create a dedicated worktree and branch for the task instead of editing in a checkout another active session may be using. Base it on `origin/dev` and follow Branch Names.
-- Before any Git operation, inspect `git worktree list` and the branch each checkout holds — never assume another checkout's branch. Remove the task worktree and branch after merge.
-- Advance or merge into `dev` only after confirming its state; when `dev` is not checked out in any worktree, fast-forward it with `git branch -f dev <task-branch>` from the task worktree.
+- Commit-producing work → dedicated worktree + branch per task, never a checkout another active session may use. Base on `origin/dev`; follow Branch Names.
+- Before any Git operation: inspect `git worktree list` and each checkout's branch — never assume. Remove task worktree + branch after merge.
+- Advance/merge `dev` only after confirming its state; `dev` checked out nowhere → fast-forward via `git branch -f dev <task-branch>` from the task worktree.
 
 ## Git Safety
 
-- Never force-push, rewrite published history, run destructive `git reset`/`git clean`, or discard others' work. If Git state is unclear or an operation could lose data, stop and identify what must be resolved before continuing.
-- Obtain explicit approval before pushing to a remote, opening a PR, or creating a tag or release.
+- Never force-push, rewrite published history, run destructive `git reset`/`git clean`, or discard others' work. Unclear Git state or possible data loss → stop, identify what must be resolved first.
+- Explicit approval before pushing to a remote, opening a PR, or creating a tag/release.
 
 ## Commits and PR Titles
 
-Use conventional commit-style messages and PR titles: `type(scope): summary`. Valid types are `feat`, `fix`, `docs`, `chore`, `refactor`, and `test`; scopes are optional — use the affected package or area when helpful (`core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, `plugin`).
+Conventional messages and titles: `type(scope): summary`. Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`. Scopes optional — affected package/area when helpful (`core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, `plugin`).
 
 Examples: `fix(tui): simplify thinking toggle styling`, `docs: update contributing guide`, `chore(sdk): regenerate types`.
 
-Before committing, inspect status and diff, stage only the files the task touched, and exclude secrets, credentials, and unnecessary artifacts.
+Before committing: inspect status + diff; stage only task files; exclude secrets, credentials, unnecessary artifacts.
 
-For user-facing `feat`, `fix`, and `perf` PRs, add a small looping animated SVG of the change under `### Visual` in the PR body (240×72 `svg` code block, e.g. a dock growing out of the composer or spinners turning in step). Draw with `currentColor` and opacity so it works in light and dark; make the unanimated state a good still (shown under reduced motion); animate with CSS or SMIL only; keep it under 8 KB with no scripts or external references. The desktop beta's "What's new" dialog shows it.
+User-facing `feat`/`fix`/`perf` PRs: add a small looping animated SVG under `### Visual` in the PR body (240×72 `svg` block, e.g. dock growing out of the composer, spinners turning in step). `currentColor` + opacity, works in light and dark; unanimated state = good still (shown under reduced motion); CSS or SMIL only; <8 KB, no scripts or external references. Desktop beta "What's new" dialog shows it.
 
 ## Style Guide
 
 ### General Principles
 
-- Keep things in one function unless composable or reusable
-- Validate unknown values once at the boundary that owns them. Pass typed values inward instead of repeating `typeof value === "object"` and property-existence checks. Do not defensively revalidate values already guaranteed by a schema, constructor, or internal type.
-- Do not extract single-use helpers preemptively. Inline the logic at the call site unless the helper is reused, hides a genuinely complex boundary, or has a clear independent name that improves the caller.
-- Before adding complexity for a speculative or vanishingly unlikely race or security edge case, explain the concrete failure mode, likelihood, and complexity cost to the user and get their buy-in. Do not silently expand scope for theoretical robustness.
-- Avoid `try`/`catch` where possible
-- Avoid using the `any` type
-- Use Bun APIs when possible, like `Bun.file()`
-- Rely on type inference when possible; avoid explicit type annotations or interfaces unless necessary for exports or clarity
-- Prefer functional array methods (flatMap, filter, map) over for loops; use type guards on filter to maintain type inference downstream
-- In `src/config`, follow the existing self-export pattern at the top of the file (for example `export * as ConfigAgent from "./agent.js"`) when adding a new config module.
-- In Effect generators, bind services to named variables before calling methods. Do not use nested service yields such as `yield* (yield* Foo.Service).bar()`.
+- One function unless composable or reusable.
+- Validate unknown values once, at the owning boundary; pass typed values inward. No repeated `typeof value === "object"`/property-existence checks; no defensive revalidation of values already guaranteed by schema, constructor, or internal type.
+- No preemptive single-use helpers; inline at the call site unless reused, hiding a genuinely complex boundary, or carrying a clear independent name that improves the caller.
+- Speculative or vanishingly unlikely race/security complexity → explain concrete failure mode, likelihood, complexity cost; get user buy-in first. Never silently expand scope for theoretical robustness.
+- Avoid `try`/`catch` where possible.
+- No `any`.
+- Prefer Bun APIs (`Bun.file()`).
+- Prefer type inference; explicit annotations/interfaces only when necessary (exports, clarity).
+- Prefer functional array methods (`flatMap`, `filter`, `map`) over for loops; type guards on `filter` preserve downstream inference.
+- `src/config`: follow the existing self-export pattern at file top (`export * as ConfigAgent from "./agent.js"`).
+- Effect generators: bind services to named variables before calling methods; no nested service yields (`yield* (yield* Foo.Service).bar()`).
 
-Reduce total variable count by inlining when a value is only used once.
+Inline values used only once:
 
 ```ts
 // Good
@@ -92,7 +92,7 @@ const journal = await Bun.file(journalPath).json()
 
 ### Destructuring
 
-Avoid unnecessary destructuring. Use dot notation to preserve context.
+Avoid unnecessary destructuring; dot notation preserves context.
 
 ```ts
 // Good
@@ -105,15 +105,15 @@ const { a, b } = obj
 
 ### Imports
 
-- Never alias imports. Do not use `import { foo as bar } from "..."` or renamed imports like `resolve as pathResolve`.
-- Never use type-position `import("...")` references such as `Schema.declare<import("@opencode/plugin/effect/plugin").Plugin["effect"]>`. Only when two imports genuinely collide on a name and no other option exists, an aliased type import (`import type { Plugin as PluginDefinition } from "..."`) is permitted as a last resort — still strongly preferred not to.
-- Never use star imports. Do not use `import * as Foo from "..."` or `import type * as Foo from "..."`.
-- If a namespace-style value is needed, import the module's own exported namespace by name, for example `import { Project } from "@opencode/core/project"`, then reference `Project.ID`.
-- Prefer dynamic imports for heavy modules that are only needed in selected code paths, especially in startup-sensitive entrypoints. Destructure dynamic import bindings near the top of the narrowest scope that needs them so they read like normal imports. Avoid inline chains such as `await import("./module").then((mod) => mod.value())` or `(await import("./module")).value()`. Keep branch-specific imports inside the branch that needs them to preserve lazy loading.
+- No aliased imports (`import { foo as bar } from "..."`, renamed imports like `resolve as pathResolve`).
+- No type-position `import("...")`, e.g. `Schema.declare<import("@opencode/plugin/effect/plugin").Plugin["effect"]>`. Genuine, unavoidable name collision only: aliased type import (`import type { Plugin as PluginDefinition } from "..."`) as last resort — still strongly discouraged.
+- No star imports (`import * as Foo`, `import type * as Foo`).
+- Namespace-style value → import the module's exported namespace by name (`import { Project } from "@opencode/core/project"`), reference `Project.ID`.
+- Dynamic imports for heavy modules needed only in selected code paths, especially startup-sensitive entrypoints. Destructure bindings near the top of the narrowest scope, reading like normal imports. No inline chains (`await import("./module").then((mod) => mod.value())`, `(await import("./module")).value()`). Branch-specific imports stay inside the branch needing them, preserving lazy loading.
 
 ### Variables
 
-Prefer `const` over `let`. Use ternaries or early returns instead of reassignment.
+Prefer `const` over `let`; ternaries or early returns over reassignment.
 
 ```ts
 // Good
@@ -127,7 +127,7 @@ else foo = 2
 
 ### Control Flow
 
-Avoid `else` statements. Prefer early returns.
+No `else`; prefer early returns.
 
 ```ts
 // Good
@@ -145,7 +145,7 @@ function foo() {
 
 ### Complex Logic
 
-When a function has several validation branches or supporting details, make the main function read as the happy path and move supporting details into small helpers below it.
+Several validation branches or supporting details → main function reads as the happy path; supporting details move to small helpers below.
 
 ```ts
 // Good
@@ -160,14 +160,14 @@ function requireConfig(input: unknown) {
 }
 ```
 
-- Keep helpers close to the code they support, below the main export when that improves readability; extract only when the helper names a real concept like `requireConfig` or `readMetadata`.
-- Do not return `Effect` from helpers unless they actually perform effectful work. Synchronous parsing, validation, and option building should stay synchronous.
-- Prefer Effect schema helpers such as `Schema.UnknownFromJsonString` and `Schema.decodeUnknownOption` over manual `JSON.parse` wrapped in `Effect.try` when parsing untrusted JSON strings.
-- Add comments for non-obvious constraints and surprising behavior, not for obvious assignments or control flow.
+- Helpers stay close to the code they support, below the main export when that reads better; extract only real concepts (`requireConfig`, `readMetadata`).
+- No `Effect` returns from helpers unless genuinely effectful; synchronous parsing, validation, option building stay synchronous.
+- Untrusted JSON → Effect schema helpers (`Schema.UnknownFromJsonString`, `Schema.decodeUnknownOption`), not manual `JSON.parse` in `Effect.try`.
+- Comments cover non-obvious constraints and surprising behavior only — not obvious assignments or control flow.
 
 ### Schema Definitions (Drizzle)
 
-Use snake_case for field names so column names don't need to be redefined as strings.
+snake_case field names, so columns never redefine names as strings.
 
 ```ts
 // Good
@@ -187,34 +187,34 @@ const table = sqliteTable("session", {
 
 ## Testing
 
-- Avoid mocks as much as possible; never use `globalThis.*` unless it's the only option.
-- Test the actual implementation; do not duplicate logic into tests.
-- Tests cannot run from repo root (guard: `do-not-run-tests-from-root`); run from package directories such as `packages/core`.
-- Before writing or changing tests, read the matching skill in `.opencode/skills`: `unit-tests` (bun test), `tui-tests` (OpenTUI renderer tests), `app-e2e-tests` (Playwright in `packages/app/e2e`) or `component-tests` (Playwright on stories, `packages/stories`). They cover what has made tests slow or flaky in CI.
+- Minimal mocks; `globalThis.*` only when no alternative exists.
+- Test the actual implementation; never duplicate logic into tests.
+- Tests never run from repo root (guard: `do-not-run-tests-from-root`); run from package directories (e.g. `packages/core`).
+- Before writing or changing tests, read the matching `.opencode/skills` skill: `unit-tests` (bun test), `tui-tests` (OpenTUI renderer tests), `app-e2e-tests` (Playwright, `packages/app/e2e`), `component-tests` (Playwright on stories, `packages/stories`) — they cover known CI slowness/flakiness causes.
 
 ## Checks
 
-- Run `bun run check` from the repository root as the canonical full lint and type-check verification.
-- During focused iteration, run `bun typecheck` from the affected package directory (for example, `packages/core`). Never run `tsc` directly.
-- Local `typecheck` scripts use `bun check`. CI and package publishing run `typecheck:tsc`, the official TypeScript compiler (`@typescript/native`). When the two disagree, `tsc` is the source of truth; reproduce with `bun run typecheck:tsc` from the package directory.
-- `bun check` aims to match TypeScript 7.1, not the `7.0.2` that `process.versions.typescript` reports (oven-sh/bun#46536), and writes no declaration files, so declaration-emit errors such as TS5088 or TS2883 appear only in `tsc`; do not report those. If the two differ otherwise, file a minimal, dependency-free repro at https://github.com/oven-sh/bun/issues with the output of both.
-- Never claim an unrun or failed check passed, and never weaken checks to manufacture a pass.
+- `bun run check` from repo root: canonical full lint + type-check.
+- Focused iteration: `bun typecheck` from the affected package directory (e.g. `packages/core`). Never run `tsc` directly.
+- Local `typecheck` scripts: `bun check`. CI and publishing: `typecheck:tsc` (official `@typescript/native`). Disagreement → `tsc` is source of truth; reproduce via `bun run typecheck:tsc` from the package directory.
+- `bun check` targets TypeScript 7.1, not the `7.0.2` `process.versions.typescript` reports (oven-sh/bun#46536); writes no declaration files, so declaration-emit errors (TS5088, TS2883) appear only in `tsc` — do not report those. Other divergence: file a minimal dependency-free repro at https://github.com/oven-sh/bun/issues with both outputs.
+- Never claim unrun or failed checks passed; never weaken checks to manufacture a pass.
 
 ## Session Core
 
-- Keep durable events minimal: record irreducible new facts and do not repeat state derivable by folding the ordered aggregate history. Enrich projections and read models with previous or derived state when consumers need self-contained views.
-- Keep durable prompt admission separate from model execution. `Session.prompt(...)` publishes `session.inbox.enqueued`, whose projection inserts one durable `session_inbox` row, before scheduling advisory `SessionExecution.wake(sessionID)` unless `resume: false` requests admit-only behavior. Delivery publishes `session.inbox.delivered`; its projection consumes the inbox row and inserts the visible message in the same transaction. `session_inbox` stores only unconsumed work.
-- Reusing a Session ID adopts the existing Session. Reusing a user or synthetic inbox item ID is idempotent when Session and type match: the first admission wins and the retried payload, metadata, and delivery mode are ignored, whether the item is still pending or already delivered (reconciled from the projected message without retained enqueue history). Cross-Session or cross-type reuse fails. Control items keep their operation-specific conflict behavior.
-- Keep `SessionExecution` process-global and Session-ID based. Its local implementation owns the process-local Session coordinator and discovers placement through `SessionStore` plus `LocationServiceMap.get(session.location)` only when a drain starts; no layer should take a Session ID. Interruption targets the active process-local ownership chain for that Session; interruption of a known but idle or locally unowned Session is a no-op, while the public API rejects an unknown Session.
-- Keep `SessionRunner`, model resolution, tool registry, permissions, and filesystem Location-scoped. Omitted `Location.workspaceID` means implicit-local placement; explicit workspace identity remains reserved for future placement semantics.
-- Each step is one explicit `llm.stream` call that continues from reloaded history. Do not add an in-memory tool loop.
-- Keep local Session drains process-local until clustering is implemented. `SessionRunCoordinator` joins explicit same-Session resumes, coalesces prompt wakeups, and allows different Sessions to run concurrently. A write-ahead execution claim marks a process-local busy period for restart recovery: terminal completion, failure, or user interruption releases it, while shutdown interruption and process death preserve it. Startup recovery resumes claimed top-level Sessions with durable per-execution attempt accounting. The claim is a recovery marker, not clustered ownership, fencing, or an exactly-once guarantee.
-- Keep delivery vocabulary explicit. Prompts steer by default. At safe step boundaries, steered compaction takes priority up to the first steered move control; other steers retain enqueue order. At an idle boundary, steers take priority; otherwise exactly one queued item delivers before the runner reevaluates continuation. Inbox items may be cancelled or changed between queue and steer before delivery. Promoting new user input resets the selected agent's step allowance; a batch of steers resets it once.
-- One step is one logical LLM call; its durable record covers only the model-visible span. Do not write "provider turn", and do not use bare "turn" for a single call: "turn" is reserved for the future assistant-turn unit containing all steps from prompt promotion until the session would go idle.
-- Keep event replay ownership separate from clustered Session execution ownership.
+- Durable events stay minimal: record irreducible new facts; never repeat state derivable by folding ordered aggregate history. Enrich projections and read models with previous or derived state when consumers need self-contained views.
+- Durable prompt admission stays separate from model execution. `Session.prompt(...)` publishes `session.inbox.enqueued`, whose projection inserts one durable `session_inbox` row, then schedules advisory `SessionExecution.wake(sessionID)` unless `resume: false` requests admit-only behavior. Delivery publishes `session.inbox.delivered`; its projection consumes the inbox row and inserts the visible message in the same transaction. `session_inbox` stores only unconsumed work.
+- Reusing a Session ID adopts the existing Session. Reused user/synthetic inbox item ID is idempotent when Session and type match: first admission wins; retried payload, metadata, and delivery mode are ignored, whether pending or already delivered (reconciled from the projected message without retained enqueue history). Cross-Session or cross-type reuse fails. Control items keep their operation-specific conflict behavior.
+- `SessionExecution` stays process-global and Session-ID based. Its local implementation owns the process-local Session coordinator and discovers placement via `SessionStore` + `LocationServiceMap.get(session.location)` only when a drain starts; no layer takes a Session ID. Interruption targets the active process-local ownership chain for that Session; interrupting a known-but-idle or locally-unowned Session is a no-op; the public API rejects an unknown Session.
+- `SessionRunner`, model resolution, tool registry, permissions, filesystem: all Location-scoped. Omitted `Location.workspaceID` = implicit-local placement; explicit workspace identity reserved for future placement semantics.
+- Each step: one explicit `llm.stream` call continuing from reloaded history. No in-memory tool loop.
+- Local Session drains stay process-local until clustering is implemented. `SessionRunCoordinator` joins explicit same-Session resumes, coalesces prompt wakeups, lets different Sessions run concurrently. Write-ahead execution claim marks a process-local busy period for restart recovery: terminal completion, failure, or user interruption releases it; shutdown interruption and process death preserve it. Startup recovery resumes claimed top-level Sessions with durable per-execution attempt accounting. Claim = recovery marker, not clustered ownership, fencing, or an exactly-once guarantee.
+- Delivery vocabulary stays explicit. Prompts steer by default. Safe step boundaries: steered compaction takes priority up to the first steered move control; other steers keep enqueue order. Idle boundary: steers take priority; otherwise exactly one queued item delivers before the runner reevaluates continuation. Inbox items may be cancelled or changed between queue and steer before delivery. Promoting new user input resets the selected agent's step allowance; a steer batch resets it once.
+- One step = one logical LLM call; its durable record covers only the model-visible span. Never write "provider turn"; never use bare "turn" for a single call — "turn" is reserved for the future assistant-turn unit containing all steps from prompt promotion until the session would go idle.
+- Event replay ownership stays separate from clustered Session execution ownership.
 
 ## Communication
 
-- Write plain, direct, concise replies, docs, and commit messages. Avoid filler, staged openers, em-dash chains, and contrived contrasts. Explain necessary jargon once for a nondeveloper without talking down. Never invent facts or certainty.
-- **Complete** means acceptance criteria are met and applicable verification passed. If implementation is finished but checks remain unrun, use **Complete (unverified)**; otherwise **Partial** or **Blocked**. Separate attempted work from confirmed results.
-- **Final task report** (usually <=120 words; expand only for material complexity or risk): **Status** — Complete / Complete (unverified) / Partial / Blocked; **Done** — 1–3 meaningful outcomes; **Verified** — checks actually run and their results, noting material gaps; **Pending** — open issues, risks, or decisions, else "None"; **Next** — highest-value next action and owner, else "None"; **Git** — file/branch/commit/PR state and skipped checks. Lead with the outcome; use this format for task completion, not progress updates.
+- Plain, direct, concise replies, docs, and commit messages. No filler, staged openers, em-dash chains, or contrived contrasts. Explain jargon once for nondevelopers, without talking down. Never invent facts or certainty.
+- **Complete** = acceptance criteria met + applicable verification passed. Implementation finished but checks unrun → **Complete (unverified)**; otherwise **Partial** or **Blocked**. Separate attempted work from confirmed results.
+- **Final task report** (usually <=120 words; expand only for material complexity/risk): **Status** — Complete / Complete (unverified) / Partial / Blocked; **Done** — 1–3 meaningful outcomes; **Verified** — checks actually run + results, noting material gaps; **Pending** — open issues/risks/decisions, else "None"; **Next** — highest-value next action + owner, else "None"; **Git** — file/branch/commit/PR state + skipped checks. Lead with the outcome; use for task completion only, not progress updates.
