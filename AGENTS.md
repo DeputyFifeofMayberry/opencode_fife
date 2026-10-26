@@ -45,6 +45,12 @@ Use a short branch name of at most three words, separated by hyphens. Do not use
 
 Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
 
+## Worktrees
+
+- Before starting work that will produce commits, create a dedicated worktree and branch for the task instead of editing in a checkout another active session may be using. Base it on `origin/dev` and follow Branch Names.
+- Before any Git operation, inspect `git worktree list` and the branch each checkout holds — never assume another checkout's branch. Remove the task worktree and branch after merge.
+- Advance or merge into `dev` only after confirming its state; when `dev` is not checked out in any worktree, fast-forward it with `git branch -f dev <task-branch>` from the task worktree.
+
 ## Git Safety
 
 - Never force-push, rewrite published history, run destructive `git reset`/`git clean`, or discard others' work. If Git state is unclear or an operation could lose data, stop and identify what must be resolved before continuing.
