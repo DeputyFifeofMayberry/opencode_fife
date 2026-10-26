@@ -109,6 +109,7 @@ import type {
   ModelDefaultOutput,
   GenerateTextInput,
   GenerateTextOutput,
+  VoiceModelsOutput,
   VoiceSessionInput,
   VoiceSessionOutput,
   ProviderListInput,
@@ -153,6 +154,8 @@ import type {
   McpDisconnectOutput,
   McpResourceCatalogInput,
   McpResourceCatalogOutput,
+  McpClientTokenInput,
+  McpClientTokenOutput,
   CredentialListOutput,
   CredentialCreateInput,
   CredentialCreateOutput,
@@ -192,6 +195,10 @@ import type {
   FileFindOutput,
   FileWriteInput,
   FileWriteOutput,
+  FileWatchInput,
+  FileWatchOutput,
+  FileUnwatchInput,
+  FileUnwatchOutput,
   CommandListInput,
   CommandListOutput,
   SkillListInput,
@@ -229,6 +236,8 @@ import type {
   ExperimentalPersistentPtyRemoveOutput,
   ExperimentalPersistentPtyConnectTokenInput,
   ExperimentalPersistentPtyConnectTokenOutput,
+  ExperimentalMediaGetInput,
+  ExperimentalMediaGetOutput,
   ShellListInput,
   ShellListOutput,
   ShellCreateInput,
@@ -261,6 +270,8 @@ import type {
   VcsBranchListOutput,
   VcsDiffInput,
   VcsDiffOutput,
+  DebugHeapDumpInput,
+  DebugHeapDumpOutput,
   DebugLocationListOutput,
   DebugLocationEvictInput,
   DebugLocationEvictOutput,
@@ -269,6 +280,8 @@ import type {
   WebsearchProvidersOutput,
   WebsearchQueryInput,
   WebsearchQueryOutput,
+  UsageLimitsInput,
+  UsageLimitsOutput,
   ConfigGetInput,
   ConfigGetOutput,
   ConfigShellsOutput,
@@ -483,7 +496,7 @@ export function make(options: ClientOptions) {
             path: `/api/agent`,
             query: { location: input?.["location"] },
             successStatus: 200,
-            declaredStatuses: [400, 401, 404],
+            declaredStatuses: [400, 401, 404, 503],
             empty: false,
           },
           requestOptions,
@@ -1164,6 +1177,17 @@ export function make(options: ClientOptions) {
         ).then((value) => value.data),
     },
     voice: {
+      models: (requestOptions?: RequestOptions) =>
+        request<{ readonly data: VoiceModelsOutput }>(
+          {
+            method: "GET",
+            path: `/api/experimental/voice/models`,
+            successStatus: 200,
+            declaredStatuses: [400, 401, 404, 503],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
       session: (input: VoiceSessionInput, requestOptions?: RequestOptions) =>
         request<{ readonly data: VoiceSessionOutput }>(
           {
@@ -1451,6 +1475,21 @@ export function make(options: ClientOptions) {
             requestOptions,
           ),
       },
+      client: {
+        token: (input: McpClientTokenInput, requestOptions?: RequestOptions) =>
+          request<McpClientTokenOutput>(
+            {
+              method: "POST",
+              path: `/api/experimental/client-mcp/token`,
+              query: { location: input["location"], name: input["name"] },
+              headers: { "x-opencode-ticket": input["x-opencode-ticket"] },
+              successStatus: 200,
+              declaredStatuses: [400, 401, 403, 404],
+              empty: false,
+            },
+            requestOptions,
+          ),
+      },
     },
     credential: {
       list: (requestOptions?: RequestOptions) =>
@@ -1519,7 +1558,7 @@ export function make(options: ClientOptions) {
             path: `/api/project`,
             query: { archived: input?.["archived"] },
             successStatus: 200,
-            declaredStatuses: [400, 401, 404],
+            declaredStatuses: [400, 401],
             empty: false,
           },
           requestOptions,
@@ -1602,7 +1641,7 @@ export function make(options: ClientOptions) {
               method: "DELETE",
               path: `/api/permission/saved/${encodeURIComponent(input.id)}`,
               successStatus: 204,
-              declaredStatuses: [400, 401, 404],
+              declaredStatuses: [400, 401],
               empty: true,
             },
             requestOptions,
@@ -1712,6 +1751,32 @@ export function make(options: ClientOptions) {
             declaredStatuses: [400, 401, 404],
             empty: false,
             binaryBody: true,
+          },
+          requestOptions,
+        ),
+      watch: (input: FileWatchInput, requestOptions?: RequestOptions) =>
+        request<FileWatchOutput>(
+          {
+            method: "POST",
+            path: `/api/experimental/fs/watch`,
+            query: { location: input["location"] },
+            body: { path: input["path"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401, 404, 503],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      unwatch: (input: FileUnwatchInput, requestOptions?: RequestOptions) =>
+        request<FileUnwatchOutput>(
+          {
+            method: "DELETE",
+            path: `/api/experimental/fs/watch`,
+            query: { location: input["location"] },
+            body: { path: input["path"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401, 404],
+            empty: true,
           },
           requestOptions,
         ),
@@ -1975,6 +2040,20 @@ export function make(options: ClientOptions) {
             requestOptions,
           ).then((value) => value.data),
       },
+      media: {
+        get: (input: ExperimentalMediaGetInput, requestOptions?: RequestOptions) =>
+          request<ExperimentalMediaGetOutput>(
+            {
+              method: "GET",
+              path: `/api/experimental/media/${encodeURIComponent(input.hash)}`,
+              successStatus: 200,
+              declaredStatuses: [400, 401, 404],
+              empty: false,
+              binary: true,
+            },
+            requestOptions,
+          ),
+      },
     },
     shell: {
       list: (input?: ShellListInput, requestOptions?: RequestOptions) =>
@@ -2182,7 +2261,13 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/vcs/diff`,
-            query: { location: input["location"], mode: input["mode"], base: input["base"], context: input["context"] },
+            query: {
+              location: input["location"],
+              mode: input["mode"],
+              base: input["base"],
+              context: input["context"],
+              untracked: input["untracked"],
+            },
             successStatus: 200,
             declaredStatuses: [400, 401, 404, 503],
             empty: false,
@@ -2191,6 +2276,18 @@ export function make(options: ClientOptions) {
         ),
     },
     debug: {
+      heapDump: (input?: DebugHeapDumpInput, requestOptions?: RequestOptions) =>
+        request<DebugHeapDumpOutput>(
+          {
+            method: "POST",
+            path: `/api/debug/heap-dump`,
+            query: { directory: input?.["directory"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 500],
+            empty: false,
+          },
+          requestOptions,
+        ),
       location: {
         list: (requestOptions?: RequestOptions) =>
           request<DebugLocationListOutput>(
@@ -2252,6 +2349,20 @@ export function make(options: ClientOptions) {
             path: `/api/websearch`,
             query: { location: input["location"] },
             body: { query: input["query"], providerID: input["providerID"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 404, 503],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    usage: {
+      limits: (input?: UsageLimitsInput, requestOptions?: RequestOptions) =>
+        request<UsageLimitsOutput>(
+          {
+            method: "GET",
+            path: `/api/experimental/usage/limits`,
+            query: { location: input?.["location"] },
             successStatus: 200,
             declaredStatuses: [400, 401, 404, 503],
             empty: false,
