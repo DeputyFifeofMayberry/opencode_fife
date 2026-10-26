@@ -79,6 +79,21 @@ export const ModelSelected = Event.durable({
 })
 export type ModelSelected = typeof ModelSelected.Type
 
+export const EffortTransitioned = Event.durable({
+  type: "session.effort.transitioned",
+  ...options,
+  schema: {
+    ...Base,
+    /** The decision that produced the transition; an absent effort at standard means the model default. */
+    decision: Schema.Struct({
+      rule: Schema.Literals(["base", "mode-pin", "escalated"]),
+      level: Schema.Literals(["low", "standard", "deep"]),
+      effort: Schema.String.pipe(optional),
+    }),
+  },
+})
+export type EffortTransitioned = typeof EffortTransitioned.Type
+
 export const Moved = Event.durable({
   type: "session.moved",
   ...options,

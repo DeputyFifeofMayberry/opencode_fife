@@ -15194,6 +15194,35 @@
               }
             ]
           },
+          "effort_policy": {
+            "type": "object",
+            "properties": {
+              "verification_commands": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "base_level": {
+                "type": "string",
+                "enum": ["low", "standard", "deep"]
+              },
+              "mutating_tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "agent_operations": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": ["general", "explore", "implement", "plan", "review", "mechanical"]
+                }
+              }
+            },
+            "additionalProperties": false
+          },
           "auto_background_ms": {
             "type": "integer",
             "minimum": 0

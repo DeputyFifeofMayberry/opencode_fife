@@ -2,6 +2,7 @@ export * as EffortStore from "./store.js"
 
 import { eq, sql } from "drizzle-orm"
 import { Context, Effect, Layer } from "effect"
+import { makeGlobalNode } from "@opencode/util/effect/app-node"
 import type { SessionSchema } from "../session/schema.js"
 import { SessionEffortTable } from "../session/sql.js"
 import { Database } from "../database/database.js"
@@ -89,3 +90,6 @@ export const layer = Layer.effect(
     })
   }),
 )
+
+/** Instance-graph node so the runner layer can require the store. */
+export const node = makeGlobalNode({ service: Service, layer, deps: [Database.node] })

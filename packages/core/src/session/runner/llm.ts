@@ -19,6 +19,10 @@ import { SessionSchema } from "../schema.js"
 import { SessionStore } from "../store.js"
 import { SessionMessageTable } from "../sql.js"
 import { SessionTitle } from "../title.js"
+import { EffortStore } from "../../effort/store.js"
+import { EffortTransition } from "../../effort/transition.js"
+import { Config } from "../../config.js"
+import { Model as ModelService } from "../../model.js"
 import { toSessionError } from "../to-session-error.js"
 import { DrainResult, Service, type Interface } from "./index.js"
 import { Snapshot } from "../../snapshot.js"
@@ -50,6 +54,9 @@ const layer = Layer.effect(
     const plugins = yield* Plugin.Service
     const title = yield* SessionTitle.Service
     const steps = yield* SessionStep.make
+    const efforts = yield* EffortStore.Service
+    const config = yield* Config.Service
+    const models = yield* ModelService.Service
     // Title generation starts once input is visible and must not delay model execution.
     const titles = yield* FiberMap.make<SessionSchema.ID, void, never>()
 
@@ -286,8 +293,14 @@ const layer = Layer.effect(
       let recoverContinuation = true
       while (true) {
         // Reuse boundary preparation once; retries refresh context without delivering more input.
-        const loaded = initial ?? (yield* prepareContext(sessionID).pipe(Effect.flatMap(context.load)))
+        const entered = initial ?? (yield* prepareContext(sessionID).pipe(Effect.flatMap(context.load)))
         initial = undefined
+        // The effort policy may switch the session's variant durably; reload so this step's request carries it.
+        const switched = yield* EffortTransition.apply(
+          { bus, store, efforts, config, models },
+          { sessionID, agent: entered.agent.id, resolved: entered.model },
+        )
+        const loaded = switched ? yield* prepareContext(sessionID).pipe(Effect.flatMap(context.load)) : entered
         const estimate = SessionCompaction.estimatePrompt(loaded)
         const compacted = yield* compaction.compact({ reason: "auto", context: loaded, estimate })
         if (compacted.status === "failed") return yield* new StepFailedError({ error: compacted.error })
@@ -501,5 +514,8 @@ export const node = makeLocationNode({
     Snapshot.node,
     ToolOutput.node,
     Database.node,
+    EffortStore.node,
+    Config.node,
+    ModelService.node,
   ],
 })

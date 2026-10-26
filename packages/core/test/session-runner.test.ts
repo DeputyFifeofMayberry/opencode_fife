@@ -82,6 +82,7 @@ import { asc, desc, eq, sql } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
 import { promptLocationNode } from "./fixture/prompt-location"
 import { LocationServiceMap } from "@opencode/core/location-service-map"
+import { EffortStore } from "@opencode/core/effort/store"
 import { Expected } from "./lib/session-message"
 import { permissionLayer } from "./lib/permission"
 import { agentHost, modelHost, host, noProviders } from "./plugin/host"
@@ -109,6 +110,8 @@ const testLLM = TestLLM.layer({
 type ModelLimit = { readonly context: number; readonly input?: number; readonly output: number }
 const defaultModelLimit = { context: 200_000, output: 32_000 }
 const modelLimits = new Map<string, ModelLimit>()
+/** Catalog infos served by the prompt Model.Service mock; policy scenarios register effort variants here. */
+const modelInfos = new Map<string, Model.Info>()
 const testModel = (id: string, limit: ModelLimit = defaultModelLimit) => {
   modelLimits.set(id, limit)
   return LanguageModel.make({ id, provider: "fake", route: OpenAIChat.route })
@@ -405,7 +408,7 @@ const layer = Layer.unwrap(
       }),
     ])
     const promptModels = Layer.mock(Model.Service, {
-      get: () => Effect.undefined,
+      get: (providerID, id) => Effect.succeed(modelInfos.get(`${providerID}/${id}`)),
       all: () => Effect.succeed([]),
       available: () => Effect.succeed([]),
       default: () => Effect.undefined,
@@ -468,6 +471,7 @@ const layer = Layer.unwrap(
         SessionProjector.node,
         SessionStore.node,
         SessionInbox.node,
+        EffortStore.node,
         Agent.node,
         Model.node,
         Tool.node,
@@ -2103,6 +2107,103 @@ describe("SessionRunnerLLM", () => {
         { role: "user" },
       ],
     })
+  })
+
+  const effortModelInfo = () => {
+    modelInfos.set(
+      "fake/fake-model",
+      {
+        ...Model.Info.default(Provider.ID.make("fake"), Model.ID.make("fake-model")),
+        variants: ["low", "high", "max"].map((id) => ({ id: Model.VariantID.make(id) })),
+      },
+    )
+  }
+
+  const subscribeEffortTransitions = (s: Scenario) =>
+    Effect.gen(function* () {
+      const seen = yield* Queue.unbounded<SessionEvent.EffortTransitioned["data"]>()
+      yield* s.bus.subscribe(SessionEvent.EffortTransitioned).pipe(
+        Stream.filter((event) => event.data.sessionID === sessionID),
+        Stream.runForEach((event) => Queue.offer(seen, event.data)),
+        Effect.forkScoped({ startImmediately: true }),
+      )
+      return seen
+    })
+
+  scenario("applies the policy base as a durable variant and records the transition", function* (s) {
+    effortModelInfo()
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "low", revision: 0 })
+    const seen = yield* subscribeEffortTransitions(s)
+
+    yield* s.llm.push(TestLLM.text("First answer", "effort-base-first"))
+    yield* s.runPrompt("First")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("low" as Model.VariantID)
+    const transition = yield* Queue.take(seen)
+    expect(transition.decision).toEqual({ rule: "base", level: "low", effort: "low" })
+    expect((yield* efforts.get(sessionID))?.lastAppliedVariant).toBe("low")
+
+    // The policy's own write is an echo: the next step decides the same and must not re-transition.
+    yield* s.llm.push(TestLLM.text("Second answer", "effort-base-second"))
+    yield* s.runPrompt("Second")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("low" as Model.VariantID)
+    expect(yield* Queue.isFull(seen)).toBe(false)
+  })
+
+  scenario("clears the variant when escalation reaches the model default", function* (s) {
+    effortModelInfo()
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "low", revision: 0 })
+    const seen = yield* subscribeEffortTransitions(s)
+
+    yield* s.llm.push(TestLLM.text("First answer", "effort-clear-first"))
+    yield* s.runPrompt("First")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("low" as Model.VariantID)
+
+    const base = yield* Queue.take(seen)
+    expect(base.decision).toEqual({ rule: "base", level: "low", effort: "low" })
+
+    // The verifier fails; one level above low is standard: the model default, i.e. no variant.
+    yield* efforts.set({
+      sessionID,
+      baseLevel: "low",
+      openFailure: { verifier: "pwsh\0pnpm typecheck\0/work", sequence: 4, revision: 7 },
+      revision: 7,
+      lastAppliedVariant: "low",
+    })
+    yield* s.llm.push(TestLLM.text("Second answer", "effort-clear-second"))
+    yield* s.runPrompt("Second")
+    // Cleared to the model default, which the store reads back as the "default" variant.
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("default" as Model.VariantID)
+    const transition = yield* Queue.take(seen)
+    expect(transition.decision).toEqual({ rule: "escalated", level: "standard" })
+    expect((yield* efforts.get(sessionID))?.lastAppliedVariant).toBeUndefined()
+  })
+
+  scenario("a user pick replaces the policy baseline and is never escalated", function* (s) {
+    effortModelInfo()
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "low", revision: 0 })
+    const seen = yield* subscribeEffortTransitions(s)
+
+    yield* s.llm.push(TestLLM.text("First answer", "effort-pick-first"))
+    yield* s.runPrompt("First")
+    expect((yield* efforts.get(sessionID))?.lastAppliedVariant).toBe("low")
+
+    yield* s.bus.publish(SessionEvent.ModelSelected, {
+      sessionID,
+      model: {
+        id: ID.make("fake-model"),
+        providerID: Provider.ID.make("fake"),
+        variant: Model.VariantID.make("high"),
+      },
+    })
+    yield* s.llm.push(TestLLM.text("Second answer", "effort-pick-second"))
+    yield* s.runPrompt("Second")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("high" as Model.VariantID)
+    expect((yield* efforts.get(sessionID))?.lastAppliedVariant).toBeUndefined()
+    yield* Queue.take(seen)
+    expect(yield* Queue.isFull(seen)).toBe(false)
   })
 
   scenario("preserves instruction values while a source is temporarily unavailable", function* (s) {
