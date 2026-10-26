@@ -19,7 +19,7 @@ import type { StreamOptions } from "@opencode/ai/route"
 import type { SessionCompactionResult } from "@opencode/plugin/effect/session"
 import type { SessionError } from "@opencode/schema/session-error"
 import { makeLocationNode } from "@opencode/util/effect/app-node"
-import { Context, Effect, Exit, Fiber, Layer, Result, Scope, Stream } from "effect"
+import { Clock, Context, Effect, Exit, Fiber, Layer, Result, Scope, Stream } from "effect"
 import { Agent } from "../agent.js"
 import { Bus } from "../bus.js"
 import { Database } from "../database/database.js"
@@ -314,18 +314,38 @@ export const layer = Layer.effect(
       // opens here, before any wait, so a background summary still being written shows as a running compaction.
       if (trigger.reason !== "manual")
         yield* bus.publish(SessionEvent.Compaction.Started, { sessionID: context.session.id, reason: "auto" })
+      const startedAt = yield* Clock.currentTimeMillis
       const swapped = held ? yield* usePrecomputed(selected, held, budget, settings) : undefined
       const compaction = swapped
         ? Effect.succeed(swapped)
         : native
           ? compactNatively(selected, budget, settings.keep)
           : summarize(selected, budget, settings.keep)
-      return yield* compaction.pipe(
+      const outcome = yield* compaction.pipe(
         Effect.matchEffect({
           onSuccess: (result) => publish(selected, result),
           onFailure: (failure) => publish(selected, failure),
         }),
       )
+      const usage = spent.get(context.session.id)
+      yield* Effect.logInfo("session compaction", {
+        sessionID: context.session.id,
+        reason: trigger.reason,
+        model: context.model.ref,
+        estimate: total(trigger.reason === "manual" ? estimatePrompt(context) : (trigger.estimate ?? estimatePrompt(context))),
+        budget,
+        keep: settings.keep,
+        precomputed: held !== undefined,
+        precomputedUsed: swapped !== undefined,
+        status: outcome.status,
+        durationMs: (yield* Clock.currentTimeMillis) - startedAt,
+        input: usage?.tokens.input,
+        cacheRead: usage?.tokens.cache.read,
+        cacheWrite: usage?.tokens.cache.write,
+        output: usage?.tokens.output,
+        cost: usage?.cost,
+      })
+      return outcome
     })
 
     /**
@@ -469,26 +489,46 @@ export const layer = Layer.effect(
       const filled = (text: string) => text.split("\n").some((line) => headings.includes(line.trim()))
       const prepared = yield* prepare(context, messages, budget)
 
-      // Hooks saw the request without the summary prompt, so it is appended here. A reply that ignores the
-      // template gets one reminder before it counts as a failure. The tools stay in the request so the history
-      // and prompt cache still match, but the model must answer in text: a tool call leaves the summary empty.
+      // Hooks saw the request without the summary prompt, so it is appended here. The first attempt leaves
+      // `toolChoice` at the conversation's default: forcing `"none"` changes the provider's prompt-cache scope
+      // on some gateways, so the summary would stop reusing the transcript and pay full price for it. A reply
+      // that ignores the template, including one that calls a tool, is retried once with `"none"` and a
+      // reminder. Only that retry pays the cache miss.
       const send = (request: LLMRequest) =>
         Effect.gen(function* () {
+          const logAttempt = (attempt: number, text: string, startedAt: number) =>
+            Effect.gen(function* () {
+              yield* Effect.logInfo("session compaction summary", {
+                sessionID: context.session.id,
+                reason: trigger.reason,
+                attempt,
+                filled: filled(text),
+                chars: text.length,
+                durationMs: (yield* Clock.currentTimeMillis) - startedAt,
+                background: background !== undefined,
+              })
+            })
           const prompted = fitOutput(
             LLMRequest.update(request, {
               messages: [...request.messages, Message.user(prompt)],
+            }),
+            context.model.limit,
+          )
+          const attemptStartedAt = yield* Clock.currentTimeMillis
+          const reply = yield* stream(context, prompted, prepared.options, background)
+          yield* logAttempt(1, reply.text, attemptStartedAt)
+          if (filled(reply.text)) return reply
+
+          const nudged = fitOutput(
+            LLMRequest.update(prompted, {
+              messages: [...prompted.messages, Message.user(NUDGE)],
               toolChoice: ToolChoice.make("none"),
             }),
             context.model.limit,
           )
-          const reply = yield* stream(context, prompted, prepared.options, background)
-          if (filled(reply.text)) return reply
-
-          const nudged = fitOutput(
-            LLMRequest.update(prompted, { messages: [...prompted.messages, Message.user(NUDGE)] }),
-            context.model.limit,
-          )
+          const retryStartedAt = yield* Clock.currentTimeMillis
           const retry = yield* stream(context, nudged, prepared.options, background)
+          yield* logAttempt(2, retry.text, retryStartedAt)
           if (filled(retry.text)) return retry
           return yield* Effect.fail<Failure>({
             error: {
@@ -538,7 +578,8 @@ export const layer = Layer.effect(
       keep: number,
     ): Effect.fn.Return<Result, Failure> {
       const context = trigger.context
-      if (!context.messages.some(SessionRecentText.messageToText)) return yield* Effect.fail(NOTHING_TO_COMPACT)
+      if (!context.messages.some((message) => SessionRecentText.messageToText(message)))
+        return yield* Effect.fail(NOTHING_TO_COMPACT)
       const unsupported = (message: string) =>
         Effect.fail<Failure>({ error: { type: "provider.unsupported-operation", message } })
       const prepared = yield* prepare(context, context.messages, budget, "session")
@@ -944,7 +985,13 @@ const heldIndex = (held: Precomputed, context: SessionContext.Loaded) => {
 
 /** Estimated text a swapped-in summary keeps verbatim: every message from `index` on. */
 const tailTokens = (context: SessionContext.Loaded, index: number) =>
-  Token.estimate(context.messages.slice(index).map(SessionRecentText.messageToText).filter(Boolean).join("\n\n"))
+  Token.estimate(
+    context.messages
+      .slice(index)
+      .map((message) => SessionRecentText.messageToText(message))
+      .filter(Boolean)
+      .join("\n\n"),
+  )
 
 const tailLimit = (keep: number, budget: number) =>
   Math.min(Math.max(keep * 2, PRECOMPUTED_TAIL_MIN), Math.floor(budget * PRECOMPUTED_TAIL_SHARE))

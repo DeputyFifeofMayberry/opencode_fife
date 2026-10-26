@@ -44,6 +44,8 @@ import { asc, eq, inArray, sql } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
 
 let requests: LLMRequest[] = []
+/** Replies queued for the next summary calls; an empty queue uses the valid default summary. */
+let replies: string[] = []
 /** Runs before a request's response streams; tests hold it back to keep a background summary in flight. */
 let beforeResponse: Effect.Effect<void> = Effect.void
 const model = LanguageModel.make({
@@ -64,11 +66,12 @@ const cost = [
 const client = Layer.mock(LLMClient.Service)({
   stream: (request: LLMRequest) => {
     requests.push(request)
+    const text = replies.shift() ?? "## Objective\n- manual summary"
     return Stream.fromEffect(beforeResponse).pipe(
       Stream.drain,
       Stream.concat(
         Stream.make(
-          LLMEvent.textDelta({ id: "summary", text: "## Objective\n- manual summary" }),
+          LLMEvent.textDelta({ id: "summary", text }),
           LLMEvent.stepFinish({
             index: 0,
             reason: { normalized: "stop" },
@@ -696,7 +699,7 @@ it.effect("manual compaction summarizes short context instead of no-op", () =>
       "x-opencode-client": "opencode",
     })
     expect(requests[0]?.generation).toEqual(GenerationOptions.make({ maxTokens: 30_000 }))
-    expect(requests[0]?.toolChoice?.type).toBe("none")
+    expect(requests[0]?.toolChoice).toBeUndefined()
     expect(JSON.stringify(requests[0]?.messages)).toContain("Manual compaction should include this short conversation.")
     expect(JSON.stringify(requests[0]?.messages)).toContain("Use Effect services and generators.")
     expect(JSON.stringify(requests[0]?.messages)).toContain("User shell pwd completed: /project")
@@ -731,6 +734,23 @@ it.effect("manual compaction summarizes short context instead of no-op", () =>
       { type: Bus.versionedType(SessionEvent.Compaction.Ended.type, 1) },
     ])
   }),
+)
+
+it.effect("summary keeps the conversation's tool choice, then forces text only on retry", () =>
+  Effect.gen(function* () {
+    requests = []
+    replies = ["I will inspect the repository instead.", "## Objective\n- retried summary"]
+    const session = yield* insertSession(Session.ID.make("ses_compaction_retry"))
+    const messages = [textUser("Retry the summary.")]
+    expect(yield* compactManually(session, messages)).toEqual({ status: "completed" })
+    expect(requests).toHaveLength(2)
+    // The first attempt matches the conversation's own request so the provider can reuse its cached prefix.
+    expect(requests[0]?.toolChoice).toBeUndefined()
+    expect(JSON.stringify(requests[0]?.messages.at(-1))).toContain("Summarize only what")
+    // Only the retry forces text, accepting the cache miss because the model did not return a summary.
+    expect(requests[1]?.toolChoice?.type).toBe("none")
+    expect(JSON.stringify(requests[1]?.messages.at(-1))).toContain("previous response did not fill in")
+  }).pipe(Effect.ensuring(Effect.sync(() => (replies = [])))),
 )
 
 it.effect("summary updates include the retained tail in compaction hooks and the model request", () =>

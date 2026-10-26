@@ -2,7 +2,7 @@ export * as SessionRunnerLLM from "./llm.js"
 
 import { Message } from "@opencode/ai/effect"
 import { and, desc, eq, inArray, sql } from "drizzle-orm"
-import { Cause, Effect, Exit, FiberMap, Layer } from "effect"
+import { Cause, Clock, DateTime, Effect, Exit, FiberMap, Layer } from "effect"
 import { Database } from "../../database/database.js"
 import { Bus } from "../../bus.js"
 import { LocationLifecycle } from "../../location-lifecycle.js"
@@ -183,15 +183,89 @@ const layer = Layer.effect(
         ),
       )
 
-      while (true) {
-        const next = yield* advanceToStep()
-        if (next._tag !== "Ready") return next
-        continuing = yield* runStep(next.context, step)
-        step++
-        force = false
-        entering = false
-      }
+      const startedAt = yield* Clock.currentTimeMillis
+      const session = yield* store.get(sessionID)
+      const idleAt = session?.time.idle === undefined ? undefined : DateTime.toEpochMillis(session.time.idle)
+      let checkpoint = false
+      let estimatedPrompt: number | undefined
+      let firstStep:
+        | {
+            readonly prompt: number
+            readonly input: number
+            readonly cacheRead: number
+            readonly cacheWrite: number
+            readonly output: number
+            readonly reasoning: number
+            readonly cost: unknown
+          }
+        | undefined
+      let stepCount = 0
+
+      return yield* Effect.gen(function* () {
+        while (true) {
+          const next = yield* advanceToStep()
+          if (next._tag !== "Ready") return next
+          if (stepCount === 0) {
+            checkpoint = next.context.messages[0]?.type === "compaction"
+            estimatedPrompt = SessionCompaction.estimateContext(next.context)
+          }
+          continuing = yield* runStep(next.context, step)
+          step++
+          stepCount++
+          if (stepCount === 1) firstStep = yield* firstStepUsage(sessionID)
+          force = false
+          entering = false
+        }
+      }).pipe(
+        Effect.ensuring(
+          Effect.gen(function* () {
+            if (stepCount === 0) return
+            const endedAt = yield* Clock.currentTimeMillis
+            yield* Effect.logInfo("session resume", {
+              sessionID,
+              idleMs: idleAt === undefined ? undefined : startedAt - idleAt,
+              checkpoint,
+              estimatedPrompt,
+              steps: stepCount,
+              firstStep,
+              durationMs: endedAt - startedAt,
+            })
+          }),
+        ),
+      )
     })
+
+    /**
+     * Usage of the most recent assistant message, which after the first Step is that Step's response. Decoding is
+     * best effort: resume telemetry must never fail the drain it describes.
+     */
+    const firstStepUsage = (sessionID: SessionSchema.ID) =>
+      Effect.gen(function* () {
+        const row = yield* db
+          .select()
+          .from(SessionMessageTable)
+          .where(
+            and(eq(SessionMessageTable.session_id, sessionID), eq(SessionMessageTable.type, "assistant")),
+          )
+          .orderBy(desc(SessionMessageTable.seq))
+          .limit(1)
+          .get()
+          .pipe(Effect.orElseSucceed(() => undefined))
+        if (!row) return undefined
+        const message = yield* Effect.try(() => SessionHistory.decodeMessageRowSync(row)).pipe(
+          Effect.orElseSucceed(() => undefined),
+        )
+        if (message?.type !== "assistant" || !message.tokens) return undefined
+        return {
+          prompt: message.tokens.input + message.tokens.cache.read + message.tokens.cache.write,
+          input: message.tokens.input,
+          cacheRead: message.tokens.cache.read,
+          cacheWrite: message.tokens.cache.write,
+          output: message.tokens.output,
+          reasoning: message.tokens.reasoning,
+          cost: message.cost,
+        }
+      })
 
     const prepareContext = Effect.fn("SessionRunner.prepareContext")(function* (sessionID: SessionSchema.ID) {
       // Plugins can reload mid-turn; each step and retry must read the settled agents, models and skills.
