@@ -5,7 +5,7 @@
 
 ## Agent Skills
 
-- Skills live in `.opencode/skills/<name>/SKILL.md`; shared checklists live in `.opencode/references/` (Definition of Done, testing patterns, security, performance, accessibility, observability, orchestration).
+- Skills live in `.opencode/skills/<name>/SKILL.md`; shared checklists live in `.opencode/references/` (`definition-of-done`, testing, security, performance, accessibility, observability, orchestration).
 - If a task matches a skill, invoke it and follow it exactly — do not partially apply it or reimplement it from memory. Never skip a matching skill because the task seems small or quick; if routing is unclear, read `using-agent-skills`.
 - Route intent to skills: feature or significant change → `spec-driven-development`, then `incremental-implementation` + `test-driven-development` (plan first with `planning-and-task-breakdown` when multi-step); bug or unexpected behavior → `debugging-and-error-recovery`; review before merge → `code-review-and-quality`; refactor for clarity → `code-simplification`; API/interface design → `api-and-interface-design`; UI work → `frontend-ui-engineering`; security → `security-and-hardening`; performance → `performance-optimization`; launch → `shipping-and-launch`.
 - The Definition of Done (`.opencode/references/definition-of-done.md`) is the project-wide completion bar for every change, on top of per-task acceptance criteria.
@@ -20,8 +20,7 @@
 
 ## Live TUI Testing
 
-- Run `bun run dev:live` from a development worktree to test its TUI against the currently elected `opencode` background server and live sessions.
-- Pass a directory after the script when needed, for example `bun run dev:live /path/to/project`.
+- Run `bun run dev:live` from a development worktree to test its TUI against the currently elected `opencode` background server and live sessions; pass a directory after the script when needed (`bun run dev:live /path/to/project`).
 - The script discovers the server with `opencode service status`, injects its private local credential from `opencode service get password`, and uses the `dev` TUI storage channel so tabs and other client-local state match the installed client.
 - Prefer `dev:live` over plain `bun run dev` for this workflow. An implicit managed-service connection may replace the live server when the worktree client version differs; explicit `--server` warns and continues without replacing it.
 
@@ -41,9 +40,7 @@
 
 ## Branch Names
 
-Use a short branch name of at most three words, separated by hyphens. Do not use slashes or type prefixes such as `feat/` or `fix/`.
-
-Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
+Branch names are at most three short words, hyphen-separated — no slashes or type prefixes such as `feat/`. Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
 
 ## Worktrees
 
@@ -58,15 +55,13 @@ Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
 
 ## Commits and PR Titles
 
-Use conventional commit-style messages and PR titles: `type(scope): summary`.
-
-Valid types are `feat`, `fix`, `docs`, `chore`, `refactor`, and `test`. Scopes are optional; use the affected package or area when helpful, e.g. `core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, or `plugin`.
+Use conventional commit-style messages and PR titles: `type(scope): summary`. Valid types are `feat`, `fix`, `docs`, `chore`, `refactor`, and `test`; scopes are optional — use the affected package or area when helpful (`core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, `plugin`).
 
 Examples: `fix(tui): simplify thinking toggle styling`, `docs: update contributing guide`, `chore(sdk): regenerate types`.
 
 Before committing, inspect status and diff, stage only the files the task touched, and exclude secrets, credentials, and unnecessary artifacts.
 
-For user-facing `feat`, `fix` and `perf` PRs, add a small looping animated SVG of the change under `### Visual` in the PR body (a `svg` code block, 240×72, for example a dock growing out of the composer or spinners turning in step). Draw with `currentColor` and opacity so it works in light and dark, make the unanimated state a good still (it is shown under reduced motion), animate with CSS or SMIL only, and keep it under 8 KB with no scripts or external references. The desktop beta's "What's new" dialog shows it.
+For user-facing `feat`, `fix`, and `perf` PRs, add a small looping animated SVG of the change under `### Visual` in the PR body (240×72 `svg` code block, e.g. a dock growing out of the composer or spinners turning in step). Draw with `currentColor` and opacity so it works in light and dark; make the unanimated state a good still (shown under reduced motion); animate with CSS or SMIL only; keep it under 8 KB with no scripts or external references. The desktop beta's "What's new" dialog shows it.
 
 ## Style Guide
 
@@ -165,8 +160,7 @@ function requireConfig(input: unknown) {
 }
 ```
 
-- Keep helpers close to the code they support, below the main export when that improves readability.
-- Do not over-abstract simple expressions into many single-use helpers; extract only when it names a real concept like `requireConfig` or `readMetadata`.
+- Keep helpers close to the code they support, below the main export when that improves readability; extract only when the helper names a real concept like `requireConfig` or `readMetadata`.
 - Do not return `Effect` from helpers unless they actually perform effectful work. Synchronous parsing, validation, and option building should stay synchronous.
 - Prefer Effect schema helpers such as `Schema.UnknownFromJsonString` and `Schema.decodeUnknownOption` over manual `JSON.parse` wrapped in `Effect.try` when parsing untrusted JSON strings.
 - Add comments for non-obvious constraints and surprising behavior, not for obvious assignments or control flow.
@@ -193,8 +187,8 @@ const table = sqliteTable("session", {
 
 ## Testing
 
-- Avoid mocks as much as possible, you shouldn't be using globalThis.\* at all unless it's the only option.
-- Test actual implementation, do not duplicate logic into tests
+- Avoid mocks as much as possible; never use `globalThis.*` unless it's the only option.
+- Test the actual implementation; do not duplicate logic into tests.
 - Tests cannot run from repo root (guard: `do-not-run-tests-from-root`); run from package directories such as `packages/core`.
 - Before writing or changing tests, read the matching skill in `.opencode/skills`: `unit-tests` (bun test), `tui-tests` (OpenTUI renderer tests), `app-e2e-tests` (Playwright in `packages/app/e2e`) or `component-tests` (Playwright on stories, `packages/stories`). They cover what has made tests slow or flaky in CI.
 
@@ -202,8 +196,8 @@ const table = sqliteTable("session", {
 
 - Run `bun run check` from the repository root as the canonical full lint and type-check verification.
 - During focused iteration, run `bun typecheck` from the affected package directory (for example, `packages/core`). Never run `tsc` directly.
-- Local `typecheck` scripts use `bun check`. CI and package publishing run `typecheck:tsc`, which uses the official TypeScript compiler (`@typescript/native`). When the two disagree, `tsc` is the source of truth; reproduce with `bun run typecheck:tsc` from the package directory.
-- `bun check` aims to match TypeScript 7.1, not the `7.0.2` that `process.versions.typescript` reports (oven-sh/bun#46536). When `bun check` and `tsc` from the pinned `@typescript/native` report different errors, file a minimal, dependency-free repro at https://github.com/oven-sh/bun/issues, with the output of both. `bun check` writes no declaration files, so declaration-emit errors such as TS5088 or TS2883 are expected to appear only in `tsc`; do not report those.
+- Local `typecheck` scripts use `bun check`. CI and package publishing run `typecheck:tsc`, the official TypeScript compiler (`@typescript/native`). When the two disagree, `tsc` is the source of truth; reproduce with `bun run typecheck:tsc` from the package directory.
+- `bun check` aims to match TypeScript 7.1, not the `7.0.2` that `process.versions.typescript` reports (oven-sh/bun#46536), and writes no declaration files, so declaration-emit errors such as TS5088 or TS2883 appear only in `tsc`; do not report those. If the two differ otherwise, file a minimal, dependency-free repro at https://github.com/oven-sh/bun/issues with the output of both.
 - Never claim an unrun or failed check passed, and never weaken checks to manufacture a pass.
 
 ## Session Core
