@@ -13,7 +13,11 @@ export const kept = (message: SessionMessage.CompactionCompleted) =>
   typeof message.metadata?.recent === "string" ? message.metadata.recent : ""
 
 /** One message as the recent, verbatim part of a summary shows it. Empty for messages that part leaves out. */
-export const messageToText = (message: SessionMessage.Info | SessionStored.User): string => {
+export const messageToText = (
+  message: SessionMessage.Info | SessionStored.User,
+  options?: { readonly toolOutputMaxChars?: number },
+): string => {
+  const toolOutputMaxChars = options?.toolOutputMaxChars ?? TOOL_OUTPUT_MAX_CHARS
   switch (message.type) {
     // Earlier summaries and instruction updates are handled outside the recent part.
     case "compaction":
@@ -47,7 +51,7 @@ export const messageToText = (message: SessionMessage.Info | SessionStored.User)
           const input = typeof part.state.input === "string" ? part.state.input : JSON.stringify(part.state.input)
           const call = `[Assistant tool call]: ${part.name}(${input})`
           if (part.state.status === "completed") {
-            return [call, `[Tool result]: ${truncateToolOutput(serializeToolContent(part.state.content))}`]
+            return [call, `[Tool result]: ${truncateToolOutput(serializeToolContent(part.state.content), toolOutputMaxChars)}`]
           }
           if (part.state.status === "error") return [call, `[Tool error]: ${part.state.error.message}`]
           return [call]
@@ -62,21 +66,23 @@ export const messageToText = (message: SessionMessage.Info | SessionStored.User)
 
     case "shell":
       if (message.metadata?.background === true) return ""
-      return `[Shell]: ${message.command}\n${truncateToolOutput(message.output?.output ?? "")}`
+      return `[Shell]: ${message.command}\n${truncateToolOutput(message.output?.output ?? "", toolOutputMaxChars)}`
 
     default:
       return ""
   }
 }
 
-export const truncateToolOutput = (value: string) => {
-  if (value.length <= TOOL_OUTPUT_MAX_CHARS) return value
+export const truncateToolOutput = (value: string, max = TOOL_OUTPUT_MAX_CHARS) => truncateText(value, max)
 
-  // Count code points so a surrogate pair is never split.
+/** Bound a value by code points so a surrogate pair is never split. */
+export const truncateText = (value: string, max: number) => {
+  if (value.length <= max) return value
+
   let end = 0
   let kept = 0
   for (const char of value) {
-    if (kept === TOOL_OUTPUT_MAX_CHARS) break
+    if (kept === max) break
     end += char.length
     kept++
   }

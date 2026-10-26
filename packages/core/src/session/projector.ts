@@ -15,6 +15,7 @@ import { InstructionState } from "./instruction-state.js"
 import { SessionBlob } from "./blob.js"
 import { SessionInboxTable, SessionMessageTable, SessionTable } from "./sql.js"
 import { SessionStored } from "./stored.js"
+import { SessionTranscript } from "./transcript.js"
 import { InstructionEntry } from "./instruction-entry.js"
 import { Slug } from "../util/slug.js"
 import { FSUtil } from "@opencode/util/fs-util"
@@ -273,6 +274,11 @@ function run(db: DatabaseService, event: MessageEvent) {
       // the same message when it extracted nothing, so streaming updates skip the ref tables entirely.
       if (event.type === SessionEvent.MessageContentUpdated.type) yield* SessionBlob.syncRefs(db, owner, data)
       else if (stored !== message) yield* SessionBlob.recordRefs(db, owner, data)
+      yield* SessionTranscript.index(db, {
+        sessionID: event.data.sessionID,
+        seq: updated.seq,
+        message,
+      })
     })
     const appendMessage = (message: SessionMessage.Info) => insertMessage(db, event, message)
     const adapter: SessionMessageUpdater.Adapter = {
@@ -439,6 +445,11 @@ const insertMessage = Effect.fnUntraced(function* (
     { sessionID: event.data.sessionID, messageID: message.id, seq: event.durable.seq },
     data,
   )
+  yield* SessionTranscript.index(db, {
+    sessionID: event.data.sessionID,
+    seq: event.durable.seq,
+    message,
+  })
 })
 
 function projectIdle(

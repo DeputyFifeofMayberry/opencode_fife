@@ -57,6 +57,7 @@ import { ModelsDev } from "../models-dev.js"
 import { Mcp } from "../mcp/index.js"
 import { Npm } from "@opencode/util/npm"
 import { Permission } from "../permission.js"
+import { Database } from "../database/database.js"
 import { Reference } from "../reference.js"
 import { WebSearch } from "../websearch.js"
 import { Ripgrep } from "../ripgrep.js"
@@ -79,6 +80,7 @@ import { OpenCodeTools } from "../tool/plugin/opencode.js"
 import { QuestionTool } from "../tool/plugin/question.js"
 import { ReadToolFileSystem } from "../tool/read-filesystem.js"
 import { ReadTool } from "../tool/plugin/read.js"
+import { SessionTool } from "../tool/plugin/session.js"
 import { ShellTool } from "../tool/plugin/shell.js"
 import { SkillTool } from "../tool/plugin/skill.js"
 import { SubagentTool } from "../tool/plugin/subagent.js"
@@ -116,6 +118,7 @@ const services = [
   Command.Service,
   Config.Service,
   Credential.Service,
+  Database.Service,
   Bus.Service,
   Environment.Service,
   FileAccess.Service,
@@ -171,6 +174,7 @@ export const requirements = LayerNode.group([
   Command.node,
   Config.node,
   Credential.node,
+  Database.node,
   Bus.node,
   Environment.node,
   FileAccess.node,
@@ -245,6 +249,7 @@ const pre = [
   McpResourceTools.Plugin,
   QuestionTool.Plugin,
   ReadTool.Plugin,
+  SessionTool.Plugin,
   ShellTool.Plugin,
   SkillTool.Plugin,
   SubagentTool.Plugin,

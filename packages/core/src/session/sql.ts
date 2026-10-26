@@ -102,6 +102,29 @@ export const SessionMessageTable = sqliteTable(
   ],
 )
 
+/**
+ * The searchable rendering of each completed message. FTS5 indexes `text` through a runtime-created external
+ * content table and triggers, because drizzle cannot express virtual tables; this table is the durable source.
+ */
+export const SessionMessageTextTable = sqliteTable(
+  "session_message_text",
+  {
+    message_id: text()
+      .$type<SessionMessage.ID>()
+      .primaryKey()
+      .references(() => SessionMessageTable.id, { onDelete: "cascade" }),
+    session_id: text()
+      .$type<SessionSchema.ID>()
+      .notNull()
+      .references(() => SessionTable.id, { onDelete: "cascade" }),
+    seq: integer().notNull(),
+    type: text().$type<SessionMessage.Type>().notNull(),
+    time_created: integer().notNull(),
+    text: text().notNull(),
+  },
+  (table) => [index("session_message_text_session_seq_idx").on(table.session_id, table.seq)],
+)
+
 export const SessionInboxTable = sqliteTable(
   "session_inbox",
   {

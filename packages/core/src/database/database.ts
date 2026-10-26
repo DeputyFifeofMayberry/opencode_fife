@@ -9,6 +9,7 @@ import { closeSync, existsSync, openSync } from "node:fs"
 import { chmod } from "node:fs/promises"
 import { isAbsolute, join } from "path"
 import { DatabaseMigration } from "./migration.js"
+import { DatabaseFts } from "./fts.js"
 import { makeGlobalNode } from "@opencode/util/effect/app-node"
 
 const makeDatabase = EffectDrizzleSqlite.makeWithDefaults()
@@ -46,7 +47,12 @@ const databaseLayer = (lock: Effect.Effect<Semaphore.Semaphore>) =>
       // Durable Object SQLite always enforces foreign keys and rejects the pragma.
       if (supportsForeignKeyToggle) yield* db.run("PRAGMA foreign_keys = ON")
       const semaphore = yield* lock
-      yield* semaphore.withPermit(DatabaseMigration.apply(db))
+      yield* semaphore.withPermit(
+        Effect.gen(function* () {
+          yield* DatabaseMigration.apply(db)
+          yield* DatabaseFts.bootstrap(db)
+        }),
+      )
 
       return { db }
     }).pipe(Effect.orDie),
