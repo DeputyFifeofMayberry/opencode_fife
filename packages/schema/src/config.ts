@@ -8,6 +8,7 @@ import { ConfigAgent } from "./config/agent.js"
 import { ConfigMedia } from "./config/media.js"
 import { ConfigCompaction } from "./config/compaction.js"
 import { ConfigCommand } from "./config/command.js"
+import { ConfigEffort } from "./config/effort.js"
 import { ConfigExperimental } from "./config/experimental.js"
 import { ConfigFormatter } from "./config/formatter.js"
 import { ConfigHooks } from "./config/hooks.js"
@@ -112,6 +113,9 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   }),
   warming: ConfigWarming.Warming.pipe(optional).annotate({
     description: "Keep recently active sessions warm with transient model requests (default: false)",
+  }),
+  effort_policy: ConfigEffort.Info.pipe(optional).annotate({
+    description: "Automatic reasoning-effort policy: verification-driven escalation, delegation minimums, plan pin",
   }),
   auto_background_ms: NonNegativeInt.pipe(optional).annotate({
     description:

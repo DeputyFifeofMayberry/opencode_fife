@@ -149,3 +149,33 @@ describe("Config.Entry", () => {
     expect(encoded.info.providers?.custom).not.toHaveProperty("canonical")
   })
 })
+
+describe("Config.Effort", () => {
+  const decode = Schema.decodeUnknownSync(Config.Info)
+
+  test("round-trips the effort policy section", () => {
+    const input = {
+      effort_policy: {
+        verification_commands: ["pnpm typecheck", "pnpm test"],
+        base_level: "low",
+        mutating_tools: ["write", "edit"],
+        agent_operations: { reviewer: "review", scripts: "mechanical" },
+      },
+    } as const
+    const decoded = decode(input)
+    expect(decoded.effort_policy?.base_level).toBe("low")
+    expect(Schema.encodeSync(Config.Info)(decoded)).toEqual(input)
+  })
+
+  test("omits the section when absent or empty", () => {
+    expect(Schema.encodeSync(Config.Info)(new Config.Info({ effort_policy: undefined }))).not.toHaveProperty(
+      "effort_policy",
+    )
+  })
+
+  test("rejects unknown levels and operations", () => {
+    expect(() => decode({ effort_policy: { base_level: "maximum" } })).toThrow()
+    expect(() => decode({ effort_policy: { agent_operations: { reviewer: "audit" } } })).toThrow()
+    expect(() => decode({ effort_policy: { verification_commands: "pnpm typecheck" } })).toThrow()
+  })
+})
