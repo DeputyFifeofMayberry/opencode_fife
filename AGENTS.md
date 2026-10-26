@@ -9,6 +9,14 @@
 - If a task matches a skill, invoke it and follow it exactly — do not partially apply it or reimplement it from memory. Never skip a matching skill because the task seems small or quick; if routing is unclear, read `using-agent-skills`.
 - Route intent to skills: feature or significant change → `spec-driven-development`, then `incremental-implementation` + `test-driven-development` (plan first with `planning-and-task-breakdown` when multi-step); bug or unexpected behavior → `debugging-and-error-recovery`; review before merge → `code-review-and-quality`; refactor for clarity → `code-simplification`; API/interface design → `api-and-interface-design`; UI work → `frontend-ui-engineering`; security → `security-and-hardening`; performance → `performance-optimization`; launch → `shipping-and-launch`.
 - The Definition of Done (`.opencode/references/definition-of-done.md`) is the project-wide completion bar for every change, on top of per-task acceptance criteria.
+- Skill and reference docs guide but do not override explicit requirements in this file; read only the sections relevant to the task.
+
+## Workflow
+
+- **Inspect:** read the relevant code, tests, and callers; check branch and worktree state; preserve existing changes and untracked files. For nontrivial tasks, define scope and acceptance criteria and clarify consequential ambiguity.
+- **Implement:** the simplest correct change. Preserve interfaces, module boundaries, compatibility, and data; keep unrelated work and speculative abstraction out of scope.
+- **Protect:** handle meaningful failures, edge cases, permissions, and security risks. Never conceal errors.
+- **Verify:** run the relevant checks, fix failures and rerun them, inspect the final diff, and update affected docs.
 
 ## Live TUI Testing
 
@@ -37,6 +45,10 @@ Use a short branch name of at most three words, separated by hyphens. Do not use
 
 Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
 
+## Git Safety
+
+- Never force-push, rewrite published history, run destructive `git reset`/`git clean`, or discard others' work. If Git state is unclear or an operation could lose data, stop and identify what must be resolved before continuing.
+
 ## Commits and PR Titles
 
 Use conventional commit-style messages and PR titles: `type(scope): summary`.
@@ -44,6 +56,8 @@ Use conventional commit-style messages and PR titles: `type(scope): summary`.
 Valid types are `feat`, `fix`, `docs`, `chore`, `refactor`, and `test`. Scopes are optional; use the affected package or area when helpful, e.g. `core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, or `plugin`.
 
 Examples: `fix(tui): simplify thinking toggle styling`, `docs: update contributing guide`, `chore(sdk): regenerate types`.
+
+Before committing, inspect status and diff, and stage only the files the task touched.
 
 For user-facing `feat`, `fix` and `perf` PRs, add a small looping animated SVG of the change under `### Visual` in the PR body (a `svg` code block, 240×72, for example a dock growing out of the composer or spinners turning in step). Draw with `currentColor` and opacity so it works in light and dark, make the unanimated state a good still (it is shown under reduced motion), animate with CSS or SMIL only, and keep it under 8 KB with no scripts or external references. The desktop beta's "What's new" dialog shows it.
 
@@ -183,6 +197,7 @@ const table = sqliteTable("session", {
 - During focused iteration, run `bun typecheck` from the affected package directory (for example, `packages/core`). Never run `tsc` directly.
 - Local `typecheck` scripts use `bun check`. CI and package publishing run `typecheck:tsc`, which uses the official TypeScript compiler (`@typescript/native`). When the two disagree, `tsc` is the source of truth; reproduce with `bun run typecheck:tsc` from the package directory.
 - `bun check` aims to match TypeScript 7.1, not the `7.0.2` that `process.versions.typescript` reports (oven-sh/bun#46536). When `bun check` and `tsc` from the pinned `@typescript/native` report different errors, file a minimal, dependency-free repro at https://github.com/oven-sh/bun/issues, with the output of both. `bun check` writes no declaration files, so declaration-emit errors such as TS5088 or TS2883 are expected to appear only in `tsc`; do not report those.
+- Never claim an unrun or failed check passed, and never weaken checks to manufacture a pass.
 
 ## Session Core
 
@@ -196,3 +211,9 @@ const table = sqliteTable("session", {
 - Keep delivery vocabulary explicit. Prompts steer by default. At safe step boundaries, steered compaction takes priority up to the first steered move control; other steers retain enqueue order. At an idle boundary, steers take priority; otherwise exactly one queued item delivers before the runner reevaluates continuation. Inbox items may be cancelled or changed between queue and steer before delivery. Promoting new user input resets the selected agent's step allowance; a batch of steers resets it once.
 - One step is one logical LLM call; its durable record covers only the model-visible span. Do not write "provider turn", and do not use bare "turn" for a single call: "turn" is reserved for the future assistant-turn unit containing all steps from prompt promotion until the session would go idle.
 - Keep event replay ownership separate from clustered Session execution ownership.
+
+## Communication
+
+- Write plain, direct, concise replies, docs, and commit messages. Avoid filler, staged openers, em-dash chains, and contrived contrasts. Explain necessary jargon once for a nondeveloper without talking down. Never invent facts or certainty.
+- **Complete** means acceptance criteria are met and applicable verification passed. If implementation is finished but checks remain unrun, use **Complete (unverified)**; otherwise **Partial** or **Blocked**. Separate attempted work from confirmed results.
+- **Final task report** (usually <=120 words; expand only for material complexity or risk): **Status** — Complete / Complete (unverified) / Partial / Blocked; **Done** — 1–3 meaningful outcomes; **Verified** — checks actually run and their results, noting material gaps; **Pending** — open issues, risks, or decisions, else "None"; **Next** — highest-value next action and owner, else "None"; **Git** — file/branch/commit/PR state and skipped checks. Lead with the outcome; use this format for task completion, not progress updates.
