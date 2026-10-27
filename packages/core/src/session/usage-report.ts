@@ -3,7 +3,7 @@ export * as SessionUsageReport from "./usage-report.js"
 import { createHash } from "node:crypto"
 import { DateTime, Option, Schema } from "effect"
 import { Money } from "@opencode/schema/money"
-import { NonNegativeInt, optional } from "@opencode/schema/schema"
+import { NonNegativeInt, PositiveInt, optional } from "@opencode/schema/schema"
 import { Session } from "@opencode/schema/session"
 import { SessionTransfer } from "@opencode/schema/session-transfer"
 import { SessionMessage } from "@opencode/schema/session-message"
@@ -46,6 +46,8 @@ export const Run = Schema.Struct({
    * warming calls, which belong in `auxiliary_scope`.
    */
   provider_requests: NonNegativeInt.pipe(optional),
+  /** Wall-clock milliseconds the backend reported for the run; absent when the run never started. */
+  wall_ms: PositiveInt.pipe(optional),
   /** Declared share of downstream reasoning attributed to an action; attribution stays inferred. */
   attribution_share: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).pipe(optional),
   auxiliary_scope: Schema.Struct({ title: Schema.Boolean, warming: Schema.Boolean }).pipe(optional),
