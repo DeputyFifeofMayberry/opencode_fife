@@ -23,6 +23,7 @@
 - `bun run dev:live` from a development worktree tests its TUI against the currently elected `opencode` background server and live sessions; pass a directory when needed (`bun run dev:live /path/to/project`).
 - Script discovers server via `opencode service status`, injects its private local credential (`opencode service get password`), uses the `dev` TUI storage channel so tabs and client-local state match the installed client.
 - Prefer `dev:live` over plain `bun run dev`. Implicit managed-service connection may replace the live server when worktree client version differs; explicit `--server` warns and continues without replacing it.
+- **Concurrent testing:** Worktree isolation does not isolate background servers, ports, storage, or live sessions — `dev:live` targets the currently elected server and the shared `dev` TUI storage channel from any worktree. Coordinate concurrent tests; use separate instances or storage to prevent interference.
 
 ## TUI Stories
 
@@ -44,9 +45,11 @@ Branch names: at most three short words, hyphen-separated, no slashes or type pr
 
 ## Worktrees
 
-- Commit-producing work → dedicated worktree + branch per task, never a checkout another active session may use. Base on `origin/dev`; follow Branch Names.
-- Before any Git operation: inspect `git worktree list` and each checkout's branch — never assume. Remove task worktree + branch after merge.
-- Advance/merge `dev` only after confirming its state; `dev` checked out nowhere → fast-forward via `git branch -f dev <task-branch>` from the task worktree.
+- Independent concurrent tasks → separate worktrees and branches based on `origin/dev`; continue related work in the task's existing worktree. Follow Branch Names.
+- Multiple agents may inspect a worktree, but only one may modify it. Never check out a branch active in another worktree; never switch, reset, remove, or repurpose another session's worktree.
+- Before consequential Git operations (branch switches, worktree create/remove, integration): inspect `git worktree list`, each checkout's branch, and working-tree status — never assume. Preserve existing work.
+- **Integration:** Feature branches integrate into `dev` through CI-validated, squash-merged PRs — never advance local `dev` directly to a task branch or via `git branch -f`. After merge, synchronize local `dev` with `origin/dev` only by fetch + `git merge --ff-only origin/dev` (verified fast-forward). Never force-update or overwrite divergent history. Follow Git Safety approval requirements.
+- After integration: remove the task worktree + branch only after verifying no uncommitted or unmerged work remains. Rule changes apply to new tasks; never disrupt worktrees or branches used by active sessions.
 
 ## Git Safety
 
@@ -55,7 +58,7 @@ Branch names: at most three short words, hyphen-separated, no slashes or type pr
 
 ## Commits and PR Titles
 
-Conventional messages and titles: `type(scope): summary`. Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`. Scopes optional — affected package/area when helpful (`core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, `plugin`).
+Conventional messages and titles: `type(scope): summary`. Types: `feat`, `fix`, `perf`, `docs`, `chore`, `refactor`, `test`. Scopes optional — affected package/area when helpful (`core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, `plugin`).
 
 Examples: `fix(tui): simplify thinking toggle styling`, `docs: update contributing guide`, `chore(sdk): regenerate types`.
 

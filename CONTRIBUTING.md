@@ -97,7 +97,7 @@ Long, AI-generated PR descriptions and issues may be ignored. Write a short expl
 
 ### Use Conventional Titles
 
-Use `type(scope): summary`. Supported types are `feat`, `fix`, `docs`, `chore`, `refactor`, and `test`. The scope is optional.
+Use `type(scope): summary`. Supported types are `feat`, `fix`, `perf`, `docs`, `chore`, `refactor`, and `test`. The scope is optional.
 
 Examples:
 
