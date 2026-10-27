@@ -49,6 +49,7 @@ Branch names: at most three short words, hyphen-separated, no slashes or type pr
 - Multiple agents may inspect a worktree, but only one may modify it. Never check out a branch active in another worktree; never switch, reset, remove, or repurpose another session's worktree.
 - Before consequential Git operations (branch switches, worktree create/remove, integration): inspect `git worktree list`, each checkout's branch, and working-tree status — never assume. Preserve existing work.
 - **Integration:** Feature branches integrate into `dev` through CI-validated, squash-merged PRs — never advance local `dev` directly to a task branch or via `git branch -f`. After merge, synchronize local `dev` with `origin/dev` only by fetch + `git merge --ff-only origin/dev` (verified fast-forward). Never force-update or overwrite divergent history. Follow Git Safety approval requirements.
+- **PR lifecycle:** Opening and merging a PR may occur in the same task or agent session. Treat them as separate authorization checkpoints unless the user explicitly approves the complete workflow upfront. Before merging, confirm required CI checks, reviews, mergeability, and final diff. Squash-merge into `dev` only when all requirements are satisfied; never bypass branch protections. After merge, safely synchronize local `dev` and clean up the task worktree.
 - After integration: remove the task worktree + branch only after verifying no uncommitted or unmerged work remains. Rule changes apply to new tasks; never disrupt worktrees or branches used by active sessions.
 
 ## Git Safety
