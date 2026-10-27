@@ -17,8 +17,8 @@
     {
       "id": "smoke-rename-constant",
       "class": "implementation",
-      "prompt": "In this repository copy, rename the constant LEGACY_NAME to MODERN_NAME everywhere it appears under perf/token-reasoning/fixtures/smoke/, keep the test green, and finish when `bun test perf/token-reasoning/fixtures/smoke/run/smoke-target.test.ts` passes.",
-      "verify": "bun test perf/token-reasoning/fixtures/smoke/run/smoke-target.test.ts"
+      "prompt": "In this repository copy, rename the constant LEGACY_NAME to MODERN_NAME in perf/token-reasoning/fixtures/run/legacy-name.ts, keep the test green, and finish when `bun test perf/token-reasoning/fixtures/run/legacy-name.test.ts` passes.",
+      "verify": "bun test perf/token-reasoning/fixtures/run/legacy-name.test.ts"
     }
   ]
 }

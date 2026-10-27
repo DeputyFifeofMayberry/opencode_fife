@@ -178,11 +178,14 @@ bun script/benchmark-effort.ts perf/token-reasoning/smoke.json --stage smoke \
   --execute --approve-spend --model <provider/model> --out-dir <dir>
 ```
 
-- Runs each admitted spec in an isolated snapshot (`git archive` of `HEAD` plus the smoke seeds,
-  with the repo's root `bunfig.toml` `[test].root` guard stripped so `bun test` works), one
-  `opencode run` per arm — efficiency → `#low`, balanced → the model default, quality → `#max` —
-  then exports the session, runs the task's `verify` command from the snapshot root, and feeds
-  `EffortBenchmarkRunner`.
+- Runs each admitted spec in an isolated snapshot (`git archive` of `HEAD` plus the corpus seeds),
+  one `opencode run` per arm — efficiency → `#low`, balanced → the model default, quality →
+  `#max` — then exports the session, runs the task's `verify` command from the snapshot root, and
+  feeds `EffortBenchmarkRunner`. Explicit-file `bun test` from the root bypasses the repo's
+  test-root guard, which is why `verify` names the file path.
+- Corpus seeds live in `fixtures/seed/`: `*.verify.ts` files are failing tests that materialize
+  into the snapshot as `fixtures/run/<name>.test.ts`; everything else copies verbatim. Tasks
+  reference the materialized `run/` paths.
 - Discovery skips the preflight distinctness gate on purpose: Stage 0 measures which arms actually
   resolve to distinct provider-visible tiers. The approved-ceiling gate applies regardless.
 - `--approve-spend` is required for any execution; ceilings stay admission limits.
@@ -194,6 +197,42 @@ balanced 88,847 (46.0s), quality 74,545 (52.7s) — n=1, screening-grade at best
 Cost evidence is unavailable for this provider: no catalog rates, so runs report as unpriced
 (`cost_complete: false`) and only token evidence is usable until pricing exists or external
 reconciliation is performed.
+
+## Stage 1 screening corpus
+
+`screening.json` defines the screening stage: three seeded implementation tasks (digit-boundary
+slug bug, `toRoman` implementation, debounce `leading` option) × three arms × two repetitions =
+18 runs. Each task's `verify` is a seeded failing test under `fixtures/seed/`, so correctness is
+deterministic and external to the model. Screening ceilings are unset (`approved: false`) until
+authorized; execution also needs a priced model so cost evidence stops reporting unpriced. The
+plan's review/planning task classes need independent human raters and are out of scope for this
+automated screening pass.
+
+## Stage 1 screening result (2026-10-27, live)
+
+`openrouter/z-ai/glm-5.3-flash` (priced route), 3 seeded implementation tasks × 3 arms × 2
+repetitions = 18 runs, $5 stage / $0.25 run admission ceilings; total spend $0.4278.
+
+| Arm | Wire tier | Pass | Timeout | Fail | Gross tokens | Cost | Mean wall |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| efficiency | `low` | 0/6 | 0 | 6 | 990,733 | $0.0515 | ~25s |
+| balanced | default | 2/6 | 0 | 4 | 4,004,088 | $0.1805 | ~150s |
+| quality | `max`/`deep` | 3/6 | 2 | 1 | 4,320,313 | $0.1958 | ~240s+ |
+
+- **Verified success rises with effort**: 0/6 → 2/6 → 3/6 (+2 timeouts). Cost per verified
+  success: efficiency undefined (no passes), balanced $0.090, quality $0.065 — quality's extra
+  spend bought more passes at screening grade (n=6 per arm; not confirmatory).
+- **The efficiency arm is rejected for this task class**: `low` passed nothing.
+- **Route-dependent tier aliasing confirmed**: the quality arm's `#max` request ran as `max` in
+  four runs and `deep` in two on the openrouter route (Stage 0's zai route applied `max`
+  directly) — exactly the "provider effective tier unknown" class the plan requires reports to
+  separate. The two `deep` runs are the two timeouts (28–48 min).
+- **All runs usage-complete and priced**; `cost_complete` is false across the board because the
+  harness cannot observe hidden provider retries (`provider_requests` unset) — the plan's export
+  limitation, not unpriced spend. Unpriced records: 0.
+- The two pre-timeout hangs exposed a Windows process-tree gap: `proc.kill()` only terminated the
+  `cmd` shim while `opencode` kept the pipes open. The backend now runs `opencode run --auto`
+  (permission-free, non-interactive) and tree-kills via `taskkill /t /f` on timeout.
 
 ## Tests
 
