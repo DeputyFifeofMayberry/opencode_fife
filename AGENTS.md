@@ -58,7 +58,7 @@ Branch names: at most three short words, hyphen-separated, no slashes or type pr
 
 ## Commits and PR Titles
 
-Conventional messages and titles: `type(scope): summary`. Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`. Scopes optional — affected package/area when helpful (`core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, `plugin`).
+Conventional messages and titles: `type(scope): summary`. Types: `feat`, `fix`, `perf`, `docs`, `chore`, `refactor`, `test`. Scopes optional — affected package/area when helpful (`core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, `plugin`).
 
 Examples: `fix(tui): simplify thinking toggle styling`, `docs: update contributing guide`, `chore(sdk): regenerate types`.
 
