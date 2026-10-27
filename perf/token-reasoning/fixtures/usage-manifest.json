@@ -1,0 +1,29 @@
+{
+  "runs": [
+    {
+      "task_id": "fixture-efficient",
+      "policy": "efficiency",
+      "root_session_id": "ses_usage_efficient",
+      "correctness": "pass",
+      "stratum": "synthetic",
+      "provider": "fixture-provider",
+      "model": "fixture-model",
+      "requested_variant": "low",
+      "cache_condition": "cold",
+      "repetition": 1,
+      "repository": "synthetic",
+      "provider_requests": 4,
+      "attribution_share": 0.25,
+      "auxiliary_scope": { "title": false, "warming": false }
+    },
+    {
+      "task_id": "fixture-legacy",
+      "policy": "quality",
+      "root_session_id": "ses_usage_legacy",
+      "correctness": "pass",
+      "stratum": "synthetic",
+      "provider_requests": 1,
+      "auxiliary_scope": { "title": true, "warming": false }
+    }
+  ]
+}
