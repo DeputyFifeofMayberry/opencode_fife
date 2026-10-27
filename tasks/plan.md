@@ -39,7 +39,7 @@ Integrate the vendored `effort-policy-core` decision rules into `packages/core` 
 
 ### Phase 3: Full surface + polish
 
-- [ ] Task 7: Delegation minimums at subagent child creation
+- [x] Task 7: Delegation minimums at subagent child creation
 - [ ] Task 8: Restart recovery, prompt-cache marker verification, docs, live smoke
 
 ### Checkpoint: Complete

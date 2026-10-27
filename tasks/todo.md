@@ -166,13 +166,14 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Description:** Verify escalation state survives server restart (durable row honored, no duplicate transitions on first step after recovery). Assert `Message.effort` markers appear on policy-switched requests so `supportsEffortUpdates` routes keep their prompt cache. Touch up docs (`docs/spec` cross-links, config annotations) and run a live smoke with `bun run dev:live`: configure a failing verifier, watch effort rise and restore. Optionally label the picker's "default" option as the auto affordance.
 
 **Acceptance criteria:**
-- [ ] Restart mid-escalation resumes the escalated level exactly once
-- [ ] Policy-switched requests carry the effort marker on supporting routes (spec criterion 6)
+- [x] Restart mid-escalation resumes the escalated level exactly once
+- [x] Policy-switched requests carry the effort marker on supporting routes (spec criterion 6)
 - [ ] All ten spec success criteria checked off
+- [ ] Manual: `bun run dev:live` with a configured verifier, observe transition and restore
 
 **Verification:**
-- [ ] `cd packages/core && bun test test/effort`
-- [ ] `bun run check` from repo root
+- [x] `cd packages/core && bun test test/effort`
+- [x] `bun run check` from repo root
 - [ ] Manual: `bun run dev:live` with a configured verifier, observe transition and restore
 
 **Dependencies:** Tasks 5, 6
