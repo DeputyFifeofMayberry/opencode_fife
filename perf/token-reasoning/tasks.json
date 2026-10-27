@@ -1,0 +1,14 @@
+{
+  "tasks": [
+    {
+      "id": "smoke-rename-constant",
+      "class": "implementation",
+      "prompt": "In the snapshot repository, rename the constant LEGACY_NAME to MODERN_NAME everywhere it appears, keep the build green, and finish when the test suite passes."
+    },
+    {
+      "id": "smoke-read-entrypoint",
+      "class": "discovery",
+      "prompt": "In the snapshot repository, identify the CLI entrypoint and explain in at most 100 words how a command name reaches its handler. Cite the files you used; do not speculate about files you did not open."
+    }
+  ]
+}

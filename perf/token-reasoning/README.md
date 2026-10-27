@@ -148,6 +148,29 @@ The legacy run has no provenance and reports its spend as `legacy_unknown`. Both
 unattributed spend and two observed effort levels (`low`/`deep` and `default`), which is a valid
 two-arm comparison.
 
+## Benchmark preflight
+
+`script/benchmark-effort.ts` is the Milestone 3 entry point. The offline `--check` mode validates a
+suite manifest, classifies arm distinctness, and expands the stage's runs without spending anything:
+
+```sh
+bun script/benchmark-effort.ts perf/token-reasoning/fixtures/effort-suite.example.json \
+  --stage smoke --check --model-info model.info.json
+```
+
+- Arms are the plan's fixed mapping: efficiency → `low`, balanced → `standard`, quality → `deep`.
+- Preflight resolves each arm through the route's advertised variants (`EffortAdapter.capability` +
+  `resolveLevelEffort`) and runs the largest valid comparison: three arms when all three are
+  distinct, otherwise two. Converged and unavailable arms are reported, never dropped silently.
+  Stage 0's wire measurements can supply observed effective tiers, which override the written
+  effort when a provider aliases tiers.
+- Stage ceilings are enforced admission limits, not spend guarantees: requests already in flight
+  when a ceiling trips still complete, so actuals can overshoot. The runner refuses to start a live
+  stage whose `approved` flag is false, and no live execution path exists until the Milestone 3
+  runner lands behind an explicit approval flag.
+- `perf/token-reasoning/tasks.json` is the declarative corpus. Its smoke tasks are placeholders for
+  pipeline bring-up only; Stage 1 requires rubric-scored tasks with predeclared thresholds.
+
 ## Tests
 
 ```sh

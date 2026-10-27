@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "provider": "REPLACE-ME",
+  "model": "REPLACE-ME",
+  "seed": "stage0-smoke",
+  "repetitions": 1,
+  "arms": [
+    { "policy": "efficiency" },
+    { "policy": "balanced" },
+    { "policy": "quality" }
+  ],
+  "cache_conditions": ["cold"],
+  "stages": [
+    { "stage": "smoke", "ceiling_usd": 1, "run_ceiling_usd": 0.25, "approved": false },
+    { "stage": "screening", "ceiling_usd": 25, "run_ceiling_usd": 1, "approved": false }
+  ],
+  "tasks": [
+    { "id": "smoke-rename-constant", "class": "implementation", "prompt": "see tasks.json" },
+    { "id": "smoke-read-entrypoint", "class": "discovery", "prompt": "see tasks.json" }
+  ]
+}
