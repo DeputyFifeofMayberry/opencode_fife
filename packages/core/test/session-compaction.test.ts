@@ -369,6 +369,16 @@ test("compaction update prompt rewrites legacy checkpoints only when asked", () 
   expect(SessionCompaction.buildPrompt(false, true)).not.toContain(rewrite)
 })
 
+test("compaction update prompt prunes stale detail instead of preserving it", () => {
+  const prompt = SessionCompaction.buildPrompt(true)
+  expect(prompt).toContain("Treat the previous checkpoint as material to rewrite, not an archive to preserve")
+  expect(prompt).toContain("Drop what newer history has resolved or superseded")
+  expect(prompt).toContain("no longer than continuing the work requires")
+  expect(prompt).not.toContain("Preserve previous information")
+  expect(prompt).not.toContain("you may remove it")
+  expect(SessionCompaction.buildPrompt(false)).not.toContain("existing checkpoint")
+})
+
 test("compaction prompts prohibit task execution", () => {
   for (const update of [false, true])
     expect(SessionCompaction.buildPrompt(update)).toContain("Do not continue the task or call tools")

@@ -230,7 +230,7 @@ export const buildPrompt = (update: boolean, legacy = false) => {
           "The existing checkpoint was written with an earlier format that recorded far more detail than this one asks for. Rewrite it at the level of detail described below rather than carrying its detail forward. Keep its requirements, decisions, and open questions; they came from earlier conversation with the user.",
         ]
       : []),
-    "Newer history always takes precedence over the existing checkpoint. Preserve previous information unless newer history clearly contradicts, supersedes, resolves, or makes it stale. If something is no longer relevant to continuing the work, you may remove it.",
+    "Newer history always takes precedence over the existing checkpoint. Treat the previous checkpoint as material to rewrite, not an archive to preserve: carry forward only what still binds the work, such as unmet requirements, decisions and workflow state still in force, and unresolved questions or blockers. Drop what newer history has resolved or superseded, and what the listed files, the code, or current instructions make recoverable. The updated checkpoint should be no longer than continuing the work requires; when the previous one carries more than that, shorten it.",
     "Incorporate newer requirements, decisions, progress, and context. Reconcile Work State and Next Move: move completed work out of Active, remove resolved blockers and answered questions, and preserve unresolved or pending work.",
     "Return only the updated Markdown sections. Do not reproduce the `<conversation-checkpoint>`, `<summary>`, or `<recent-context>` wrapper tags from the previous checkpoint.",
     ...shared,
