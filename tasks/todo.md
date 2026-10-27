@@ -188,4 +188,4 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 ## Checkpoint: Complete
 - [x] All spec success criteria verified
 - [x] `bun run check` clean except the pre-existing `packages/app` artifact; full `packages/core` effort suites green
-- [ ] Ready for review (pending manual live smoke)
+- [x] Ready for review — PR #9 (`effort-policy` → `dev`)

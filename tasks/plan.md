@@ -46,7 +46,7 @@ Integrate the vendored `effort-policy-core` decision rules into `packages/core` 
 ### Checkpoint: Complete
 - [x] All ten spec success criteria verified
 - [x] `bun run check` from repo root (red only in the pre-existing `packages/app` symlink artifact); tests run from `packages/core`
-- [ ] Ready for review (manual live smoke deferred: provider quota exhausted; config-path fix already landed from the partial smoke)
+- [x] Ready for review — PR #9 (`effort-policy` → `dev`); manual escalation leg re-runs when provider quota resets
 
 ## Risks and Mitigations
 
