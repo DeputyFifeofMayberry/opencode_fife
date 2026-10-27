@@ -137,30 +137,29 @@ const smallWindowModel = testModel("small-window", { context: 64_000, output: 16
 const largeOutputModel = testModel("large-output", { context: 1_000_000, output: 1_000_000 })
 
 test("calculates step cost using the matching context tier", () => {
-  expect(
-    SessionUsage.calculateCost(
-      [
-        {
-          input: Money.USDPerMillionTokens.make(1),
-          output: Money.USDPerMillionTokens.make(2),
-          cache: {
-            read: Money.USDPerMillionTokens.make(0.1),
-            write: Money.USDPerMillionTokens.make(0.5),
-          },
+  const cost = SessionUsage.calculateCost(
+    [
+      {
+        input: Money.USDPerMillionTokens.make(1),
+        output: Money.USDPerMillionTokens.make(2),
+        cache: {
+          read: Money.USDPerMillionTokens.make(0.1),
+          write: Money.USDPerMillionTokens.make(0.5),
         },
-        {
-          tier: { type: "context", size: 100 },
-          input: Money.USDPerMillionTokens.make(3),
-          output: Money.USDPerMillionTokens.make(4),
-          cache: {
-            read: Money.USDPerMillionTokens.make(0.2),
-            write: Money.USDPerMillionTokens.make(0.6),
-          },
+      },
+      {
+        tier: { type: "context", size: 100 },
+        input: Money.USDPerMillionTokens.make(3),
+        output: Money.USDPerMillionTokens.make(4),
+        cache: {
+          read: Money.USDPerMillionTokens.make(0.2),
+          write: Money.USDPerMillionTokens.make(0.6),
         },
-      ],
-      { input: 80, output: 10, reasoning: 2, cache: { read: 20, write: 1 } },
-    ),
-  ).toBeCloseTo(0.0002926)
+      },
+    ],
+    { input: 80, output: 10, reasoning: 2, cache: { read: 20, write: 1 } },
+  )
+  expect(cost ?? Number.NaN).toBeCloseTo(0.0002926)
 })
 
 test("ignores malformed model cost fields", () => {
@@ -202,7 +201,7 @@ test("does not apply an ineligible tier without base pricing", () => {
       ],
       { input: 80, output: 10, reasoning: 2, cache: { read: 20, write: 0 } },
     ),
-  ).toBe(Money.USD.zero)
+  ).toBeUndefined()
 })
 
 const resolvesModel: Effect.Effect<void, SessionRunnerModel.Error> = Effect.void

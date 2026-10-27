@@ -19,6 +19,7 @@ import { InstructionEntry } from "./instruction-entry.js"
 import { Agent } from "./agent.js"
 import { Skill as SkillSchema } from "./skill.js"
 import { Money } from "./money.js"
+import { CostProvenance } from "./cost-provenance.js"
 import { Snapshot } from "./snapshot.js"
 import { TokenUsage } from "./token-usage.js"
 import { SessionInbox } from "./session-inbox.js"
@@ -179,6 +180,7 @@ export const UsageRecorded = Event.durable({
     ...Base,
     source: Schema.Literals(["title", "compaction"]),
     cost: Money.USD,
+    costProvenance: CostProvenance.Info.pipe(optional),
     tokens: TokenUsage.Info,
   },
 })
@@ -382,6 +384,7 @@ export namespace Step {
       rawFinish: Schema.String.pipe(optional),
       native: SessionMessage.Native.pipe(optional),
       cost: Money.USD,
+      costProvenance: CostProvenance.Info.pipe(optional),
       tokens: TokenUsage.Info,
       snapshot: Snapshot.ID.pipe(optional),
       files: Schema.Array(RelativePath).pipe(optional),
@@ -400,6 +403,7 @@ export namespace Step {
       rawFinish: Schema.String.pipe(optional),
       native: SessionMessage.Native.pipe(optional),
       cost: Money.USD.pipe(optional),
+      costProvenance: CostProvenance.Info.pipe(optional),
       tokens: TokenUsage.Info.pipe(optional),
       snapshot: Snapshot.ID.pipe(optional),
       files: Schema.Array(RelativePath).pipe(optional),
@@ -632,6 +636,7 @@ export namespace Compaction {
       // Repeats the internal `session.usage.recorded` figures: that event never reaches clients, and it
       // stays the accounting source for session totals and stats.
       cost: SessionMessage.CompactionCompleted.fields.cost,
+      costProvenance: SessionMessage.CompactionCompleted.fields.costProvenance,
       tokens: SessionMessage.CompactionCompleted.fields.tokens,
     },
   })
@@ -646,6 +651,7 @@ export namespace Compaction {
       error: SessionError.Error,
       inputID: SessionMessage.ID.pipe(optional),
       cost: SessionMessage.CompactionFailed.fields.cost,
+      costProvenance: SessionMessage.CompactionFailed.fields.costProvenance,
       tokens: SessionMessage.CompactionFailed.fields.tokens,
     },
   })

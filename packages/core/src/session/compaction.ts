@@ -879,10 +879,7 @@ export const layer = Layer.effect(
 
     /** A request hook supplied the summary itself, so no model call happens. */
     const fromHook = (context: SessionContext.Loaded, supplied: SessionCompactionResult, background?: Background) => {
-      const usage = supplied.tokens && {
-        tokens: supplied.tokens,
-        cost: SessionUsage.calculateCost(context.model.cost, supplied.tokens),
-      }
+      const usage = supplied.tokens && SessionUsage.estimate(supplied.tokens, context.model.cost)
       return spend(context.session.id, usage, background?.usage).pipe(
         Effect.as<Result>({
           text: supplied.summary,
