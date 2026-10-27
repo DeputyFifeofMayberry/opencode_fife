@@ -40,24 +40,38 @@ export interface RunnerResult {
 }
 
 /**
- * Runs one stage: preflight gate, admission per run, execution in seeded order, and ledger assembly.
+ * Runs one stage: admission per run, execution in seeded order, and ledger assembly.
  * A run the budget refuses is reported as not started; a backend crash is reported as errored.
  * Neither is silently dropped from the manifest.
+ *
+ * `discovery` (Stage 0) skips the preflight distinctness gate: measuring which arms actually
+ * resolve to distinct provider-visible tiers is the point, so converged arms run on purpose.
+ * The approved-ceiling gate applies in every mode. Discovery needs no model info; the report's
+ * preflight section is then informational only.
  */
 export function execute(input: {
   suite: Suite
   stage: "smoke" | "screening" | "confirmatory"
-  model: Model.Info
+  model?: Model.Info
   observed?: ReadonlyMap<Policy, string>
+  discovery?: boolean
   run: (spec: RunSpec) => Promise<Outcome>
 }): Promise<RunnerResult> {
   return (async () => {
-    const preflight = EffortBenchmark.preflight(
-      input.model,
-      input.suite.arms.map((arm) => arm.policy),
-      input.observed,
-    )
-    if (!preflight.valid) throw new Error("preflight found fewer than two distinct arms; refusing to start")
+    const preflight =
+      input.model === undefined
+        ? { arms: [], comparison: [], valid: false }
+        : EffortBenchmark.preflight(
+            input.model,
+            input.suite.arms.map((arm) => arm.policy),
+            input.observed,
+          )
+    if (!input.discovery && !preflight.valid) {
+      throw new Error("preflight found fewer than two distinct arms; refusing to start")
+    }
+    if (!input.discovery && input.model === undefined) {
+      throw new Error("non-discovery stages need --model-info for the preflight gate")
+    }
     const declared = input.suite.stages.find((entry) => entry.stage === input.stage)
     if (!declared) throw new Error(`stage ${input.stage} is not declared by the suite`)
     if (!declared.approved) throw new Error("stage ceiling is not approved; refusing to start")

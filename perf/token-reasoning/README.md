@@ -171,6 +171,30 @@ bun script/benchmark-effort.ts perf/token-reasoning/fixtures/effort-suite.exampl
 - `perf/token-reasoning/tasks.json` is the declarative corpus. Its smoke tasks are placeholders for
   pipeline bring-up only; Stage 1 requires rubric-scored tasks with predeclared thresholds.
 
+## Execute mode (Stage 0 discovery)
+
+```sh
+bun script/benchmark-effort.ts perf/token-reasoning/smoke.json --stage smoke \
+  --execute --approve-spend --model <provider/model> --out-dir <dir>
+```
+
+- Runs each admitted spec in an isolated snapshot (`git archive` of `HEAD` plus the smoke seeds,
+  with the repo's root `bunfig.toml` `[test].root` guard stripped so `bun test` works), one
+  `opencode run` per arm — efficiency → `#low`, balanced → the model default, quality → `#max` —
+  then exports the session, runs the task's `verify` command from the snapshot root, and feeds
+  `EffortBenchmarkRunner`.
+- Discovery skips the preflight distinctness gate on purpose: Stage 0 measures which arms actually
+  resolve to distinct provider-visible tiers. The approved-ceiling gate applies regardless.
+- `--approve-spend` is required for any execution; ceilings stay admission limits.
+
+Stage 0 result (2026-10-27, `zai-coding-plan/glm-5.3-flash`, n=1 per arm, smoke task): all three
+arms applied distinct wire variants (`low`, `default`, `max`) — the static E/B/Q comparison has a
+valid three-arm form on this route. First smoke token counts (gross): efficiency 71,972 (28.0s),
+balanced 88,847 (46.0s), quality 74,545 (52.7s) — n=1, screening-grade at best, not evidence.
+Cost evidence is unavailable for this provider: no catalog rates, so runs report as unpriced
+(`cost_complete: false`) and only token evidence is usable until pricing exists or external
+reconciliation is performed.
+
 ## Tests
 
 ```sh

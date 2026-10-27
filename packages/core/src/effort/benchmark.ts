@@ -2,7 +2,7 @@ export * as EffortBenchmark from "./benchmark.js"
 
 import { createHash } from "node:crypto"
 import { Schema } from "effect"
-import { PositiveInt } from "@opencode/schema/schema"
+import { PositiveInt, optional } from "@opencode/schema/schema"
 import { Model } from "@opencode/schema/model"
 import type { Session } from "@opencode/schema/session"
 import { EffortAdapter } from "./adapter.js"
@@ -32,10 +32,13 @@ const Stage = Schema.Struct({
   approved: Schema.Boolean,
 }).annotate({ identifier: "EffortBenchmark.Stage" })
 
+export interface Task extends Schema.Schema.Type<typeof Task> {}
 export const Task = Schema.Struct({
   id: Schema.String,
   class: Schema.Literals(["implementation", "planning", "review", "discovery"]),
   prompt: Schema.String,
+  /** Shell command the backend runs in the snapshot copy to settle correctness; absent means external rubric. */
+  verify: Schema.String.pipe(optional),
 }).annotate({ identifier: "EffortBenchmark.Task" })
 
 export interface Suite extends Schema.Schema.Type<typeof Suite> {}
