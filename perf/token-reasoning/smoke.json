@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "provider": "runtime-default",
+  "model": "runtime-default",
+  "seed": "stage0-smoke",
+  "repetitions": 1,
+  "arms": [
+    { "policy": "efficiency" },
+    { "policy": "balanced" },
+    { "policy": "quality" }
+  ],
+  "cache_conditions": ["cold"],
+  "stages": [
+    { "stage": "smoke", "ceiling_usd": 1, "run_ceiling_usd": 0.25, "approved": true }
+  ],
+  "tasks": [
+    {
+      "id": "smoke-rename-constant",
+      "class": "implementation",
+      "prompt": "In this repository copy, rename the constant LEGACY_NAME to MODERN_NAME everywhere it appears under perf/token-reasoning/fixtures/smoke/, keep the test green, and finish when `bun test perf/token-reasoning/fixtures/smoke/run/smoke-target.test.ts` passes.",
+      "verify": "bun test perf/token-reasoning/fixtures/smoke/run/smoke-target.test.ts"
+    }
+  ]
+}
