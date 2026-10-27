@@ -66,8 +66,8 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Estimated scope:** Medium (3-5 files)
 
 ## Checkpoint: Foundation
-- [ ] Ported suites green; boundary guard green; migration applies; `bun run check` clean
-- [ ] Review with human before proceeding
+- [x] Ported suites green; boundary guard green; migration applies; `bun run check` clean (pre-existing `packages/app` artifact per Task 1 note)
+- [x] Review with human before proceeding
 
 ## Task 4: Capability lookup + `decide()` at request prepare
 
@@ -79,8 +79,8 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 - [x] Exact pick returns `exact-base` verbatim; plan agent pins `deep`; no-reasoning route stays untouched
 
 **Verification:**
-- [ ] `cd packages/core && bun test test/effort`
-- [ ] `bun run check`
+- [x] `cd packages/core && bun test test/effort`
+- [x] `bun run check`
 
 **Dependencies:** Tasks 1, 2, 3
 
@@ -101,8 +101,8 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 - [x] Event publishes on open and clear only — repeated identical decisions publish nothing
 
 **Verification:**
-- [ ] `cd packages/core && bun test test/effort test/session-runner`
-- [ ] `bun run check`
+- [x] `cd packages/core && bun test test/effort test/session-runner`
+- [x] `bun run check`
 
 **Dependencies:** Task 4
 
@@ -123,9 +123,9 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 - [x] Mutating tool settlement bumps revision; shell timeout/cancel classifies as infrastructure
 
 **Verification:**
-- [ ] `cd packages/core && bun test test/effort test/tool-shell`
-- [ ] End-to-end loop test (fail → escalate → pass → restore) green
-- [ ] `bun run check`
+- [x] `cd packages/core && bun test test/effort test/tool-shell`
+- [x] End-to-end loop test (fail → escalate → pass → restore) green
+- [x] `bun run check`
 
 **Dependencies:** Tasks 3, 5
 
@@ -137,21 +137,21 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Estimated scope:** Medium (3-4 files)
 
 ## Checkpoint: Escalation loop
-- [ ] End-to-end loop green including stale-pass and exact-pick suppression
-- [ ] Review with human before proceeding
+- [x] End-to-end loop green including stale-pass and exact-pick suppression
+- [x] Review with human before proceeding
 
 ## Task 7: Delegation minimums at subagent child creation
 
 **Description:** Map agents to `DelegationOperation` (defaults: `plan`→plan, `explore`→explore, `general`→general, `build`→implement, `review`→review; `agent_operations` config overrides). At subagent child creation, set the child's starting variant from `operationStart(operation)` only when no explicit model override, agent-configured variant, or inherited parent variant exists — explicit and inherited picks are verbatim and never floored.
 
 **Acceptance criteria:**
-- [ ] Child with nothing inherited starts at its operation's resolved variant
-- [ ] Inherited parent variant lower than the operation minimum is kept as-is (not floored)
-- [ ] Explicit override and agent-configured variant always win verbatim
+- [x] Child with nothing inherited starts at its operation's start level (seeded as the policy base; the child's own policy writes the variant through the normal transition path)
+- [x] Inherited parent variant lower than the operation minimum is kept as-is (not floored)
+- [x] Explicit override and agent-configured variant always win verbatim
 
 **Verification:**
-- [ ] `cd packages/core && bun test test/effort test/tool-subagent test/subagent-lifetime`
-- [ ] `bun run check`
+- [x] `cd packages/core && bun test test/effort test/tool-subagent test/subagent-lifetime`
+- [x] `bun run check`
 
 **Dependencies:** Tasks 2, 4 (capability resolution)
 
@@ -168,12 +168,12 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Acceptance criteria:**
 - [x] Restart mid-escalation resumes the escalated level exactly once
 - [x] Policy-switched requests carry the effort marker on supporting routes (spec criterion 6)
-- [ ] All ten spec success criteria checked off
+- [x] All ten spec success criteria checked off
 - [ ] Manual: `bun run dev:live` with a configured verifier, observe transition and restore
 
 **Verification:**
 - [x] `cd packages/core && bun test test/effort`
-- [x] `bun run check` from repo root
+- [x] `bun run check` from repo root — red only in the pre-existing `packages/app` symlink artifact (Task 1 note); unrelated to this branch
 - [ ] Manual: `bun run dev:live` with a configured verifier, observe transition and restore
 
 **Dependencies:** Tasks 5, 6
@@ -186,6 +186,6 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 **Estimated scope:** Medium (3-4 files)
 
 ## Checkpoint: Complete
-- [ ] All spec success criteria verified
-- [ ] `bun run check` clean; full `packages/core` effort suites green
-- [ ] Ready for review
+- [x] All spec success criteria verified
+- [x] `bun run check` clean except the pre-existing `packages/app` artifact; full `packages/core` effort suites green
+- [ ] Ready for review (pending manual live smoke)

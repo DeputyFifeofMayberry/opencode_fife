@@ -40,12 +40,13 @@ Integrate the vendored `effort-policy-core` decision rules into `packages/core` 
 ### Phase 3: Full surface + polish
 
 - [x] Task 7: Delegation minimums at subagent child creation
-- [ ] Task 8: Restart recovery, prompt-cache marker verification, docs, live smoke
+- [x] Task 8: Restart recovery, prompt-cache marker verification, docs
+- [ ] Manual: live smoke via `bun run dev:live` with a configured verifier
 
 ### Checkpoint: Complete
-- [ ] All ten spec success criteria verified
-- [ ] `bun run check` clean from repo root; tests run from `packages/core`
-- [ ] Ready for review
+- [x] All ten spec success criteria verified
+- [x] `bun run check` from repo root (red only in the pre-existing `packages/app` symlink artifact); tests run from `packages/core`
+- [ ] Ready for review (pending manual live smoke)
 
 ## Risks and Mitigations
 
