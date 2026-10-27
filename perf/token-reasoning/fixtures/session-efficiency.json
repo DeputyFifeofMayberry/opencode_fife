@@ -1,0 +1,178 @@
+{
+  "info": {
+    "id": "ses_usage_efficient",
+    "projectID": "project_usage_fixture",
+    "cost": 0.12,
+    "tokens": {
+      "input": 2700,
+      "output": 450,
+      "reasoning": 180,
+      "cache": {
+        "read": 900,
+        "write": 100
+      }
+    },
+    "time": {
+      "created": 1790856000000,
+      "updated": 1790856000000
+    },
+    "title": "usage ledger fixture",
+    "location": {
+      "directory": "/perf/token-reasoning"
+    }
+  },
+  "messages": [
+    {
+      "id": "msg_usage_prompt",
+      "time": {
+        "created": 1790856000000
+      },
+      "text": "Synthetic task prompt for the usage ledger fixture.",
+      "type": "user"
+    },
+    {
+      "id": "msg_usage_step_one",
+      "time": {
+        "created": 1790856000000
+      },
+      "type": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture-model",
+        "providerID": "fixture-provider",
+        "variant": "low"
+      },
+      "content": [],
+      "cost": 0.05,
+      "tokens": {
+        "input": 1000,
+        "output": 200,
+        "reasoning": 100,
+        "cache": {
+          "read": 300,
+          "write": 50
+        }
+      },
+      "costProvenance": {
+        "provider": 0.05
+      }
+    },
+    {
+      "type": "compaction",
+      "id": "msg_usage_compaction",
+      "metadata": {
+        "precomputedUsed": true
+      },
+      "time": {
+        "created": 1790856000000
+      },
+      "status": "completed",
+      "reason": "auto",
+      "model": {
+        "id": "fixture-model",
+        "providerID": "fixture-provider",
+        "variant": "deep"
+      },
+      "summary": "Synthetic compaction summary.",
+      "cost": 0.01,
+      "tokens": {
+        "input": 500,
+        "output": 100,
+        "reasoning": 0,
+        "cache": {
+          "read": 200,
+          "write": 0
+        }
+      },
+      "costProvenance": {
+        "estimated": 0.01
+      }
+    },
+    {
+      "id": "msg_usage_step_two",
+      "time": {
+        "created": 1790856000000
+      },
+      "type": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture-model",
+        "providerID": "fixture-provider",
+        "variant": "low"
+      },
+      "content": [
+        {
+          "type": "tool",
+          "id": "call_usage_read",
+          "name": "read",
+          "state": {
+            "status": "completed",
+            "input": {
+              "path": "fixture.ts"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "synthetic tool result"
+              }
+            ],
+            "metadata": {
+              "truncated": true
+            }
+          },
+          "time": {
+            "created": 1790856000000
+          }
+        }
+      ],
+      "cost": 0.04,
+      "tokens": {
+        "input": 800,
+        "output": 100,
+        "reasoning": 50,
+        "cache": {
+          "read": 200,
+          "write": 50
+        }
+      },
+      "costProvenance": {
+        "estimated": 0.04
+      }
+    },
+    {
+      "id": "msg_usage_step_three",
+      "time": {
+        "created": 1790856000000
+      },
+      "type": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture-model",
+        "providerID": "fixture-provider",
+        "variant": "low"
+      },
+      "content": [],
+      "cost": 0.02,
+      "tokens": {
+        "input": 400,
+        "output": 50,
+        "reasoning": 30,
+        "cache": {
+          "read": 200,
+          "write": 0
+        }
+      },
+      "costProvenance": {
+        "estimated": 0.02
+      }
+    },
+    {
+      "id": "msg_usage_idle",
+      "time": {
+        "created": 1790856000000
+      },
+      "type": "idle",
+      "outcome": "succeeded"
+    }
+  ]
+}

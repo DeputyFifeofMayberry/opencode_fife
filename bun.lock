@@ -15,6 +15,8 @@
         "@actions/artifact": "5.0.1",
         "@ast-grep/cli": "0.44.0",
         "@opencode/client": "workspace:*",
+        "@opencode/core": "workspace:*",
+        "@opencode/schema": "workspace:*",
         "@oxlint/plugins": "1.60.0",
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",

@@ -1,0 +1,57 @@
+{
+  "info": {
+    "id": "ses_usage_legacy",
+    "projectID": "project_usage_fixture",
+    "cost": 0.02,
+    "tokens": {
+      "input": 400,
+      "output": 50,
+      "reasoning": 10,
+      "cache": {
+        "read": 100,
+        "write": 0
+      }
+    },
+    "time": {
+      "created": 1790856000000,
+      "updated": 1790856000000
+    },
+    "title": "usage ledger fixture",
+    "location": {
+      "directory": "/perf/token-reasoning"
+    }
+  },
+  "messages": [
+    {
+      "id": "msg_usage_legacy_prompt",
+      "time": {
+        "created": 1790856000000
+      },
+      "text": "Synthetic legacy task prompt.",
+      "type": "user"
+    },
+    {
+      "id": "msg_usage_legacy_step",
+      "time": {
+        "created": 1790856000000
+      },
+      "type": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture-model",
+        "providerID": "fixture-provider"
+      },
+      "content": [],
+      "cost": 0.02,
+      "tokens": {
+        "input": 400,
+        "output": 50,
+        "reasoning": 10,
+        "cache": {
+          "read": 100,
+          "write": 0
+        }
+      }
+    }
+  ]
+}
