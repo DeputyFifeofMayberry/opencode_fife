@@ -876,6 +876,7 @@ describe("SessionProjector", () => {
         rawFinish: "stop_sequence",
         native: { response: "ended" },
         cost: Money.USD.make(1),
+        costProvenance: { provider: Money.USD.make(1) },
         tokens: { input: 2, output: 3, reasoning: 4, cache: { read: 5, write: 6 } },
         snapshot: Snapshot.ID.make("snap_ended"),
         files: [RelativePath.make("src/ended.ts")],
@@ -887,6 +888,9 @@ describe("SessionProjector", () => {
         rawFinish: "blocked",
         native: { response: "failed" },
         error: { type: "provider.invalid-request", message: "Failed" },
+        cost: Money.USD.make(0.5),
+        costProvenance: { estimated: Money.USD.make(0.5) },
+        tokens: { input: 1, output: 2, reasoning: 0, cache: { read: 0, write: 0 } },
         snapshot: Snapshot.ID.make("snap_failed"),
         files: [RelativePath.make("src/failed.ts")],
       })
@@ -907,6 +911,7 @@ describe("SessionProjector", () => {
         rawFinish: "stop_sequence",
         native: { response: "ended" },
         cost: Money.USD.make(1),
+        costProvenance: { provider: Money.USD.make(1) },
         tokens: { input: 2, output: 3, reasoning: 4, cache: { read: 5, write: 6 } },
         snapshot: { end: "snap_ended", files: ["src/ended.ts"] },
         time: { streamed: created, completed: created },
@@ -917,8 +922,41 @@ describe("SessionProjector", () => {
         rawFinish: "blocked",
         native: { response: "failed" },
         error: { type: "provider.invalid-request", message: "Failed" },
+        cost: Money.USD.make(0.5),
+        costProvenance: { estimated: Money.USD.make(0.5) },
+        tokens: { input: 1, output: 2, reasoning: 0, cache: { read: 0, write: 0 } },
         snapshot: { end: "snap_failed", files: ["src/failed.ts"] },
         time: { completed: created },
+      })
+    }),
+  )
+
+  it.effect("keeps cost provenance on a settled compaction message", () =>
+    Effect.gen(function* () {
+      const db = yield* seedSession()
+      const service = yield* Bus.Service
+      yield* service.publish(SessionEvent.Compaction.Ended, {
+        sessionID,
+        reason: "auto",
+        text: "summary",
+        cost: Money.USD.make(1),
+        costProvenance: { estimated: Money.USD.make(1), unpriced: 1 },
+        tokens: { input: 1, output: 2, reasoning: 0, cache: { read: 0, write: 0 } },
+      })
+
+      const rows = yield* db
+        .select()
+        .from(SessionMessageTable)
+        .where(eq(SessionMessageTable.type, "compaction"))
+        .all()
+        .pipe(Effect.orDie)
+      expect(rows).toHaveLength(1)
+      expect(
+        Schema.decodeUnknownSync(SessionMessage.Info)({ ...rows[0].data, id: rows[0].id, type: rows[0].type }),
+      ).toMatchObject({
+        status: "completed",
+        cost: Money.USD.make(1),
+        costProvenance: { estimated: Money.USD.make(1), unpriced: 1 },
       })
     }),
   )

@@ -15,6 +15,7 @@ import { SessionError } from "./session-error.js"
 import { Agent } from "./agent.js"
 import { Skill as SkillSchema } from "./skill.js"
 import { Money } from "./money.js"
+import { CostProvenance } from "./cost-provenance.js"
 import { Snapshot } from "./snapshot.js"
 import { TokenUsage } from "./token-usage.js"
 
@@ -234,6 +235,8 @@ export const Assistant = Schema.Struct({
   /** Step-level native data, such as a provider's reason for blocking a response. */
   native: Native.pipe(optional),
   cost: Money.USD.pipe(optional),
+  /** How `cost` was priced, absent on records stored before provenance existed. */
+  costProvenance: CostProvenance.Info.pipe(optional),
   tokens: TokenUsage.Info.pipe(optional),
   error: SessionError.Error.pipe(optional),
   retry: AssistantRetry.pipe(optional),
@@ -250,6 +253,8 @@ const CompactionBase = { type: Schema.tag("compaction"), ...Base }
 /** Usage of the compaction request itself, not the size of the resulting context. */
 const CompactionUsage = {
   cost: Money.USD.pipe(optional),
+  /** How `cost` was priced across the compaction's requests, absent on records stored before provenance existed. */
+  costProvenance: CostProvenance.Info.pipe(optional),
   tokens: TokenUsage.Info.pipe(optional),
 }
 

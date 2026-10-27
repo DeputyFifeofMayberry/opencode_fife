@@ -269,6 +269,7 @@ export function update(adapter: Adapter, event: SessionEvent.DurableEvent) {
           draft.rawFinish = event.data.rawFinish
           draft.native = castDraft(event.data.native)
           draft.cost = event.data.cost
+          draft.costProvenance = castDraft(event.data.costProvenance)
           draft.tokens = event.data.tokens
           projectTerminalSnapshot(draft, event)
         })
@@ -283,6 +284,7 @@ export function update(adapter: Adapter, event: SessionEvent.DurableEvent) {
           draft.retry = undefined
           if (event.data.cost !== undefined && event.data.tokens !== undefined) {
             draft.cost = event.data.cost
+            draft.costProvenance = castDraft(event.data.costProvenance)
             draft.tokens = castDraft(event.data.tokens)
           }
           projectTerminalSnapshot(draft, event)
@@ -437,6 +439,7 @@ export function update(adapter: Adapter, event: SessionEvent.DurableEvent) {
               native: event.data.native,
               summary: event.data.text,
               cost: event.data.cost,
+              costProvenance: castDraft(event.data.costProvenance),
               tokens: event.data.tokens,
             })
             return
@@ -452,6 +455,7 @@ export function update(adapter: Adapter, event: SessionEvent.DurableEvent) {
               native: event.data.native,
               summary: event.data.text,
               cost: event.data.cost,
+              costProvenance: castDraft(event.data.costProvenance),
               tokens: event.data.tokens,
               time: { created },
             }),
@@ -468,6 +472,7 @@ export function update(adapter: Adapter, event: SessionEvent.DurableEvent) {
             reason: event.data.reason,
             error: event.data.error,
             cost: event.data.cost,
+            costProvenance: castDraft(event.data.costProvenance),
             tokens: event.data.tokens,
             time: current?.time ?? { created },
           })
