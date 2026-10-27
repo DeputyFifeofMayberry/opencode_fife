@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { mkdtemp, mkdir, copyFile, rm, writeFile } from "node:fs/promises"
+import { mkdtemp, mkdir, copyFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { parseArgs } from "node:util"
 import { Session } from "@opencode/schema/session"
@@ -113,13 +113,13 @@ async function runLive(
   if (!task) throw new Error(`task ${spec.task_id} is not in the corpus`)
   const snapshot = await mkdtemp(path.join(process.env.TEMP ?? "/tmp", "bench-snapshot-"))
   await extractSnapshot(snapshot)
-  await seedSmoke(snapshot)
+  await seedCorpus(snapshot)
 
   const variant = spec.policy === "efficiency" ? "low" : spec.policy === "quality" ? "max" : undefined
   const modelArg = variant === undefined ? ctx.modelRef : `${ctx.modelRef}#${variant}`
   const runTimeout = Math.min(ctx.timeoutMs, 15 * 60_000)
   const runOutput = await capture(
-    ["opencode", "run", "--format", "json", "-m", modelArg, "--title", `bench-${spec.task_id}-${spec.policy}`, task.prompt],
+    ["opencode", "run", "--format", "json", "--auto", "-m", modelArg, "--title", `bench-${spec.task_id}-${spec.policy}`, task.prompt],
     { cwd: snapshot, timeoutMs: runTimeout },
   )
   if (runOutput.timedOut) {
@@ -176,18 +176,19 @@ async function extractSnapshot(into: string) {
   if (pack.code !== 0) throw new Error(`git archive failed: ${pack.stderr.slice(0, 300)}`)
   const unpack = await capture(["tar", "-xf", zip], { cwd: into, timeoutMs: 300_000 })
   if (unpack.code !== 0) throw new Error(`snapshot extract failed: ${unpack.stderr.slice(0, 300)}`)
-  // The root bunfig sets [test].root to a guard directory, so every `bun test` in the snapshot
-  // fails before running anything. The smoke verifies through bun test, so the guard goes.
-  await rm(path.join(into, "bunfig.toml"), { force: true })
 }
 
-/** The smoke target: committed under seed/ names, materialized as a failing test in the snapshot. */
-async function seedSmoke(snapshot: string) {
-  const seedDir = path.resolve(import.meta.dirname, "../perf/token-reasoning/fixtures/smoke/seed")
-  const runDir = path.join(snapshot, "perf/token-reasoning/fixtures/smoke/run")
+/** Corpus seeds: committed under fixtures/seed/, materialized into the snapshot as runnable tests. */
+async function seedCorpus(snapshot: string) {
+  const seedDir = path.resolve(import.meta.dirname, "../perf/token-reasoning/fixtures/seed")
+  const runDir = path.join(snapshot, "perf/token-reasoning/fixtures/run")
   await mkdir(runDir, { recursive: true })
-  await copyFile(path.join(seedDir, "legacy-name.ts"), path.join(runDir, "legacy-name.ts"))
-  await copyFile(path.join(seedDir, "legacy-name.verify.ts"), path.join(runDir, "smoke-target.test.ts"))
+  const seeds = await Array.fromAsync(new Bun.Glob("**/*").scan({ cwd: seedDir, onlyFiles: true }))
+  for (const seed of seeds) {
+    // `*.verify.ts` seeds arrive as failing `<name>.test.ts` files; everything else copies verbatim.
+    const target = seed.endsWith(".verify.ts") ? `${seed.slice(0, -".verify.ts")}.test.ts` : seed
+    await copyFile(path.join(seedDir, seed), path.join(runDir, target))
+  }
 }
 
 async function exportSession(sessionID: string) {
@@ -230,7 +231,10 @@ async function capture(cmd: string[], options: { cwd: string; timeoutMs: number 
   let timedOut = false
   const timer = setTimeout(() => {
     timedOut = true
-    proc.kill()
+    // The direct child is a cmd shim; the real work runs in its descendants, which keep the
+    // stdout pipe open. Kill the whole tree or the capture never drains.
+    if (process.platform === "win32") Bun.spawnSync(["taskkill", "/pid", String(proc.pid), "/t", "/f"])
+    else proc.kill()
   }, options.timeoutMs)
   const [stdout, stderr, code] = await Promise.all([
     new Response(proc.stdout).text(),

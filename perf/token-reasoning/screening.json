@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "provider": "runtime-default",
+  "model": "runtime-default",
+  "seed": "stage1-screening",
+  "repetitions": 2,
+  "arms": [
+    { "policy": "efficiency" },
+    { "policy": "balanced" },
+    { "policy": "quality" }
+  ],
+  "cache_conditions": ["cold"],
+  "stages": [
+    { "stage": "screening", "ceiling_usd": 5, "run_ceiling_usd": 0.25, "approved": true }
+  ],
+  "tasks": [
+    {
+      "id": "screen-slug-digit-boundaries",
+      "class": "implementation",
+      "prompt": "In this repository copy, `perf/token-reasoning/fixtures/run/slug-case.test.ts` fails. Fix `slugCase` in `perf/token-reasoning/fixtures/run/slug-case.ts` so the whole file passes with the minimal change that preserves existing behavior. Finish when `bun test perf/token-reasoning/fixtures/run/slug-case.test.ts` passes.",
+      "verify": "bun test perf/token-reasoning/fixtures/run/slug-case.test.ts"
+    },
+    {
+      "id": "screen-implement-to-roman",
+      "class": "implementation",
+      "prompt": "In this repository copy, implement `toRoman` in `perf/token-reasoning/fixtures/run/to-roman.ts` to satisfy `perf/token-reasoning/fixtures/run/to-roman.test.ts` (convert 1-3999 to Roman numerals subtractively; throw RangeError outside the range). Minimal implementation, finish when `bun test perf/token-reasoning/fixtures/run/to-roman.test.ts` passes.",
+      "verify": "bun test perf/token-reasoning/fixtures/run/to-roman.test.ts"
+    },
+    {
+      "id": "screen-debounce-leading",
+      "class": "implementation",
+      "prompt": "In this repository copy, `perf/token-reasoning/fixtures/run/debounce.test.ts` fails: `debounce` must honor `options.leading` (fire immediately on the first call after a quiet period, then suppress until the window elapses). Update `perf/token-reasoning/fixtures/run/debounce.ts` minimally. Finish when `bun test perf/token-reasoning/fixtures/run/debounce.test.ts` passes.",
+      "verify": "bun test perf/token-reasoning/fixtures/run/debounce.test.ts"
+    }
+  ]
+}
