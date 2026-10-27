@@ -4,7 +4,9 @@ import { OpenAIChat } from "@opencode/ai/protocols/openai-chat"
 import { TestLLM } from "@opencode/ai/testing"
 import { Agent } from "@opencode/core/agent"
 import { Bus } from "@opencode/core/bus"
+import { Config } from "@opencode/core/config"
 import { Database } from "@opencode/core/database/database"
+import { EffortStore } from "@opencode/core/effort/store"
 import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
 import { EventTable } from "@opencode/core/event/sql"
 import { Project } from "@opencode/core/project"
@@ -26,10 +28,11 @@ import { testEffect } from "./lib/effect"
 
 const it = testEffect(
   Layer.merge(
-    AppNodeBuilder.build(LayerNode.group([Database.node, Bus.node, SessionProjector.node, ToolOutput.node]), [
-      Bus.node.replace(Bus.configured({ persist: true })),
-    ]),
-    TestLLM.testLayer(),
+    AppNodeBuilder.build(
+      LayerNode.group([Database.node, Bus.node, SessionProjector.node, ToolOutput.node, EffortStore.node]),
+      [Bus.node.replace(Bus.configured({ persist: true }))],
+    ),
+    Layer.merge(TestLLM.testLayer(), Config.testLayer([])),
   ),
 )
 

@@ -13,6 +13,10 @@ import type { Agent } from "@opencode/schema/agent"
 import { Cause, Clock, Data, Effect, Exit, Fiber, Option, Stream } from "effect"
 import { SessionError } from "@opencode/schema/session-error"
 import { Bus } from "../../bus.js"
+import { Config } from "../../config.js"
+import { Database } from "../../database/database.js"
+import { EffortEvidence } from "../../effort/evidence.js"
+import { EffortStore } from "../../effort/store.js"
 import { ConfigHooks } from "../../config-hooks.js"
 import { Permission } from "../../permission.js"
 import { Snapshot } from "../../snapshot.js"
@@ -70,6 +74,9 @@ export const make = Effect.gen(function* () {
   const llm = yield* LLMClient.Service
   const snapshots = yield* Snapshot.Service
   const toolOutput = yield* ToolOutput.Service
+  const db = (yield* Database.Service).db
+  const efforts = yield* EffortStore.Service
+  const config = yield* Config.Service
 
   const attempt = Effect.fn("SessionStep.attempt")(function* (input: Input) {
     // The start snapshot only has to exist before local tools run, which cannot happen before Step.Started,
@@ -127,7 +134,18 @@ export const make = Effect.gen(function* () {
             fiber: yield* Effect.uninterruptibleMask((restore) =>
               restore(executeTool(event)).pipe(
                 Effect.flatMap(toolOutput.truncate),
-                Effect.flatMap((outcome) => publisher.toolExecution(event.id, event.name, outcome)),
+                Effect.flatMap((outcome) =>
+                  publisher.toolExecution(event.id, event.name, outcome).pipe(
+                    // Evidence lands after the durable settlement, before the step settles.
+                    Effect.tap(() =>
+                      EffortEvidence.observe(
+                        { db, efforts, config },
+                        input.sessionID,
+                        { tool: event.name, input: event.input, metadata: outcome.metadata },
+                      ),
+                    ),
+                  ),
+                ),
                 Effect.catchTag("Tool.Error", (error) =>
                   publisher.failTool(event.id, toSessionError(error), error.metadata).pipe(Effect.asVoid),
                 ),

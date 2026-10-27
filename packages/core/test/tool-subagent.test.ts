@@ -36,6 +36,7 @@ import { PluginSupervisor } from "@opencode/core/plugin/supervisor"
 import { Permission } from "@opencode/core/permission"
 import { SubagentTool } from "@opencode/core/tool/plugin/subagent"
 import { Tool } from "@opencode/core/tool"
+import { EffortStore } from "@opencode/core/effort/store"
 import { tmpdir } from "./fixture/tmpdir"
 import { tempGlobalLayer } from "./fixture/global"
 import { offlineModels } from "./fixture/models"
@@ -128,6 +129,7 @@ const subagentPluginSupervisor = makeLocationNode({
     Session.node,
     Job.node,
     SubagentJob.node,
+    EffortStore.node,
     Tool.node,
     PluginHooks.node,
   ],

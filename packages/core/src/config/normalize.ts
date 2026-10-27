@@ -218,6 +218,7 @@ export function normalize(input: unknown): Result {
     warming: Info.fields.warming,
     auto_background_ms: Info.fields.auto_background_ms,
     hooks: Info.fields.hooks,
+    effort_policy: Info.fields.effort_policy,
   }
   Object.entries(nativeAtomic).forEach(([key, schema]) => {
     if (!own(input, key)) return
@@ -460,60 +461,13 @@ function normalizeExperimental(
       unsupportedExperimental.forEach((key) =>
         unsupportedIfPresent(experimental, key, ["experimental", key], diagnostics),
       )
-      if (own(experimental, "portable_shell_scanner")) {
-        const value = decodeEncoded(
-          ConfigExperimental.Info.fields.portable_shell_scanner,
-          experimental.portable_shell_scanner,
-          ["experimental", "portable_shell_scanner"],
-          diagnostics,
-        )
-        if (value !== undefined) result.portable_shell_scanner = value
-      }
-      if (own(experimental, "todo")) {
-        const value = decodeEncoded(
-          ConfigExperimental.Info.fields.todo,
-          experimental.todo,
-          ["experimental", "todo"],
-          diagnostics,
-        )
-        if (value !== undefined) result.todo = value
-      }
-      if (own(experimental, "background_compaction")) {
-        const value = decodeEncoded(
-          ConfigExperimental.Info.fields.background_compaction,
-          experimental.background_compaction,
-          ["experimental", "background_compaction"],
-          diagnostics,
-        )
-        if (value !== undefined) result.background_compaction = value
-      }
-      if (own(experimental, "media_blob")) {
-        const value = decodeEncoded(
-          ConfigExperimental.Info.fields.media_blob,
-          experimental.media_blob,
-          ["experimental", "media_blob"],
-          diagnostics,
-        )
-        if (value !== undefined) result.media_blob = value
-      }
-      if (own(experimental, "subagent_depth")) {
-        const value = decodeEncoded(
-          ConfigExperimental.Info.fields.subagent_depth,
-          experimental.subagent_depth,
-          ["experimental", "subagent_depth"],
-          diagnostics,
-        )
-        if (value !== undefined) result.subagent_depth = value
-      }
-      if (own(experimental, "location_idle_timeout")) {
-        const value = decodeEncoded(
-          ConfigExperimental.Info.fields.location_idle_timeout,
-          experimental.location_idle_timeout,
-          ["experimental", "location_idle_timeout"],
-          diagnostics,
-        )
-        if (value !== undefined) result.location_idle_timeout = value
-      }
+      Object.entries(ConfigExperimental.Info.fields).forEach(([key, field]) => {
+        // Deprecated experimental policies migrate into top-level policies elsewhere.
+        if (key === "policies") return
+        if (!own(experimental, key)) return
+        const value = decodeEncoded(field, experimental[key], ["experimental", key], diagnostics)
+        if (value !== undefined) result[key] = value
+      })
     }
   }
   if (Object.keys(result).length || (isRecord(input.experimental) && !Object.keys(input.experimental).length))

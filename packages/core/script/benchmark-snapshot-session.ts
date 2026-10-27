@@ -35,6 +35,8 @@ import { SessionStep } from "../src/session/runner/step"
 import { SessionTable } from "../src/session/sql"
 import { Snapshot } from "../src/snapshot"
 import { ToolOutput } from "../src/tool-output"
+import { Config } from "../src/config"
+import { EffortStore } from "../src/effort/store"
 
 const args = process.argv.slice(2)
 const flag = (name: string) => {
@@ -168,10 +170,11 @@ const run = (snapshots: Layer.Layer<Snapshot.Service>) =>
     Effect.provide(snapshots),
     Effect.provide(
       Layer.merge(
-        AppNodeBuilder.build(LayerNode.group([Database.node, Bus.node, SessionProjector.node, ToolOutput.node]), [
-          Bus.node.replace(Bus.configured({ persist: true })),
-        ]),
-        TestLLM.testLayer(),
+        AppNodeBuilder.build(
+          LayerNode.group([Database.node, Bus.node, SessionProjector.node, ToolOutput.node, EffortStore.node]),
+          [Bus.node.replace(Bus.configured({ persist: true }))],
+        ),
+        Layer.merge(TestLLM.testLayer(), Config.testLayer([])),
       ),
     ),
     Effect.provide(Logger.layer([])),

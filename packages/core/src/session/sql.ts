@@ -14,6 +14,7 @@ import type { Workspace } from "@opencode/schema/workspace"
 import { Timestamps } from "../database/schema.sql.js"
 import type { Instruction } from "@opencode/schema/instruction"
 import type { Session } from "@opencode/schema/session"
+import type { EffortLevel } from "../effort/policy/types.js"
 import type { CompactionPayload, MovePayload, SyntheticPayload } from "@opencode/schema/session-inbox"
 import type { RevertV1 } from "@opencode/schema/session-revert"
 import type { Schema } from "effect"
@@ -124,6 +125,21 @@ export const SessionMessageTextTable = sqliteTable(
   },
   (table) => [index("session_message_text_session_seq_idx").on(table.session_id, table.seq)],
 )
+
+export const SessionEffortTable = sqliteTable("session_effort", {
+  session_id: text()
+    .$type<SessionSchema.ID>()
+    .primaryKey()
+    .references(() => SessionTable.id, { onDelete: "cascade" }),
+  base_level: text().$type<EffortLevel>().notNull(),
+  open_failure: text({ mode: "json" }).$type<{
+    verifier: string
+    sequence: number
+    revision: number
+  }>(),
+  revision: integer().notNull().default(0),
+  last_applied_variant: text(),
+})
 
 export const SessionInboxTable = sqliteTable(
   "session_inbox",

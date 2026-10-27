@@ -82,6 +82,8 @@ import { asc, desc, eq, sql } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
 import { promptLocationNode } from "./fixture/prompt-location"
 import { LocationServiceMap } from "@opencode/core/location-service-map"
+import { EffortStore } from "@opencode/core/effort/store"
+import { ConfigEffort } from "@opencode/schema/config/effort"
 import { Expected } from "./lib/session-message"
 import { permissionLayer } from "./lib/permission"
 import { agentHost, modelHost, host, noProviders } from "./plugin/host"
@@ -109,6 +111,10 @@ const testLLM = TestLLM.layer({
 type ModelLimit = { readonly context: number; readonly input?: number; readonly output: number }
 const defaultModelLimit = { context: 200_000, output: 32_000 }
 const modelLimits = new Map<string, ModelLimit>()
+/** Catalog infos served by the prompt Model.Service mock; policy scenarios register effort variants here. */
+const modelInfos = new Map<string, Model.Info>()
+/** Exit codes the stub shell tool settles with, popped per execution; policy scenarios queue them. */
+const verifierExits: number[] = []
 const testModel = (id: string, limit: ModelLimit = defaultModelLimit) => {
   modelLimits.set(id, limit)
   return LanguageModel.make({ id, provider: "fake", route: OpenAIChat.route })
@@ -397,6 +403,7 @@ const layer = Layer.unwrap(
       new Document({
         type: "document",
         info: new Info({
+          effort_policy: new ConfigEffort.Info({ verification_commands: ["pnpm typecheck"] }),
           compaction: new ConfigCompaction.Info({
             buffer: 3_000,
             keep: new ConfigCompaction.Keep({ tokens: 1_000 }),
@@ -405,7 +412,7 @@ const layer = Layer.unwrap(
       }),
     ])
     const promptModels = Layer.mock(Model.Service, {
-      get: () => Effect.undefined,
+      get: (providerID, id) => Effect.succeed(modelInfos.get(`${providerID}/${id}`)),
       all: () => Effect.succeed([]),
       available: () => Effect.succeed([]),
       default: () => Effect.undefined,
@@ -468,6 +475,7 @@ const layer = Layer.unwrap(
         SessionProjector.node,
         SessionStore.node,
         SessionInbox.node,
+        EffortStore.node,
         Agent.node,
         Model.node,
         Tool.node,
@@ -2103,6 +2111,166 @@ describe("SessionRunnerLLM", () => {
         { role: "user" },
       ],
     })
+  })
+
+  const effortModelInfo = () => {
+    modelInfos.set(
+      "fake/fake-model",
+      {
+        ...Model.Info.default(Provider.ID.make("fake"), Model.ID.make("fake-model")),
+        variants: ["low", "high", "max"].map((id) => ({ id: Model.VariantID.make(id) })),
+      },
+    )
+  }
+
+  const subscribeEffortTransitions = (s: Scenario) =>
+    Effect.gen(function* () {
+      const seen = yield* Queue.unbounded<SessionEvent.EffortTransitioned["data"]>()
+      yield* s.bus.subscribe(SessionEvent.EffortTransitioned).pipe(
+        Stream.filter((event) => event.data.sessionID === sessionID),
+        Stream.runForEach((event) => Queue.offer(seen, event.data)),
+        Effect.forkScoped({ startImmediately: true }),
+      )
+      return seen
+    })
+
+  scenario("applies the policy base as a durable variant and records the transition", function* (s) {
+    effortModelInfo()
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "low", revision: 0 })
+    const seen = yield* subscribeEffortTransitions(s)
+
+    yield* s.llm.push(TestLLM.text("First answer", "effort-base-first"))
+    yield* s.runPrompt("First")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("low" as Model.VariantID)
+    const transition = yield* Queue.take(seen)
+    expect(transition.decision).toEqual({ rule: "base", level: "low", effort: "low" })
+    expect((yield* efforts.get(sessionID))?.lastAppliedVariant).toBe("low")
+
+    // The policy's own write is an echo: the next step decides the same and must not re-transition.
+    yield* s.llm.push(TestLLM.text("Second answer", "effort-base-second"))
+    yield* s.runPrompt("Second")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("low" as Model.VariantID)
+    expect(yield* Queue.isFull(seen)).toBe(false)
+  })
+
+  scenario("clears the variant when escalation reaches the model default", function* (s) {
+    effortModelInfo()
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "low", revision: 0 })
+    const seen = yield* subscribeEffortTransitions(s)
+
+    yield* s.llm.push(TestLLM.text("First answer", "effort-clear-first"))
+    yield* s.runPrompt("First")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("low" as Model.VariantID)
+
+    const base = yield* Queue.take(seen)
+    expect(base.decision).toEqual({ rule: "base", level: "low", effort: "low" })
+
+    // The verifier fails; one level above low is standard: the model default, i.e. no variant.
+    yield* efforts.set({
+      sessionID,
+      baseLevel: "low",
+      openFailure: { verifier: "pwsh\0pnpm typecheck\0/work", sequence: 4, revision: 7 },
+      revision: 7,
+      lastAppliedVariant: "low",
+    })
+    yield* s.llm.push(TestLLM.text("Second answer", "effort-clear-second"))
+    yield* s.runPrompt("Second")
+    // Cleared to the model default, which the store reads back as the "default" variant.
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("default" as Model.VariantID)
+    const transition = yield* Queue.take(seen)
+    expect(transition.decision).toEqual({ rule: "escalated", level: "standard" })
+    expect((yield* efforts.get(sessionID))?.lastAppliedVariant).toBeUndefined()
+  })
+
+  scenario("a user pick replaces the policy baseline and is never escalated", function* (s) {
+    effortModelInfo()
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "low", revision: 0 })
+    const seen = yield* subscribeEffortTransitions(s)
+
+    yield* s.llm.push(TestLLM.text("First answer", "effort-pick-first"))
+    yield* s.runPrompt("First")
+    expect((yield* efforts.get(sessionID))?.lastAppliedVariant).toBe("low")
+
+    yield* s.bus.publish(SessionEvent.ModelSelected, {
+      sessionID,
+      model: {
+        id: ID.make("fake-model"),
+        providerID: Provider.ID.make("fake"),
+        variant: Model.VariantID.make("high"),
+      },
+    })
+    yield* s.llm.push(TestLLM.text("Second answer", "effort-pick-second"))
+    yield* s.runPrompt("Second")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("high" as Model.VariantID)
+    expect((yield* efforts.get(sessionID))?.lastAppliedVariant).toBeUndefined()
+    yield* Queue.take(seen)
+    expect(yield* Queue.isFull(seen)).toBe(false)
+  })
+
+  scenario("escalates while a configured verifier fails and returns when it passes", function* (s) {
+    effortModelInfo()
+    s.currentModel = LanguageModel.make({ id: "claude-effort", provider: "anthropic", route: AnthropicMessages.route })
+    modelInfos.set("anthropic/claude-effort", {
+      ...Model.Info.default(Provider.ID.make("anthropic"), Model.ID.make("claude-effort")),
+      variants: ["low", "high", "max"].map((id) => ({ id: Model.VariantID.make(id) })),
+    })
+    // The stub verifier tool registers only for this scenario so shared tool-list assertions stay clean.
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) =>
+      editor.add({
+        name: "shell",
+        description: "Stub shell: settles with the next queued verifier exit code",
+        input: Schema.Struct({ command: Schema.String }),
+        output: Schema.Struct({}),
+        options: { codemode: false },
+        execute: () =>
+          Effect.succeed({
+            output: {},
+            content: [{ type: "text" as const, text: "" }],
+            metadata: { exit: verifierExits.shift() ?? 0 },
+          }),
+      }),
+    )
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "standard", revision: 0 })
+    const seen = yield* subscribeEffortTransitions(s)
+    verifierExits.push(1)
+
+    // The verifier fails; the continuation step decides one level above standard: deep, the max variant.
+    yield* s.llm.push(TestLLM.tool("verify-fail", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.text("Answer after failing verifier", "effort-loop-fail"))
+    yield* s.runPrompt("First")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("max" as Model.VariantID)
+    const escalated = yield* Queue.take(seen)
+    expect(escalated.decision).toEqual({ rule: "escalated", level: "deep", effort: "max" })
+    const row = yield* efforts.get(sessionID)
+    expect(row?.openFailure?.verifier).toBe("pnpm typecheck")
+
+    // The escalated level holds without re-transitioning while the failure stays open.
+    yield* s.llm.push(TestLLM.text("Answer while escalated", "effort-loop-escalated"))
+    yield* s.runPrompt("Second")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("max" as Model.VariantID)
+    expect(yield* Queue.isFull(seen)).toBe(false)
+
+    // The same verifier passes: the failure clears; the variant drops next step.
+    verifierExits.push(0)
+    yield* s.llm.push(TestLLM.tool("verify-pass", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.text("Answer after passing verifier", "effort-loop-pass"))
+    yield* s.runPrompt("Third")
+    expect((yield* efforts.get(sessionID))?.openFailure).toBeUndefined()
+
+    yield* s.llm.push(TestLLM.text("Answer back at base", "effort-loop-base"))
+    yield* s.runPrompt("Fourth")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("default" as Model.VariantID)
+    const returned = yield* Queue.take(seen)
+    expect(returned.decision).toEqual({ rule: "base", level: "standard" })
+
+    // The return switch rides the cache-preserving effort update on supporting routes.
+    const last = s.requests.at(-1)
+    expect(last?.messages).toContainEqual(Message.effort({ effort: undefined, previous: "max" }))
   })
 
   scenario("preserves instruction values while a source is temporarily unavailable", function* (s) {

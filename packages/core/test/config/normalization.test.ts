@@ -107,6 +107,30 @@ describe("ConfigNormalize", () => {
     expect(result.agents?.reviewer?.system).toBe("Use V2")
   })
 
+  test("keeps the effort_policy section through normalization", () => {
+    const info = decoded({
+      effort_policy: {
+        verification_commands: ["pnpm typecheck"],
+        base_level: "deep",
+        mutating_tools: ["write", "edit"],
+        agent_operations: { reviewer: "mechanical" },
+      },
+    })
+    expect(info.effort_policy?.verification_commands).toEqual(["pnpm typecheck"])
+    expect(info.effort_policy?.base_level).toBe("deep")
+    expect(info.effort_policy?.mutating_tools).toEqual(["write", "edit"])
+    expect(info.effort_policy?.agent_operations).toEqual({ reviewer: "mechanical" })
+  })
+
+  test("reports invalid effort_policy values as diagnostics instead of dropping them silently", () => {
+    const result = normalized({
+      effort_policy: { verification_commands: "pnpm typecheck", agent_operations: { reviewer: "vibes" } },
+    })
+    expect(result.diagnostics.length).toBeGreaterThan(0)
+    expect(result.diagnostics.every((diagnostic) => diagnostic.path[0] === "effort_policy")).toBe(true)
+    expect("effort_policy" in result.encoded).toBe(false)
+  })
+
   test("canonicalizes transformed native values through decode then encode", () => {
     const result = normalized({ warming: { interval: "4 minutes", duration: "30 minutes" } })
     expect(result.encoded.warming).toEqual({ interval: "240000 millis", duration: "1800000 millis" })

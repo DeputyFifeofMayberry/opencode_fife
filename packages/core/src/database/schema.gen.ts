@@ -167,6 +167,16 @@ const schema: Omit<DatabaseMigration.Migration, "id"> = {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`session_effort\` (
+          \`session_id\` text PRIMARY KEY,
+          \`base_level\` text NOT NULL,
+          \`open_failure\` text,
+          \`revision\` integer DEFAULT 0 NOT NULL,
+          \`last_applied_variant\` text,
+          CONSTRAINT \`fk_session_effort_session_id_session_v2_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session_v2\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`session_inbox\` (
           \`id\` text PRIMARY KEY,
           \`session_id\` text NOT NULL,

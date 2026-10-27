@@ -2316,6 +2316,12 @@ export type ConfigEntry =
         plugins?: Array<string | { package: string; options?: { [x: string]: JsonValue } }>
         worktree?: ConfigWorktree
         warming?: boolean | { prompt?: string; interval?: string; duration?: string }
+        effort_policy?: {
+          verification_commands?: Array<string>
+          base_level?: "low" | "standard" | "deep"
+          mutating_tools?: Array<string>
+          agent_operations?: { [x: string]: "general" | "explore" | "implement" | "plan" | "review" | "mechanical" }
+        }
         auto_background_ms?: number
         providers?: {
           [x: string]: {
