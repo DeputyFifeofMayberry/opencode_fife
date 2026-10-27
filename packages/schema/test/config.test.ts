@@ -167,6 +167,23 @@ describe("Config.Effort", () => {
     expect(Schema.encodeSync(Config.Info)(decoded)).toEqual(input)
   })
 
+  test("decodes the example documented in docs/spec/effort-policy.md", () => {
+    const decoded = decode({
+      effort_policy: {
+        verification_commands: ["pnpm typecheck"],
+        base_level: "standard",
+        mutating_tools: ["write", "edit", "patch"],
+        agent_operations: { reviewer: "review" },
+      },
+    })
+    expect(decoded.effort_policy).toMatchObject({
+      verification_commands: ["pnpm typecheck"],
+      base_level: "standard",
+      mutating_tools: ["write", "edit", "patch"],
+      agent_operations: { reviewer: "review" },
+    })
+  })
+
   test("omits the section when absent or empty", () => {
     expect(Schema.encodeSync(Config.Info)(new Config.Info({ effort_policy: undefined }))).not.toHaveProperty(
       "effort_policy",

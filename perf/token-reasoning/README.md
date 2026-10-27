@@ -178,4 +178,5 @@ cd packages/core
 bun run script/test.ts test/session-usage-report.test.ts
 ```
 
-The plan that defines these contracts is `docs/plans/token-reasoning-optimization-plan.md`.
+The plan that defines these contracts is `docs/plans/token-reasoning-optimization-plan.md`. The
+effort profiles under comparison are documented in `docs/spec/effort-policy.md`.
