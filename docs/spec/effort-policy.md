@@ -113,16 +113,18 @@ export function classify(input: {
 
 ## Success Criteria
 
-1. Configured verifier exits non-zero → within the same session the next request runs at the resolved escalated effort, auditable via a `session.effort.transitioned` event with `rule: "escalated"`.
-2. The same verifier exits 0 at a later sequence and not-older revision → next request is back at base; a stale pass (earlier sequence or older revision) does not clear.
-3. A user-selected variant is written verbatim with `rule: "exact-base"` and never escalated, in every state.
-4. Subagent children start at their operation's level only when nothing explicit or inherited exists; inherited lower levels are not floored.
-5. With agent `plan` and no exact pick, effective base is `deep`.
-6. Effort switches preserve the provider prompt cache on `supportsEffortUpdates` routes (marker present in request messages).
-7. Routes advertising no reasoning stay untouched in all states.
-8. Unconfigured commands never change policy state, and infrastructure failures never open escalations.
-9. Escalation state survives a server restart (durable row honored, no duplicate transitions).
-10. Ported core suites pass unchanged against the vendored sources.
+Verification status after Tasks 1–8 (all criteria covered by automated tests except the live smoke in criterion 9's surrounding workflow; see `tasks/todo.md` Task 8):
+
+1. ✅ Configured verifier exits non-zero → within the same session the next request runs at the resolved escalated effort, auditable via a `session.effort.transitioned` event with `rule: "escalated"`.
+2. ✅ The same verifier exits 0 at a later sequence and not-older revision → next request is back at base; a stale pass (earlier sequence or older revision) does not clear.
+3. ✅ A user-selected variant is written verbatim with `rule: "exact-base"` and never escalated, in every state.
+4. ✅ Subagent children start at their operation's level only when nothing explicit or inherited exists; inherited lower levels are not floored.
+5. ✅ With agent `plan` and no exact pick, effective base is `deep`.
+6. ✅ Effort switches preserve the provider prompt cache on `supportsEffortUpdates` routes (marker present in request messages).
+7. ✅ Routes advertising no reasoning stay untouched in all states.
+8. ✅ Unconfigured commands never change policy state, and infrastructure failures never open escalations.
+9. ✅ Escalation state survives a server restart (durable row honored, no duplicate transitions).
+10. ✅ Ported core suites pass unchanged against the vendored sources.
 
 ## Open Questions
 

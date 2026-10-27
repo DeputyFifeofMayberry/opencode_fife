@@ -2212,6 +2212,11 @@ describe("SessionRunnerLLM", () => {
 
   scenario("escalates while a configured verifier fails and returns when it passes", function* (s) {
     effortModelInfo()
+    s.currentModel = LanguageModel.make({ id: "claude-effort", provider: "anthropic", route: AnthropicMessages.route })
+    modelInfos.set("anthropic/claude-effort", {
+      ...Model.Info.default(Provider.ID.make("anthropic"), Model.ID.make("claude-effort")),
+      variants: ["low", "high", "max"].map((id) => ({ id: Model.VariantID.make(id) })),
+    })
     // The stub verifier tool registers only for this scenario so shared tool-list assertions stay clean.
     const registry = yield* Tool.Service
     yield* registry.transform((editor) =>
@@ -2262,6 +2267,10 @@ describe("SessionRunnerLLM", () => {
     expect((yield* s.session.get(sessionID)).model?.variant).toBe("default" as Model.VariantID)
     const returned = yield* Queue.take(seen)
     expect(returned.decision).toEqual({ rule: "base", level: "standard" })
+
+    // The return switch rides the cache-preserving effort update on supporting routes.
+    const last = s.requests.at(-1)
+    expect(last?.messages).toContainEqual(Message.effort({ effort: undefined, previous: "max" }))
   })
 
   scenario("preserves instruction values while a source is temporarily unavailable", function* (s) {
