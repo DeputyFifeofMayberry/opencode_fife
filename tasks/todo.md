@@ -169,7 +169,7 @@ Spec: `docs/spec/effort-policy.md` · Plan: `tasks/plan.md`
 - [x] Restart mid-escalation resumes the escalated level exactly once
 - [x] Policy-switched requests carry the effort marker on supporting routes (spec criterion 6)
 - [x] All ten spec success criteria checked off
-- [ ] Manual: `bun run dev:live` with a configured verifier, observe transition and restore
+- [ ] Manual: `bun run dev:live` against the local dev daemon with a configured verifier — config-path bug found and fixed (`effort_policy` was stripped by config normalization; commit `8fe74cf576`); the model leg is blocked on the opencode free-tier quota (429, resets ~daily). Re-run when quota returns or with a paid provider.
 
 **Verification:**
 - [x] `cd packages/core && bun test test/effort`
