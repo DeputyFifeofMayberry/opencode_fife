@@ -15,11 +15,11 @@ import os from "os"
 import path from "path"
 import stripAnsi from "strip-ansi"
 import type { SessionMessageAssistantTool } from "@opencode/client/promise"
+import { fileDiffRecord } from "@opencode/util/file-diff"
 import { LANGUAGE_EXTENSIONS } from "../util/filetype"
 import { Locale } from "../util/locale"
 import {
   canonicalToolName,
-  finiteNumber,
   primitiveInputSummary,
   toolDisplayContent,
   toolDisplayMetadata,
@@ -200,30 +200,14 @@ function normalizeInput(name: string, value: unknown) {
 }
 
 function normalizeFile(value: unknown): PatchFile | undefined {
-  const file = dict(value)
-  const name = text(file.file) || text(file.relativePath) || text(file.filePath)
-  if (!name) return
-  const legacy = text(file.type)
-  const status =
-    text(file.status) ||
-    (legacy === "add"
-      ? "added"
-      : legacy === "delete"
-        ? "deleted"
-        : legacy === "update"
-          ? "modified"
-          : legacy === "move"
-            ? "moved"
-            : legacy)
-  const patch = typeof file.patch === "string" ? file.patch : undefined
-  const deletions = finiteNumber(file.deletions)
+  const file = fileDiffRecord(value)
+  if (!file) return
   return {
-    ...file,
-    file: name,
-    ...(status === "moved" && text(file.filePath) ? { from: text(file.filePath) } : {}),
-    ...(status ? { status } : {}),
-    ...(patch === undefined ? {} : { patch }),
-    ...(deletions === undefined ? {} : { deletions }),
+    file: file.path,
+    ...(file.status === "moved" && file.filePath ? { from: file.filePath } : {}),
+    ...(file.status ? { status: file.status } : {}),
+    ...(file.patch !== undefined ? { patch: file.patch } : {}),
+    ...(file.deletions !== undefined ? { deletions: file.deletions } : {}),
   }
 }
 

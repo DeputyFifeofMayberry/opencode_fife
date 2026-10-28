@@ -1,4 +1,5 @@
 import type { FileDiffInfo } from "@opencode/client/promise"
+import { fileDiffRecord } from "@opencode/util/file-diff"
 import { completePatchContents, normalize, type ViewDiff } from "./session-diff"
 
 type Kind = "add" | "update" | "delete"
@@ -14,22 +15,18 @@ export type ApplyPatchFile = {
 
 export type ApplyPatchFileGroup = Omit<ApplyPatchFile, "view" | "contents"> & { views: ViewDiff[] }
 
+/** Canonical entries only: a status-derived kind, a rendered patch, and at least one change. */
 export function changedFileDiff(value: unknown): value is FileDiffInfo {
-  if (!value || typeof value !== "object") return false
-
-  if (!("file" in value) || typeof value.file !== "string") return false
-
-  if (!("patch" in value) || typeof value.patch !== "string") return false
-
-  if (!("additions" in value) || typeof value.additions !== "number") return false
-
-  if (!("deletions" in value) || typeof value.deletions !== "number") return false
-
-  if (!("status" in value)) return false
-
-  if (value.status !== "added" && value.status !== "deleted" && value.status !== "modified") return false
-
-  return value.additions > 0 || value.deletions > 0
+  const file = fileDiffRecord(value)
+  return (
+    file !== undefined &&
+    file.status !== undefined &&
+    file.status !== "moved" &&
+    file.patch !== undefined &&
+    file.additions !== undefined &&
+    file.deletions !== undefined &&
+    (file.additions > 0 || file.deletions > 0)
+  )
 }
 
 export function patchFile(value: unknown): ApplyPatchFile | undefined {

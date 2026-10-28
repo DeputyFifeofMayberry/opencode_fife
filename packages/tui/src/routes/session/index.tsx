@@ -45,6 +45,7 @@ import type {
 } from "@opencode/client"
 import { useLocal } from "../../context/local"
 import { Locale } from "../../util/locale"
+import { fileDiffRecord } from "@opencode/util/file-diff"
 import { FilePath } from "../../ui/file-path"
 import {
   canonicalToolName,
@@ -3764,27 +3765,20 @@ function formatSessionTranscript(
 export function parseApplyPatchFiles(value: unknown) {
   if (!Array.isArray(value)) return []
   return value.flatMap((item) => {
-    const file = recordValue(item)
-    if (!file) return []
-    const status = stringValue(file.status)
-    const type =
-      stringValue(file.type) ??
-      (status === "added" ? "add" : status === "deleted" ? "delete" : status === "modified" ? "update" : undefined)
-    const relativePath = stringValue(file.file) ?? stringValue(file.relativePath)
-    const filePath = stringValue(file.filePath) ?? relativePath
-    const patch = stringValue(file.patch)
-    const additions = finiteNumber(file.additions)
-    const deletions = finiteNumber(file.deletions)
-    if (
-      !type ||
-      !relativePath ||
-      !filePath ||
-      patch === undefined ||
-      additions === undefined ||
-      deletions === undefined
-    )
+    const file = fileDiffRecord(item)
+    if (!file?.type || file.patch === undefined || file.additions === undefined || file.deletions === undefined)
       return []
-    return [{ type, relativePath, filePath, patch, additions, deletions, movePath: stringValue(file.movePath) }]
+    return [
+      {
+        type: file.type,
+        relativePath: file.path,
+        filePath: file.filePath ?? file.path,
+        patch: file.patch,
+        additions: file.additions,
+        deletions: file.deletions,
+        movePath: file.movePath,
+      },
+    ]
   })
 }
 
