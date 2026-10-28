@@ -19,6 +19,7 @@ import {
 import { createStore } from "solid-js/store"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
 import { Effect, Option, Schema } from "effect"
+import { toolAnswers, toolDiagnostics, toolQuestions, type ToolDiagnostic } from "@opencode/util/tool-metadata"
 import { createTwoFilesPatch, diffLines } from "diff"
 import { Dynamic } from "solid-js/web"
 import { type SessionSummary, useData } from "../context"
@@ -160,33 +161,7 @@ type ToolMetadata = ReturnType<typeof toolMetadata>
 
 const decodeString = Schema.decodeUnknownOption(Schema.String)
 
-const decodeQuestion = Schema.decodeUnknownOption(Schema.Struct({ question: Schema.String }))
-
-const decodeAnswer = Schema.decodeUnknownOption(Schema.Array(Schema.String))
-
-const decodeDiagnostic = Schema.decodeUnknownOption(
-  Schema.Struct({
-    range: Schema.Struct({ start: Schema.Struct({ line: Schema.Number, character: Schema.Number }) }),
-    message: Schema.String,
-    severity: Schema.optional(Schema.Number),
-  }),
-)
-
-type Diagnostic = Option.Option.Value<ReturnType<typeof decodeDiagnostic>>
-
-function questions(input: ToolInput) {
-  return (input.questions ?? []).flatMap((question) => Option.toArray(decodeQuestion(question)))
-}
-
-function getDiagnostics(diagnosticsByFile: ToolMetadata["diagnostics"], filePath: string | undefined) {
-  if (!filePath) return []
-
-  return (diagnosticsByFile?.[filePath] ?? [])
-    .flatMap((value) => Option.toArray(decodeDiagnostic(value)).filter((diagnostic) => diagnostic.severity === 1))
-    .slice(0, 3)
-}
-
-function DiagnosticsDisplay(props: { diagnostics: readonly Diagnostic[] }): JSX.Element {
+function DiagnosticsDisplay(props: { diagnostics: readonly ToolDiagnostic[] }): JSX.Element {
   const i18n = useI18n()
 
   return (
@@ -1449,7 +1424,7 @@ function toolErrorSubtitle(props: ToolProps, i18n: UiI18n) {
   }
 
   if (props.tool === "question") {
-    const count = questions(input).length
+    const count = toolQuestions(input).length
 
     if (count === 0) return undefined
 
@@ -2380,7 +2355,7 @@ ToolRegistry.register({
     const metadata = createMemo(() => toolMetadata(props.metadata))
     const inputPath = () => input().path ?? ""
     const diff = createMemo(() => metadata().files?.find(changedFileDiff))
-    const diagnostics = createMemo(() => getDiagnostics(metadata().diagnostics, inputPath()))
+    const diagnostics = createMemo(() => toolDiagnostics(metadata().diagnostics, inputPath()))
     const path = createMemo(() => diff()?.file ?? inputPath())
 
     const pending = () => props.status === "streaming" || props.status === "running"
@@ -2463,7 +2438,7 @@ ToolRegistry.register({
     const fileComponent = useFileComponent()
     const path = createMemo(() => toolInput(props.input).path ?? "")
     const content = createMemo(() => toolInput(props.input).content ?? "")
-    const diagnostics = createMemo(() => getDiagnostics(toolMetadata(props.metadata).diagnostics, path()))
+    const diagnostics = createMemo(() => toolDiagnostics(toolMetadata(props.metadata).diagnostics, path()))
 
     return (
       <div data-component="write-tool">
@@ -2639,13 +2614,11 @@ ToolRegistry.register({
   render(props) {
     const i18n = useI18n()
 
-    const items = createMemo(() => questions(toolInput(props.input)))
+    const items = createMemo(() => toolQuestions(toolInput(props.input)))
 
-    const answers = createMemo(() =>
-      (toolMetadata(props.metadata).answers ?? []).flatMap((answer) => Option.toArray(decodeAnswer(answer))),
-    )
+    const answers = createMemo(() => toolAnswers(toolMetadata(props.metadata).answers))
 
-    const completed = createMemo(() => answers().length > 0)
+    const completed = createMemo(() => (answers()?.length ?? 0) > 0)
 
     const subtitle = createMemo(() => {
       const count = items().length
@@ -2671,7 +2644,7 @@ ToolRegistry.register({
           <div data-component="question-answers">
             <For each={items()}>
               {(q, i) => {
-                const answer = () => answers()[i()] ?? []
+                const answer = () => answers()?.[i()] ?? []
 
                 return (
                   <div data-slot="question-answer-item">

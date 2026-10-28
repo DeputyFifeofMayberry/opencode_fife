@@ -46,6 +46,7 @@ import type {
 import { useLocal } from "../../context/local"
 import { Locale } from "../../util/locale"
 import { fileDiffRecord } from "@opencode/util/file-diff"
+import { toolAnswers, toolDiagnostics, toolQuestions } from "@opencode/util/tool-metadata"
 import { FilePath } from "../../ui/file-path"
 import {
   canonicalToolName,
@@ -3652,8 +3653,8 @@ function TodoWrite(props: ToolProps) {
 
 function Question(props: ToolProps) {
   const theme = useTheme()
-  const questions = createMemo(() => parseQuestions(props.input.questions))
-  const answers = createMemo(() => parseQuestionAnswers(props.metadata.answers))
+  const questions = createMemo(() => toolQuestions(props.input.questions))
+  const answers = createMemo(() => toolAnswers(props.metadata.answers))
   const count = createMemo(() => questions().length)
 
   function format(answer?: ReadonlyArray<string>) {
@@ -3703,7 +3704,7 @@ function Diagnostics(props: { diagnostics: unknown; filePath: string }) {
       typeof props.filePath === "string" ? props.filePath : "",
       terminalEnvironment.platform,
     )
-    return parseDiagnostics(props.diagnostics, normalized)
+    return toolDiagnostics(props.diagnostics, normalized)
   })
 
   return (
@@ -3773,33 +3774,3 @@ export function parseApplyPatchFiles(value: unknown) {
   })
 }
 
-export function parseQuestions(value: unknown) {
-  if (!Array.isArray(value)) return []
-  return value.flatMap((item) => {
-    const question = stringValue(recordValue(item)?.question)
-    return question ? [{ question }] : []
-  })
-}
-
-export function parseQuestionAnswers(value: unknown) {
-  if (!Array.isArray(value)) return
-  return value.map((answer) =>
-    Array.isArray(answer) ? answer.filter((item): item is string => typeof item === "string") : [],
-  )
-}
-
-export function parseDiagnostics(value: unknown, filePath: string) {
-  const diagnostics = recordValue(value)?.[filePath]
-  if (!Array.isArray(diagnostics)) return []
-  return diagnostics
-    .flatMap((item) => {
-      const diagnostic = recordValue(item)
-      const start = recordValue(recordValue(diagnostic?.range)?.start)
-      const line = finiteNumber(start?.line)
-      const character = finiteNumber(start?.character)
-      const message = stringValue(diagnostic?.message)
-      if (diagnostic?.severity !== 1 || line === undefined || character === undefined || !message) return []
-      return [{ range: { start: { line, character } }, message }]
-    })
-    .slice(0, 3)
-}
