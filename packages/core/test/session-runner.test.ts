@@ -46,6 +46,7 @@ import { SessionProjector } from "@opencode/core/session/projector"
 import { SessionExecution } from "@opencode/core/session/execution"
 import { SessionRunCoordinator } from "@opencode/core/session/run-coordinator"
 import { SessionRunner } from "@opencode/core/session/runner/index"
+import { StepDeclinedError } from "@opencode/core/session/error"
 import { SessionRunnerLLM } from "@opencode/core/session/runner/llm"
 import { SessionRunnerModel } from "@opencode/core/session/runner/model"
 import { SessionUsage } from "@opencode/core/session/usage"
@@ -5211,7 +5212,7 @@ describe("SessionRunnerLLM", () => {
     ])
   })
 
-  scenario("interrupts runner continuation on a decline after settling an ordinary tool error", function* (s) {
+  scenario("stops runner continuation with a typed decline after settling an ordinary tool error", function* (s) {
     const registry = yield* Tool.Service
     yield* transformTools(
       registry,
@@ -5254,7 +5255,14 @@ describe("SessionRunnerLLM", () => {
     const exit = yield* s.resume.pipe(Effect.exit)
 
     expect(exit._tag).toBe("Failure")
-    if (exit._tag === "Failure") expect(Cause.hasInterruptsOnly(exit.cause)).toBe(true)
+    if (exit._tag === "Failure") {
+      // The decline fails typed as a deliberate user stop instead of self-interrupting,
+      // so the execution can settle it as reason "user" instead of "shutdown".
+      expect(Cause.hasInterruptsOnly(exit.cause)).toBe(false)
+      expect(
+        exit.cause.reasons.some((reason) => Cause.isFailReason(reason) && reason.error instanceof StepDeclinedError),
+      ).toBe(true)
+    }
     expect(s.requests).toHaveLength(1)
     expect(yield* s.context).toMatchObject([
       Expected.user("Call declined"),
@@ -5336,7 +5344,7 @@ describe("SessionRunnerLLM", () => {
     expect(yield* recordedEventTypes(sessionID)).not.toContain("session.step.failed.1")
   })
 
-  scenario("interrupts runner continuation when a question is cancelled", function* (s) {
+  scenario("stops runner continuation with a typed decline when a question is cancelled", function* (s) {
     const registry = yield* Tool.Service
     yield* transformTools(
       registry,
@@ -5359,7 +5367,10 @@ describe("SessionRunnerLLM", () => {
     const exit = yield* Fiber.join(run)
 
     expect(exit._tag).toBe("Failure")
-    if (exit._tag === "Failure") expect(Cause.hasInterruptsOnly(exit.cause)).toBe(true)
+    if (exit._tag === "Failure")
+      expect(
+        exit.cause.reasons.some((reason) => Cause.isFailReason(reason) && reason.error instanceof StepDeclinedError),
+      ).toBe(true)
     expect(s.requests).toHaveLength(1)
     expect(yield* s.context).toMatchObject([
       Expected.user("Ask then stop"),

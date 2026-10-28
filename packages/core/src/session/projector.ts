@@ -545,6 +545,9 @@ const layer = Layer.effectDiscard(
           ),
         ]
         if (candidates.length === 0) return
+        // LIKE's own wildcards need escaping; the `%` suffix is the containment bound, and the
+        // in-memory FSUtil.contains check below makes the final containment decision.
+        const prefix = event.data.directory.replaceAll(/[\\%_]/g, "\\$&") + "%"
         const rows = yield* db
           .select({
             id: SessionTable.id,
@@ -562,7 +565,9 @@ const layer = Layer.effectDiscard(
                 event.data.adopted?.length ? inArray(SessionTable.project_id, event.data.adopted) : undefined,
                 and(
                   gte(SessionTable.directory, event.data.directory),
-                  lte(SessionTable.directory, AbsolutePath.make(event.data.directory + "\uffff")),
+                  // A `\uffff` upper bound is not containment under UTF-8 byte order: only a
+                  // "starts with directory" match is, and no literal upper bound covers it.
+                  sql`${SessionTable.directory} LIKE ${prefix} ESCAPE ${"\\"}`,
                 ),
               ),
             ),

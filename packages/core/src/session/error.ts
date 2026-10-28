@@ -59,6 +59,9 @@ export class StepFailedError extends Schema.TaggedError<StepFailedError>()("Sess
   }
 }
 
+/** A declined tool call deliberately stopped the turn; the execution settles it as a user interruption. */
+export class StepDeclinedError extends Schema.TaggedError<StepDeclinedError>()("Session.StepDeclinedError", {}) {}
+
 export class PromptConflictError extends Schema.TaggedError<PromptConflictError>()("Session.PromptConflictError", {
   sessionID: SessionSchema.ID,
   messageID: SessionMessage.ID,
