@@ -51,3 +51,15 @@ The ignored local development junction at `plugin/node_modules/effect` remains b
 The standard profile is enabled. Automatic checks, permission auto-approval, observers, telemetry, modal notifications, hook-based learning, and legacy custom tools are disabled. Console-log inspection is a bounded text scan, not a JavaScript parser. Native mutation tools retain formatting and permission ownership.
 
 Source pin, adaptations, license, and options are documented in [provenance.md](provenance.md).
+
+## 2026-10-28 integration corrections (branch `ecc-integration-fixes`)
+
+Rerun after the six ECC integration corrections (instruction bridge, command suffixes, helper bodies, v1 metadata, docs fallback, provenance/contract):
+
+- Installed-assets contract: `packages/core` `bun run script/test.ts test/ecc-hooks` — 31 pass, 0 fail (includes the new `catalog.test.ts`).
+- Native skill/instruction suites (Q-02 lines 1-2): 24 pass (skill/instructions/config-skill/tool-skill/session-skill) and 39 pass (instruction/session/skill discovery and state), 0 fail.
+- `bun check` for `packages/core` (`tsconfig.tests.json`): clean after fixing the new test's types. The adapter-scoped check reports one pre-existing error in `packages/ai/src/protocols/shared.ts:450` (`process.getBuiltinModule` typing), untouched by this branch.
+- Q-04 harness path: `node .opencode/scripts/harness-audit.js repo --format json --root .` exits 0 with deterministic JSON (16 checks) after `npm ci --prefix .opencode`.
+- Q-06 private smoke with the installed host `0.0.0-dev-20261028090130226`: enabled `true|bun|2.2.3`, disabled `||`, real shell dispatch both phases, `modelCalls: 0`, `sharedServiceRestarted: false`. Note: run it with `ECC_PLUGIN`, `PACKAGE_MANAGER`, and `ECC_VERSION` unset — an adapter-managed session exports them, and the smoke inherits `process.env`, so a managed-session run falsely shows enabled values in the disabled phase.
+- Known unrelated failures at the base tip (`a53bbd5390`), reproduced in a clean base worktree: all four `test/config/command-subagent.test.ts` cases ("runs … in the background without switching the parent"). They spawn real child sessions, use isolated temp configs that never read this repo's `.opencode`, and fail identically with and without this branch.
+

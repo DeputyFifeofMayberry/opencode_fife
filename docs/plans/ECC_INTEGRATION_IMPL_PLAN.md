@@ -125,3 +125,21 @@ Body and description unchanged. Catalog test: `SkillFile.parse` yields `autoinvo
 ## 6. Rollback
 
 Reverse commit order (docs commit is the baseline): `test(core): finalize` → `fix(opencode): docs-lookup` → `fix(opencode): learning v1` → `fix(opencode): helper bodies` → `fix(opencode): argument suffix` → `fix(opencode): instructions` → `test(core): scaffold`. Revert only owned hunks; vendor rules were never deleted, so no upstream download is needed. No schema, dependency, or state migration exists. User-created learning state under the homunculus root is never touched.
+
+## 7. Actual results (2026-10-28)
+
+Implemented as 8 commits on `ecc-integration-fixes` (docs → scaffold → C-01 → C-02 → C-03 → C-04 → C-06 → C-05 finalize).
+
+| Check | Result |
+| --- | --- |
+| Contract `test/ecc-hooks` (31 tests) | pass, 0 fail |
+| Q-02 lines 1-2 (skill/instruction suites) | 24 pass, 39 pass, 0 fail |
+| Q-02 line 3 (command-subagent/tool-subagent/permission) | 4 pre-existing failures, identical at base `a53bbd5390` (verified in a clean base worktree); all four are spawn-heavy `command subagents` cases using temp configs that never read this repo's `.opencode` |
+| `packages/core` typecheck | clean (1,784 files) after fixing the new test's own types |
+| Adapter-scoped `bun check` | 1 pre-existing error in `packages/ai/src/protocols/shared.ts:450`; zero `packages/ai` files in this diff |
+| Q-04 harness path | exit 0, deterministic JSON, 16 checks (after `npm ci --prefix .opencode`) |
+| Q-06 private smoke | enabled `true\|bun\|2.2.3`, disabled `||`, real shell dispatch, 0 model calls, no shared-service restart |
+
+Q-06 note: the smoke inherits `process.env`, so running it from inside an adapter-managed session (which exports `ECC_PLUGIN`/`PACKAGE_MANAGER`/`ECC_VERSION`) makes the disabled phase read inherited values and fail. Clear those three variables first; that reproduces the audit's plain-shell condition.
+
+Context effect (static, chars/4 heuristic — not measured provider usage): bridge 2,445 → 701 chars; the two raw rule globs (15 files, ~27,100 chars) no longer render into instructions. Per-change details in the audit's section 6.
