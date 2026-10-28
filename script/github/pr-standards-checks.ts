@@ -3,7 +3,7 @@
 
 import { complianceWindowMs, type ComplianceWarning } from "./warning-marker.ts"
 
-export const allowedTitleTypes = ["feat", "fix", "docs", "chore", "refactor", "test"]
+export const allowedTitleTypes = ["feat", "fix", "perf", "docs", "chore", "refactor", "test"]
 
 const titlePattern = new RegExp(`^(${allowedTitleTypes.join("|")})\\s*(\\([a-zA-Z0-9-]+\\))?\\s*:`)
 

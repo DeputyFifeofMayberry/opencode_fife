@@ -37,8 +37,8 @@ Ran the app and checked the settings page at narrow and wide sizes.
 `
 
 describe("hasValidTitle", () => {
-  test("accepts every documented type", () => {
-    for (const type of ["feat", "fix", "docs", "chore", "refactor", "test"]) {
+  test("accepts every documented type, including perf", () => {
+    for (const type of ["feat", "fix", "perf", "docs", "chore", "refactor", "test"]) {
       expect(hasValidTitle(`${type}: summary`)).toBe(true)
       expect(hasValidTitle(`${type}(scope): summary`)).toBe(true)
     }
@@ -62,8 +62,8 @@ describe("skipsIssueCheck", () => {
 })
 
 describe("titleMessage", () => {
-  test("lists the accepted types", () => {
-    expect(titleMessage("bad title")).toContain("`docs:`")
+  test("lists perf among the accepted types", () => {
+    expect(titleMessage("bad title")).toContain("`perf:`")
   })
 })
 
