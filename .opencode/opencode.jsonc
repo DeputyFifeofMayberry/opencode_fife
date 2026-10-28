@@ -566,9 +566,7 @@
     }
   },
   "instructions": [
-    ".opencode/ecc/INSTRUCTIONS.md",
-    ".opencode/ecc/rules/common/*.md",
-    ".opencode/ecc/rules/typescript/*.md"
+    ".opencode/ecc/INSTRUCTIONS.md"
   ],
   "plugins": [
     {

@@ -79,6 +79,13 @@ test("exactly one enabled native plugin entry is configured", () => {
   expect(record(plugin.options).enabled).toBe(true)
 })
 
+test("automatic ECC instructions are the bridge only, within its char budget", async () => {
+  expect(config.instructions).toEqual([".opencode/ecc/INSTRUCTIONS.md"])
+  const bridge = await fs.readFile(path.join(openCode, "ecc", "INSTRUCTIONS.md"), "utf8")
+  // The bridge replaces 15 always-loaded rule files; a larger budget requires a new explicit policy decision.
+  expect(bridge.length).toBeLessThanOrEqual(800)
+})
+
 test("reference-protected skills survive the configured skill permission ruleset", async () => {
   expect(normalized.type).toBe("normalized")
   if (normalized.type !== "normalized") return
