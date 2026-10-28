@@ -832,7 +832,7 @@ export function DialogSelectModel(props: { provider?: string; model?: ModelState
             class="w-[72px] shrink-0 truncate text-end capitalize"
             classList={{ invisible: !active() && !(selected() && variant(item())) }}
           >
-            {variant(item()) ?? language.t("common.default")}
+            {variant(item()) ?? language.t("common.auto")}
           </span>
         </Show>
         <span class="flex size-4 shrink-0 items-center justify-center">
@@ -959,7 +959,7 @@ export function DialogSelectModel(props: { provider?: string; model?: ModelState
                       onClick={() => choose(item(), value ?? null)}
                     >
                       <span data-slot="menu-v2-item-content" class="capitalize">
-                        {value ?? language.t("common.default")}
+                        {value ?? language.t("common.auto")}
                       </span>
                       <span
                         data-slot="menu-v2-item-indicator"

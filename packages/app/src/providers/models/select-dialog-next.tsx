@@ -942,7 +942,7 @@ export function DialogSelectModelNext(props: { provider?: string; model?: ModelS
         <Show when={usage(item())}>{(value) => <ModelUsageTag usage={value()} />}</Show>
         <Show when={active()}>
           <span data-slot="model-dialog-variant">
-            <span class="truncate capitalize">{variant(item()) ?? language.t("common.default")}</span>
+            <span class="truncate capitalize">{variant(item()) ?? language.t("common.auto")}</span>
             <Icon name="chevron-right" size="small" />
           </span>
         </Show>
@@ -1036,7 +1036,7 @@ export function DialogSelectModelNext(props: { provider?: string; model?: ModelS
             style={{ left: `${store.position.left}px`, top: `${store.position.top}px` }}
             onMouseEnter={() => triangle.cancel()}
           >
-            {/* A model without variants still lists Default, its only option. */}
+            {/* A model without variants still lists Auto, its only option. */}
             <For each={[undefined, ...variantsOf(item())]}>
               {(value) => (
                 <div
@@ -1049,7 +1049,7 @@ export function DialogSelectModelNext(props: { provider?: string; model?: ModelS
                   onClick={() => choose(item(), value ?? null)}
                 >
                   <span data-slot="menu-v2-item-content" class="capitalize">
-                    {value ?? language.t("common.default")}
+                    {value ?? language.t("common.auto")}
                   </span>
                   <span data-slot="menu-v2-item-indicator" data-checked={variant(item()) === value ? "" : undefined}>
                     <Icon name="check" size="small" />
