@@ -10,7 +10,9 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "bun test src --only-failures"
+    "test": "bun test src --only-failures",
+    "typecheck": "astro check",
+    "typecheck:tsc": "astro check"
   },
   "dependencies": {
     "@astrojs/cloudflare": "12.6.3",
@@ -18,6 +20,7 @@
     "@astrojs/solid-js": "5.1.0",
     "@astrojs/starlight": "0.34.3",
     "@fontsource/ibm-plex-mono": "5.2.5",
+    "@opencode/schema": "workspace:*",
     "@shikijs/transformers": "3.20.0",
     "@solid-primitives/resize-observer": "catalog:",
     "@types/luxon": "catalog:",
@@ -39,6 +42,7 @@
   "devDependencies": {
     "@astrojs/check": "0.9.6",
     "@types/bun": "catalog:",
+    "@types/jsdom": "30.0.0",
     "@types/node": "catalog:",
     "jsdom": "30.1.3",
     "typescript": "catalog:"

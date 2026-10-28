@@ -5,12 +5,10 @@ import { IconArrowDown } from "./icons"
 import { IconOpencode } from "./icons/custom"
 import { ShareI18nProvider, formatCurrency, formatNumber, normalizeLocale } from "./share/common"
 import styles from "./share.module.css"
-import type { MessageV2 } from "opencode/session/message-v2"
-import type { Message } from "opencode/session/message"
-import type { Session } from "opencode/session/index"
+import type { SessionV1 } from "@opencode/schema/session-v1"
 import { Part, ProviderIcon } from "./share/part"
 
-type MessageWithParts = MessageV2.Info & { parts: MessageV2.Part[] }
+type MessageWithParts = SessionV1.Info & { parts: SessionV1.Part[] }
 
 type Status = "disconnected" | "connecting" | "connected" | "error" | "reconnecting"
 
@@ -41,7 +39,7 @@ function getStatusText(status: [Status, string?], messages: Record<string, strin
 export default function Share(props: {
   id: string
   api: string
-  info: Session.Info
+  info: SessionV1.SessionInfo
   messages: { locale: string } & Record<string, string>
 }) {
   let lastScrollY = 0
@@ -58,21 +56,11 @@ export default function Share(props: {
   const [isNearBottom, setIsNearBottom] = createSignal(false)
 
   const [store, setStore] = createStore<{
-    info?: Session.Info
+    info?: SessionV1.SessionInfo
     messages: Record<string, MessageWithParts>
   }>({
-    info: {
-      id: props.id,
-      slug: props.info.slug,
-      projectID: props.info.projectID,
-      directory: props.info.directory,
-      title: props.info.title,
-      version: props.info.version,
-      time: {
-        created: props.info.time.created,
-        updated: props.info.time.updated,
-      },
-    },
+    // Seed from the server-provided info; the share id stands in for the stored session id.
+    info: { ...props.info, id: props.id as SessionV1.SessionInfo["id"] },
     messages: {},
   })
   const messages = createMemo(() =>
@@ -500,22 +488,77 @@ export default function Share(props: {
   )
 }
 
-export function fromV1(v1: Message.Info): MessageWithParts {
+/**
+ * The share API (`share_data` / `share_poll`) serves opencode 0.x session payloads: role-keyed
+ * messages with a `metadata` block and AI-SDK-style `parts`. That wire format predates `SessionV1`
+ * and has no `@opencode/schema` equivalent, so it stays a local type; `fromV1` upgrades it to the
+ * `SessionV1` shapes the renderer consumes.
+ */
+type LegacyShareMessage = {
+  id: string
+  role: "user" | "assistant"
+  metadata: {
+    sessionID: string
+    time: { created: number; completed?: number }
+    assistant?: {
+      cost: number
+      path: { cwd: string; root: string }
+      summary?: boolean
+      tokens?: {
+        total?: number
+        input: number
+        output: number
+        reasoning: number
+        cache: { read: number; write: number }
+      }
+      modelID: string
+      providerID: string
+    }
+    error?: SessionV1.Assistant["error"]
+    tool: Record<string, { title: string; time: { start: number; end: number } }>
+  }
+  parts: Array<
+    { type: "text"; text: string }
+    | { type: "step-start" }
+    | {
+        type: "tool-invocation"
+        toolInvocation:
+          | { state: "partial-call"; toolCallId: string; toolName: string }
+          | { state: "call"; toolCallId: string; toolName: string; args: Record<string, unknown> }
+          | {
+              state: "result"
+              toolCallId: string
+              toolName: string
+              args: Record<string, unknown>
+              result: string
+            }
+      }
+    | { type: "file"; mediaType: string; filename?: string; url: string }
+  >
+}
+
+export function fromV1(v1: LegacyShareMessage): MessageWithParts {
+  // Legacy share ids predate SessionV1's branded prefixes (ses_/msg_/prt_); cast once at the boundary.
+  const id = v1.id as SessionV1.Assistant["id"]
+  const sessionID = v1.metadata.sessionID as SessionV1.Assistant["sessionID"]
+
   if (v1.role === "assistant") {
+    const assistant = v1.metadata.assistant
+    if (!assistant) throw new Error("assistant message without assistant metadata")
     return {
-      id: v1.id,
-      sessionID: v1.metadata.sessionID,
+      id,
+      sessionID,
       role: "assistant",
-      parentID: "",
+      parentID: "" as SessionV1.Assistant["parentID"],
       agent: "build",
       time: {
         created: v1.metadata.time.created,
         completed: v1.metadata.time.completed,
       },
-      cost: v1.metadata.assistant!.cost,
-      path: v1.metadata.assistant!.path,
-      summary: v1.metadata.assistant!.summary,
-      tokens: v1.metadata.assistant!.tokens ?? {
+      cost: assistant.cost,
+      path: assistant.path,
+      summary: assistant.summary,
+      tokens: assistant.tokens ?? {
         input: 0,
         output: 0,
         cache: {
@@ -524,15 +567,15 @@ export function fromV1(v1: Message.Info): MessageWithParts {
         },
         reasoning: 0,
       },
-      modelID: v1.metadata.assistant!.modelID,
-      providerID: v1.metadata.assistant!.providerID,
+      modelID: assistant.modelID as SessionV1.Assistant["modelID"],
+      providerID: assistant.providerID as SessionV1.Assistant["providerID"],
       mode: "build",
       error: v1.metadata.error,
-      parts: v1.parts.flatMap((part, index): MessageV2.Part[] => {
+      parts: v1.parts.flatMap((part, index): SessionV1.Part[] => {
         const base = {
-          id: index.toString(),
-          messageID: v1.id,
-          sessionID: v1.metadata.sessionID,
+          id: index.toString() as SessionV1.ToolPart["id"],
+          messageID: id,
+          sessionID,
         }
         if (part.type === "text") {
           return [
@@ -600,22 +643,19 @@ export function fromV1(v1: Message.Info): MessageWithParts {
 
   if (v1.role === "user") {
     return {
-      id: v1.id,
-      sessionID: v1.metadata.sessionID,
+      id,
+      sessionID,
       role: "user",
       agent: "user",
-      model: {
-        providerID: "",
-        modelID: "",
-      },
+      model: { providerID: "", modelID: "" } as SessionV1.User["model"],
       time: {
         created: v1.metadata.time.created,
       },
-      parts: v1.parts.flatMap((part, index): MessageV2.Part[] => {
+      parts: v1.parts.flatMap((part, index): SessionV1.Part[] => {
         const base = {
-          id: index.toString(),
-          messageID: v1.id,
-          sessionID: v1.metadata.sessionID,
+          id: index.toString() as SessionV1.ToolPart["id"],
+          messageID: id,
+          sessionID,
         }
         if (part.type === "text") {
           return [

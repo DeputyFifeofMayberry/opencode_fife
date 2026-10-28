@@ -10,7 +10,7 @@ import VscodeScreenshot from "../assets/lander/screenshot-vscode.png";
 import GithubScreenshot from "../assets/lander/screenshot-github.png";
 
 const { data } = Astro.locals.starlightRoute.entry;
-const { title = data.title, tagline, image, actions = [] } = data.hero || {};
+const { image } = data.hero || {};
 
 const imageAttrs = {
     loading: 'eager' as const,
@@ -35,16 +35,13 @@ const bash = "| bash"
 
 let darkImage: ImageMetadata | undefined;
 let lightImage: ImageMetadata | undefined;
-let rawHtml: string | undefined;
 if (image) {
     if ('file' in image) {
         darkImage = image.file;
     } else if ('dark' in image) {
         darkImage = image.dark;
         lightImage = image.light;
-    } else {
-        rawHtml = image.html;
-  }
+    }
 }
 ---
 <div class="hero">
