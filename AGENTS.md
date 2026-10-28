@@ -1,7 +1,7 @@
 - After changing public Protocol/Server `HttpApi`: run `bun run generate` from repo root; never edit generated client files directly.
 - Dependency direction: Schema → Core and Protocol → Server. Client runtime may depend on Schema and Protocol only, never Core or Server; `sdk` composes Client, Core, Server.
 - No Changesets: never add `.changeset` files; use the existing release workflow.
-- Default branch `dev`: base branches/worktrees on `origin/dev`, target PRs at `dev`, diff against `origin/dev` unless told otherwise.
+- Daily integration branch `dev`: base new tasks on the current local `dev`; use `origin/dev` when no unpushed local work exists. Preserve `main` for future release work. GitHub's default branch may remain `main`.
 
 ## Agent Skills
 
@@ -17,6 +17,8 @@
 - **Implement:** simplest correct change. Preserve interfaces, module boundaries, compatibility, data; no unrelated work, no speculative abstraction.
 - **Protect:** handle meaningful failures, edge cases, permissions, security risks. Never conceal errors.
 - **Verify:** run relevant checks; fix failures and rerun; inspect final diff; update affected docs.
+- **Local development:** GitHub stores source history and backup. Ordinary changes need no PR, GitHub CI run, release notes, tag, registry publication, installer package, or deployment. Keep applicable local lint, typechecks, regression tests, generation, and runtime checks; broaden verification when shared code or dependencies change. See `docs/local-development.md`.
+- **Daily app:** use the installed `dev` CLI while editing source. `bun run install:local` creates a unique `dev` version, builds this Windows machine's CLI, smoke-tests it before replacement, archives the previous installed build, and records source provenance. It does not restart services. Adopt it only when active sessions and terminal work are idle; opening a normal new TUI can replace a version-mismatched server.
 
 ## Live TUI Testing
 
@@ -45,11 +47,11 @@ Branch names: at most three short words, hyphen-separated, no slashes or type pr
 
 ## Worktrees
 
-- Independent concurrent tasks → separate worktrees and branches based on `origin/dev`; continue related work in the task's existing worktree. Follow Branch Names.
+- A single task may edit and commit directly on `dev`. Independent concurrent tasks use separate worktrees and branches based on the current local `dev`; continue related work in the task's existing worktree. Follow Branch Names.
 - Multiple agents may inspect a worktree, but only one may modify it. Never check out a branch active in another worktree; never switch, reset, remove, or repurpose another session's worktree.
 - Before consequential Git operations (branch switches, worktree create/remove, integration): inspect `git worktree list`, each checkout's branch, and working-tree status — never assume. Preserve existing work.
-- **Integration:** Feature branches integrate into `dev` through CI-validated, squash-merged PRs — never advance local `dev` directly to a task branch or via `git branch -f`. After merge, synchronize local `dev` with `origin/dev` only by fetch + `git merge --ff-only origin/dev` (verified fast-forward). Never force-update or overwrite divergent history. Follow Git Safety approval requirements.
-- **PR lifecycle:** Opening and merging a PR may occur in the same task or agent session. Treat them as separate authorization checkpoints unless the user explicitly approves the complete workflow upfront. Before merging, confirm required CI checks, reviews, mergeability, and final diff. Squash-merge into `dev` only when all requirements are satisfied; never bypass branch protections. After merge, safely synchronize local `dev` and clean up the task worktree.
+- **Integration:** Review the final diff and run applicable local verification, then integrate completed task branches into an idle, clean `dev` checkout with an ordinary local merge. Never force-move a branch. Fetch remote changes before integration when needed; use fast-forward-only synchronization when possible and inspect divergence rather than discarding local history. GitHub CI and PRs are optional for personal development.
+- **PR lifecycle:** Only open a PR when requested. Keep separate authorization for opening and merging unless the user approves both upfront. Respect any applicable remote branch protections. Public release work needs an explicit release request and its relevant release checks.
 - After integration: remove the task worktree + branch only after verifying no uncommitted or unmerged work remains. Rule changes apply to new tasks; never disrupt worktrees or branches used by active sessions.
 
 ## Git Safety

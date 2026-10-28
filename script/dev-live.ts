@@ -3,7 +3,7 @@
 import { $ } from "bun"
 
 const server = (await $`opencode service status`.quiet().text()).trim()
-if (!server) {
+if (!server || server === "stopped") {
   console.error("no running opencode service — start one first")
   process.exit(1)
 }
@@ -14,8 +14,9 @@ if (!password) {
   process.exit(1)
 }
 
-const [mode, ...args] = process.argv.slice(2)
-const vite = mode === "--vite"
+const input = process.argv.slice(2)
+const vite = input[0] === "--vite"
+const args = vite ? input.slice(1) : input
 
 process.env.OPENCODE_TUI_CHANNEL = "dev"
 process.env.OPENCODE_PASSWORD = password

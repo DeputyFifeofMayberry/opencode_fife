@@ -83,22 +83,69 @@ console.log(file)`,
     await Bun.write(path.join(localBin, "opencode.exe"), Bun.file(executable))
     await Bun.write(path.join(localBin, native.name), Bun.file(native.source))
     await Bun.write(path.join(localHome, ".local/bin/opencode.exe"), Bun.file(executable))
+    expect(Bun.spawnSync(["git", "init", local]).exitCode).toBe(0)
+    await Bun.write(path.join(local, ".gitignore"), "dist/\n")
+    expect(
+      Bun.spawnSync([
+        "git",
+        "-C",
+        local,
+        "-c",
+        "user.name=fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "commit",
+        "--allow-empty",
+        "-m",
+        "fixture",
+      ]).exitCode,
+    ).toBe(0)
     const installer = path.resolve(import.meta.dir, "../../../script/install-local.ps1")
+    const commands = path.join(root.path, "install-commands.txt")
+    const invocation = `function bun {
+      Add-Content -LiteralPath $env:INSTALL_COMMANDS -Value "$env:OPENCODE_CHANNEL|$env:OPENCODE_VERSION|$args"
+      if ($env:CHANGE_SOURCE -eq '1' -and $args -contains 'script/service-smoke.ts') {
+        [IO.File]::AppendAllText((Join-Path (Get-Location) '.gitignore'), '# changed')
+      }
+      $global:LASTEXITCODE = if ($env:FAIL_SMOKE -eq '1' -and $args -contains 'script/service-smoke.ts') { 77 } else { 0 }
+    }; & '${installer.replaceAll("'", "''")}'`
+    const failedInstall = Bun.spawnSync(
+      ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", invocation],
+      { cwd: local, env: { ...env, USERPROFILE: localHome, INSTALL_COMMANDS: commands, FAIL_SMOKE: "1" } },
+    )
+    expect(failedInstall.stderr.toString()).toBe("")
+    expect(failedInstall.exitCode).not.toBe(0)
+    expect(await Bun.file(commands).text()).toContain("script/service-smoke.ts")
+    expect(await Bun.file(path.join(localHome, ".local/bin/opencode-build.json")).exists()).toBe(false)
+    expect(await Bun.file(path.join(localHome, ".local/bin/opencode.exe")).bytes()).toEqual(
+      await Bun.file(executable).bytes(),
+    )
     const localInstall = Bun.spawnSync(
-      [
-        "powershell.exe",
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-Command",
-        `function bun { $global:LASTEXITCODE = 0 }; & '${installer.replaceAll("'", "''")}'`,
-      ],
-      { cwd: local, env: { ...env, USERPROFILE: localHome } },
+      ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", invocation],
+      { cwd: local, env: { ...env, USERPROFILE: localHome, INSTALL_COMMANDS: commands, FAIL_SMOKE: undefined } },
     )
     expect(localInstall.stderr.toString()).toBe("")
     expect(localInstall.exitCode).toBe(0)
     const localInstalled = Bun.spawnSync([path.join(localHome, ".local/bin/opencode.exe")], { env })
     expect(localInstalled.exitCode).toBe(0)
     expect(localInstalled.stdout.toString().trim()).toBe(path.join(localHome, ".local/bin", native.name))
+    const manifest = await Bun.file(path.join(localHome, ".local/bin/opencode-build.json")).json()
+    expect(manifest.channel).toBe("dev")
+    expect(manifest.version).toMatch(/^0\.0\.0-dev-\d{17}$/)
+    expect(manifest.source.commit).toMatch(/^[a-f0-9]{40}$/)
+    expect(manifest.source.dirty).toBe(true)
+    expect(await Bun.file(path.join(manifest.previousBuild, "opencode.exe")).exists()).toBe(true)
+    expect(await Bun.file(commands).text()).toContain("script/service-smoke.ts")
+    const record = await Bun.file(path.join(localHome, ".local/bin/opencode-build.json")).text()
+    const changedSource = Bun.spawnSync(
+      ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", invocation],
+      {
+        cwd: local,
+        env: { ...env, USERPROFILE: localHome, INSTALL_COMMANDS: commands, FAIL_SMOKE: undefined, CHANGE_SOURCE: "1" },
+      },
+    )
+    expect(changedSource.stderr.toString()).toContain("Source changed during build or verification")
+    expect(changedSource.exitCode).not.toBe(0)
+    expect(await Bun.file(path.join(localHome, ".local/bin/opencode-build.json")).text()).toBe(record)
   },
 )
