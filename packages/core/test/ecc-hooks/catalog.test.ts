@@ -121,6 +121,19 @@ test("deprecated learning v1 is manual-only while v2 stays advertised", async ()
   expect(v2.autoinvoke).toBeUndefined()
 })
 
+test("docs-lookup stays source-backed without growing its advertised description", () => {
+  const docsLookup = record(record(config.agents)["docs-lookup"])
+  // The description entered the audit's context reconstruction at 110 chars; growth needs a new estimate.
+  expect(String(docsLookup.description).length).toBeLessThanOrEqual(110)
+  expect(String(docsLookup.description)).not.toContain("MCP to fetch")
+  expect(docsLookup.mode).toBe("subagent")
+  expect(String(docsLookup.system)).toBe("{file:ecc/prompts/agents/docs-lookup.txt}")
+  const denies = (docsLookup.permissions as ReadonlyArray<Record<string, unknown>>).some(
+    (rule) => rule.action === "edit" && rule.resource === "*" && rule.effect === "deny",
+  )
+  expect(denies).toBe(true)
+})
+
 test("automatic ECC instructions are the bridge only, within its char budget", async () => {
   expect(config.instructions).toEqual([".opencode/ecc/INSTRUCTIONS.md"])
   const bridge = await fs.readFile(path.join(openCode, "ecc", "INSTRUCTIONS.md"), "utf8")

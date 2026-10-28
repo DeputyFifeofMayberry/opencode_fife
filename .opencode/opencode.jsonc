@@ -270,7 +270,7 @@
       "system": "{file:ecc/prompts/agents/cpp-build-resolver.txt}"
     },
     "docs-lookup": {
-      "description": "Documentation specialist using Context7 MCP to fetch current library and API documentation with code examples.",
+      "description": "Documentation specialist fetching current library and API docs from Context7 or official sources.",
       "mode": "subagent",
       "system": "{file:ecc/prompts/agents/docs-lookup.txt}",
       "permissions": [
