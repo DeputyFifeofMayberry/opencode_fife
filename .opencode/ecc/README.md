@@ -28,6 +28,7 @@ These deltas are deliberately local; a snapshot refresh must reapply them:
 3. `ecc/commands/harness-audit.md`, `evolve.md`, `projects.md`, `promote.md`, `instinct-status.md`, `instinct-export.md`, `instinct-import.md` — corrected helper paths, PowerShell/POSIX commands, supported flags, and real export/import formats.
 4. `.opencode/skills/continuous-learning/SKILL.md` — `metadata.opencode/autoinvoke: false` added.
 5. `ecc/prompts/agents/docs-lookup.txt` plus its config description — Context7-when-present, official-source fallback, unverified reporting.
+6. `ecc/commands/orchestrate.md` plus its config description — plan-only workflow; does not execute agents.
 
 ## Updating the snapshot
 

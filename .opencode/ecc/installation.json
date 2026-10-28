@@ -13,7 +13,8 @@
       ".opencode/ecc/INSTRUCTIONS.md: rewritten bridge (<=800 chars)",
       "ecc/commands/{harness-audit,evolve,projects,promote,instinct-status,instinct-export,instinct-import}.md: corrected paths, shell commands, flags, formats",
       ".opencode/skills/continuous-learning/SKILL.md: metadata opencode/autoinvoke: false",
-      "ecc/prompts/agents/docs-lookup.txt + config description: source-backed fallback"
+      "ecc/prompts/agents/docs-lookup.txt + config description: source-backed fallback",
+      "ecc/commands/orchestrate.md + config description: plan-only workflow; does not execute agents"
     ]
   },
   "integration": "OpenCode v2 skills, agents, commands, rules, manual helpers, and native hook adapter",
