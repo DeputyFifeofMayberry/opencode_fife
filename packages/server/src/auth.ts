@@ -33,7 +33,7 @@ export function required(config: Info) {
 export function authorized(credentials: DecodedCredentials, config: Info) {
   if (Option.isNone(config.password) || credentials.username !== config.username) return false
   const password = Redacted.value(credentials.password)
-  return password === config.password.value || verifySession(password, config)
+  return sameSecret(password, config.password.value) || verifySession(password, config)
 }
 
 // Sessions are signed with a key derived from the server password, so rotating the password revokes every session.
@@ -49,9 +49,14 @@ export function verifySession(token: string, config: Info, now = Date.now()) {
   if (parts.length !== 2) return false
   const expires = Number(parts[0])
   if (!Number.isSafeInteger(expires) || expires * 1000 <= now) return false
-  const expected = Buffer.from(sign(config.password.value, parts[0]))
-  const actual = Buffer.from(parts[1])
-  return actual.length === expected.length && timingSafeEqual(actual, expected)
+  return sameSecret(parts[1], sign(config.password.value, parts[0]))
+}
+
+// timingSafeEqual throws on length mismatch, so the length check gates the constant-time comparison.
+function sameSecret(presented: string, expected: string) {
+  const actual = Buffer.from(presented)
+  const wanted = Buffer.from(expected)
+  return actual.length === wanted.length && timingSafeEqual(actual, wanted)
 }
 
 // Browsers share cookies across ports on the same host, so the name carries the port to keep local servers apart.

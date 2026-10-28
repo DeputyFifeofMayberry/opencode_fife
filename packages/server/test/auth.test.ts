@@ -8,6 +8,13 @@ test("accepts only the fixed opencode username", () => {
   expect(ServerAuth.authorized({ username: "custom", password: Redacted.make("secret") }, config)).toBe(false)
 })
 
+test("rejects wrong passwords of equal and unequal length", () => {
+  const config = { password: Option.some("secret"), username: "opencode" }
+  expect(ServerAuth.authorized({ username: "opencode", password: Redacted.make("secreT") }, config)).toBe(false)
+  expect(ServerAuth.authorized({ username: "opencode", password: Redacted.make("longer than secret") }, config)).toBe(false)
+  expect(ServerAuth.authorized({ username: "opencode", password: Redacted.make("") }, config)).toBe(false)
+})
+
 test("session tokens expire, resist tampering, and are revoked by changing the password", () => {
   const config = { password: Option.some("secret"), username: "opencode" }
   const now = Date.now()
