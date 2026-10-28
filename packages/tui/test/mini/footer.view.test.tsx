@@ -2556,7 +2556,7 @@ test("direct variant panel renders current variant selector", async () => {
     const list = panelMenu(app.renderer.root)
 
     expect(frame).toContain("Select variant")
-    expect(frame).toContain("Default")
+    expect(frame).toContain("Auto")
     expect(frame).toContain("high")
     expect(frame).toContain("minimal")
     expect(frame).toContain("current")

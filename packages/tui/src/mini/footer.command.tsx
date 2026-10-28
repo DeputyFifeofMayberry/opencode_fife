@@ -1049,10 +1049,10 @@ export function RunVariantSelectBody(props: {
   const entries = createMemo<VariantEntry[]>(() => [
     {
       category: "",
-      display: "Default",
+      display: "Auto",
       footer: props.current() === undefined ? "current" : undefined,
       footerTone: "selection",
-      keywords: "default",
+      keywords: "auto default",
       variant: undefined,
       current: props.current() === undefined,
     },

@@ -46,6 +46,9 @@ Precedence, highest first:
 5. **Untouched.** Routes advertising fewer than two effort variants take no
    effort in any state; the request goes out as-is.
 
+The variant picker labels the unset state **Auto**: selecting it clears an exact
+pick, so the policy decides each step. A named variant remains an exact pick.
+
 Automatic levels are `low`, `standard`, `deep` (`packages/core/src/effort/policy/levels.ts`);
 level-to-variant resolution validates against the resolved model's advertised
 variants (`EffortAdapter.capability`). `deep` prefers `max`, then the most

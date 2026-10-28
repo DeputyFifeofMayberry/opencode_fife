@@ -12,7 +12,8 @@ export function DialogVariant() {
   const options = createMemo(() => [
     {
       value: "default",
-      title: "Default",
+      title: "Auto",
+      description: "effort policy may raise it",
       onSelect: () => {
         dialog.clear()
         local.model.variant.set(undefined)

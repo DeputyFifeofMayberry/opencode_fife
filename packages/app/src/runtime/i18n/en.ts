@@ -326,6 +326,7 @@ export const dict = {
   "common.save": "Save",
   "common.saving": "Saving…",
   "common.default": "Default",
+  "common.auto": "Auto",
   "common.attachment": "attachment",
 
   "prompt.placeholder.shell": "Enter shell command… {{example}}",
