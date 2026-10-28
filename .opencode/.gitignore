@@ -4,3 +4,7 @@ package.json
 bun.lock
 .gitignore
 package-lock.json
+
+# Pinned dependencies for the local ECC scripts and skills
+!/package.json
+!/package-lock.json
