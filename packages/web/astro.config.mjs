@@ -327,7 +327,8 @@ function configSchema() {
     name: "configSchema",
     hooks: {
       "astro:build:done": async () => {
-        execFileSync("bun", ["../schema/script/config-schema.ts", "./dist/config.json"], { stdio: "inherit" })
+        // shell: true lets Windows resolve the npm shim (bun.cmd); args are static paths.
+        execFileSync("bun", ["../schema/script/config-schema.ts", "./dist/config.json"], { stdio: "inherit", shell: true })
         // The V1 TUI schema is frozen in the console app since packages/opencode lives on the v1 branch.
         copyFileSync("../console/app/public/tui.json", "./dist/tui.json")
       },
