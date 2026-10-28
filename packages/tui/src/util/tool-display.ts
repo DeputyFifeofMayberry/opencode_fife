@@ -5,11 +5,6 @@ export function canonicalToolName(name: string) {
   return name
 }
 
-export function finiteNumber(value: unknown): number | undefined {
-  if (typeof value !== "number" || !Number.isFinite(value)) return
-  return value
-}
-
 export function primitiveInputSummary(input: Record<string, unknown>, omit: readonly string[] = []) {
   const entries = Object.entries(input).filter(([key, value]) => {
     if (omit.includes(key)) return false
@@ -67,4 +62,4 @@ export function nonEmptyToolContent<T>(content: ReadonlyArray<T> | undefined): [
   return first === undefined ? undefined : [first, ...rest]
 }
 import type { SessionMessageAssistantTool } from "@opencode/client/promise"
-import { isRecord } from "./record"
+import { isRecord } from "@opencode/util/record"

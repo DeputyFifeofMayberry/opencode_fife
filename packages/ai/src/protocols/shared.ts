@@ -20,7 +20,7 @@ import {
   type ToolResultPart,
 } from "../schema/index.js"
 import { Json, decodeJson, encodeJson } from "../utils/json.js"
-import { isRecord } from "../utils/record.js"
+import { isRecord } from "@opencode/util/record"
 export { Json, decodeJson, encodeJson, isRecord }
 
 const isJson = Schema.is(Schema.Json)

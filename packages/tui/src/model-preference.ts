@@ -1,5 +1,5 @@
 import { readJson, writeJsonAtomic } from "./util/persistence"
-import { isRecord } from "./util/record"
+import { isRecord } from "@opencode/util/record"
 import { safeWatch } from "./util/watch"
 import { Flock } from "@opencode/util/flock"
 import path from "node:path"

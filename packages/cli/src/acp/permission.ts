@@ -15,11 +15,11 @@ import {
   filePath,
   patchHunks,
   pendingToolCall,
-  stringValue,
   toLocations,
   type DiffSource,
   type ToolInput,
 } from "./tool"
+import { stringValue } from "@opencode/util/boundary"
 
 type PermissionEvent = Extract<OpenCodeEvent, { type: "permission.asked" }>
 type Tool = { readonly id: string; readonly name: string; readonly input: ToolInput }

@@ -41,6 +41,7 @@
       "dependencies": {
         "@aws-sdk/credential-providers": "3.1057.0",
         "@opencode/schema": "workspace:*",
+        "@opencode/util": "workspace:*",
         "@smithy/eventstream-codec": "4.2.14",
         "@smithy/util-utf8": "4.2.2",
         "aws4fetch": "1.0.20",
@@ -209,6 +210,7 @@
       "name": "@opencode/codemode",
       "version": "2.2.0",
       "dependencies": {
+        "@opencode/util": "workspace:*",
         "acorn": "8.15.0",
         "effect": "catalog:",
       },

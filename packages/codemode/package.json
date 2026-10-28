@@ -27,6 +27,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@opencode/util": "workspace:*",
     "acorn": "8.15.0",
     "effect": "catalog:"
   },

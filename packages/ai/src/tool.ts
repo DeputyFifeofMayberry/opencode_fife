@@ -6,7 +6,7 @@ import type {
   ToolOutput as ToolOutputType,
 } from "./schema/index.js"
 import { ToolDefinition, ToolFailure, ToolOutput } from "./schema/index.js"
-import { isRecord } from "./utils/record.js"
+import { isRecord } from "@opencode/util/record"
 
 /**
  * Schema constraint for tool parameters / success values: no decoding or

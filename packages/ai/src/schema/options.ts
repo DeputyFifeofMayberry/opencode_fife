@@ -1,7 +1,7 @@
 import { Schema } from "effect"
 import { ModelID, ProviderID } from "./ids.js"
 import type { AnyRoute, CompactionOperations } from "../route/client.js"
-import { isRecord } from "../utils/record.js"
+import { isRecord } from "@opencode/util/record"
 
 export const JsonSchema = Schema.Record(Schema.String, Schema.Unknown)
 export type JsonSchema = Schema.Schema.Type<typeof JsonSchema>

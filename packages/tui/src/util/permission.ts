@@ -1,5 +1,6 @@
 import { Locale } from "./locale"
-import { canonicalToolName, finiteNumber, webSearchProviderLabel } from "./tool-display"
+import { finiteNumber } from "@opencode/util/boundary"
+import { canonicalToolName, webSearchProviderLabel } from "./tool-display"
 
 type Dict = Record<string, unknown>
 

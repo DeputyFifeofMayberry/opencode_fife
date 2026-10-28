@@ -45,12 +45,13 @@ import type {
 } from "@opencode/client"
 import { useLocal } from "../../context/local"
 import { Locale } from "../../util/locale"
+import { fileDiffRecord } from "@opencode/util/file-diff"
+import { toolAnswers, toolDiagnostics, toolQuestions } from "@opencode/util/tool-metadata"
 import { FilePath } from "../../ui/file-path"
 import {
   canonicalToolName,
   executeCalls,
   executeCallSummary,
-  finiteNumber,
   primitiveInputSummary,
   toolDisplayContent,
   toolDisplayMetadata,
@@ -120,7 +121,7 @@ import { useSessionTabs, type ScrollAnchor } from "../../context/session-tabs"
 import { createSingleFlight } from "../../util/single-flight"
 import { createDelayedPresence } from "../../util/delayed-presence"
 import { SessionLocationMissing } from "./location-missing"
-import { isRecord } from "../../util/record"
+import { finiteNumber, recordValue, stringValue } from "@opencode/util/boundary"
 import { parseTodos } from "../../util/todo"
 import { createHistoryPrepend } from "./history"
 import { context, use, type PendingAction } from "./render-context"
@@ -3652,8 +3653,8 @@ function TodoWrite(props: ToolProps) {
 
 function Question(props: ToolProps) {
   const theme = useTheme()
-  const questions = createMemo(() => parseQuestions(props.input.questions))
-  const answers = createMemo(() => parseQuestionAnswers(props.metadata.answers))
+  const questions = createMemo(() => toolQuestions(props.input.questions))
+  const answers = createMemo(() => toolAnswers(props.metadata.answers))
   const count = createMemo(() => questions().length)
 
   function format(answer?: ReadonlyArray<string>) {
@@ -3703,7 +3704,7 @@ function Diagnostics(props: { diagnostics: unknown; filePath: string }) {
       typeof props.filePath === "string" ? props.filePath : "",
       terminalEnvironment.platform,
     )
-    return parseDiagnostics(props.diagnostics, normalized)
+    return toolDiagnostics(props.diagnostics, normalized)
   })
 
   return (
@@ -3719,14 +3720,6 @@ function Diagnostics(props: { diagnostics: unknown; filePath: string }) {
       </box>
     </Show>
   )
-}
-
-function stringValue(value: unknown) {
-  return typeof value === "string" ? value : undefined
-}
-
-function recordValue(value: unknown): Record<string, unknown> | undefined {
-  return isRecord(value) ? value : undefined
 }
 
 function formatSessionTranscript(
@@ -3764,57 +3757,20 @@ function formatSessionTranscript(
 export function parseApplyPatchFiles(value: unknown) {
   if (!Array.isArray(value)) return []
   return value.flatMap((item) => {
-    const file = recordValue(item)
-    if (!file) return []
-    const status = stringValue(file.status)
-    const type =
-      stringValue(file.type) ??
-      (status === "added" ? "add" : status === "deleted" ? "delete" : status === "modified" ? "update" : undefined)
-    const relativePath = stringValue(file.file) ?? stringValue(file.relativePath)
-    const filePath = stringValue(file.filePath) ?? relativePath
-    const patch = stringValue(file.patch)
-    const additions = finiteNumber(file.additions)
-    const deletions = finiteNumber(file.deletions)
-    if (
-      !type ||
-      !relativePath ||
-      !filePath ||
-      patch === undefined ||
-      additions === undefined ||
-      deletions === undefined
-    )
+    const file = fileDiffRecord(item)
+    if (!file?.type || file.patch === undefined || file.additions === undefined || file.deletions === undefined)
       return []
-    return [{ type, relativePath, filePath, patch, additions, deletions, movePath: stringValue(file.movePath) }]
+    return [
+      {
+        type: file.type,
+        relativePath: file.path,
+        filePath: file.filePath ?? file.path,
+        patch: file.patch,
+        additions: file.additions,
+        deletions: file.deletions,
+        movePath: file.movePath,
+      },
+    ]
   })
 }
 
-export function parseQuestions(value: unknown) {
-  if (!Array.isArray(value)) return []
-  return value.flatMap((item) => {
-    const question = stringValue(recordValue(item)?.question)
-    return question ? [{ question }] : []
-  })
-}
-
-export function parseQuestionAnswers(value: unknown) {
-  if (!Array.isArray(value)) return
-  return value.map((answer) =>
-    Array.isArray(answer) ? answer.filter((item): item is string => typeof item === "string") : [],
-  )
-}
-
-export function parseDiagnostics(value: unknown, filePath: string) {
-  const diagnostics = recordValue(value)?.[filePath]
-  if (!Array.isArray(diagnostics)) return []
-  return diagnostics
-    .flatMap((item) => {
-      const diagnostic = recordValue(item)
-      const start = recordValue(recordValue(diagnostic?.range)?.start)
-      const line = finiteNumber(start?.line)
-      const character = finiteNumber(start?.character)
-      const message = stringValue(diagnostic?.message)
-      if (diagnostic?.severity !== 1 || line === undefined || character === undefined || !message) return []
-      return [{ range: { start: { line, character } }, message }]
-    })
-    .slice(0, 3)
-}

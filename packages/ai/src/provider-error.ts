@@ -13,7 +13,7 @@ import {
   type HttpRateLimitDetails,
 } from "./schema/index.js"
 import { Json } from "./utils/json.js"
-import { isRecord } from "./utils/record.js"
+import { isRecord } from "@opencode/util/record"
 
 const patterns = [
   /prompt is too long/i,

@@ -1,6 +1,6 @@
 import { Schema } from "effect"
 import { Media } from "../media.js"
-import { isRecord } from "./record.js"
+import { isRecord } from "@opencode/util/record"
 
 /**
  * Replace lone UTF-16 surrogates in every string, key and nested value. Unchanged

@@ -310,7 +310,11 @@ export const layer = (options?: Options) =>
                     content: Object.fromEntries(
                       Object.entries(state.answer).map(
                         ([key, value]): [string, NonNullable<McpClient.ElicitationResult["content"]>[string]] =>
-                          typeof value === "object" ? [key, Array.from(value)] : [key, value],
+                          Array.isArray(value)
+                            ? [key, Array.from(value)]
+                            : // SAFETY: the remaining Form.Value members are primitives; readonly
+                              // lists are arrays at runtime and already took the branch above.
+                              [key, value as string | number | boolean],
                       ),
                     ),
                   }

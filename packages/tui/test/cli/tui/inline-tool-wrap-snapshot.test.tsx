@@ -1,15 +1,13 @@
 import { afterEach, describe, expect, test } from "bun:test"
 import { For } from "solid-js"
 import { testRender, type JSX } from "@opentui/solid"
+import { toolAnswers, toolDiagnostics, toolQuestions } from "@opencode/util/tool-metadata"
 import {
   InlineToolRow,
   executeCallSummary,
   genericToolSummary,
   isBackgroundSubagent,
   parseApplyPatchFiles,
-  parseDiagnostics,
-  parseQuestionAnswers,
-  parseQuestions,
   subagentModelLabel,
   toolDisplay,
 } from "../../../src/routes/session"
@@ -180,9 +178,9 @@ describe("TUI inline tool wrapping", () => {
         movePath: undefined,
       },
     ])
-    expect(parseQuestions([{}, { question: 1 }, { question: "Continue?" }])).toEqual([{ question: "Continue?" }])
-    expect(parseQuestionAnswers([null, ["yes", 1], "no"])).toEqual([[], ["yes"], []])
-    expect(parseQuestionAnswers({})).toBeUndefined()
+    expect(toolQuestions([{}, { question: 1 }, { question: "Continue?" }])).toEqual([{ question: "Continue?" }])
+    expect(toolAnswers([null, ["yes", 1], "no"])).toEqual([[], ["yes"], []])
+    expect(toolAnswers({})).toBeUndefined()
   })
 
   test("summarizes execute calls on one line", () => {
@@ -218,7 +216,7 @@ describe("TUI inline tool wrapping", () => {
 
   test("ignores diagnostics with malformed nested ranges", () => {
     expect(
-      parseDiagnostics(
+      toolDiagnostics(
         {
           "a.ts": [
             { severity: 1, message: "missing range" },
@@ -228,7 +226,7 @@ describe("TUI inline tool wrapping", () => {
         },
         "a.ts",
       ),
-    ).toEqual([{ message: "valid", range: { start: { line: 2, character: 3 } } }])
+    ).toEqual([{ message: "valid", range: { start: { line: 2, character: 3 } }, severity: 1 }])
   })
 
   test("labels only detached or async subagents as background", () => {
