@@ -89,6 +89,23 @@ describe("FileAccess.authorizeRead", () => {
     }).pipe(provide(requests))
   })
 
+  it.live("requires external-directory authorization for a workspace symlink to an outside file", () => {
+    const requests: Permission.AssertInput[] = []
+    return Effect.gen(function* () {
+      const outside = yield* tmpdirScoped()
+      yield* Effect.promise(() => fs.writeFile(path.join(outside.path, "secret.txt"), "secret"))
+      const access = yield* FileAccess.Service
+      const location = yield* Location.Service
+      yield* Effect.promise(() =>
+        fs.symlink(outside.path, path.join(location.directory, "escape"), process.platform === "win32" ? "junction" : undefined),
+      )
+
+      yield* access.authorizeRead(path.join("escape", "secret.txt"), invocation)
+
+      expect(requests.map((request) => request.action)).toEqual(["external_directory", "read"])
+    }).pipe(provide(requests))
+  })
+
   for (const action of ["external_directory", "read"]) {
     it.live(`propagates ${action} denial without continuing authorization`, () => {
       const requests: Permission.AssertInput[] = []

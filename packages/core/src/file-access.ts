@@ -78,6 +78,20 @@ export const resolvePath = (directory: string, input: string, home = Global.Path
 }
 
 const slash = (value: string) => value.replaceAll("\\", "/")
+
+/**
+ * Canonical path for the boundary decision, reusing FSUtil.resolve's realpath canonicalization.
+ * Any realpath failure (missing target, symlink loop, denied permission) degrades to the lexical
+ * path so resolution keeps its pre-realpath behavior.
+ */
+const canonical = (value: string) => {
+  try {
+    return FSUtil.resolve(value)
+  } catch {
+    return path.resolve(FSUtil.windowsPath(value))
+  }
+}
+
 const invocation = (context: Invocation) => ({
   sessionID: context.sessionID,
   agent: context.agent,
@@ -94,10 +108,14 @@ const layer = Layer.effect(
 
     const resolve = Effect.fn("FileAccess.resolve")(function* (input: ResolveInput) {
       const absolute = AbsolutePath.make(resolvePath(location.directory, input.path))
-      const worktree = path.resolve(location.project.directory)
+      // The boundary compares canonical targets on both sides: a workspace symlink must be classified by its
+      // real destination, and a symlinked workspace must stay internal rather than start prompting as external.
+      const canonicalTarget = canonical(absolute)
+      const canonicalLocation = canonical(location.directory)
+      const canonicalWorktree = canonical(location.project.directory)
       const internal =
-        FSUtil.contains(location.directory, absolute) ||
-        (worktree !== path.parse(worktree).root && FSUtil.contains(worktree, absolute))
+        FSUtil.contains(canonicalLocation, canonicalTarget) ||
+        (canonicalWorktree !== path.parse(canonicalWorktree).root && FSUtil.contains(canonicalWorktree, canonicalTarget))
       if (internal) {
         return {
           absolute,

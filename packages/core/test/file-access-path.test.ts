@@ -138,6 +138,25 @@ describe("FileAccess.resolve", () => {
     ),
   )
 
+  it.live("keeps a symlinked workspace internal when the target is addressed canonically", () =>
+    withTempDir(({ path: base }) => {
+      const real = path.join(base, "real")
+      const link = path.join(base, "link")
+      return Effect.gen(function* () {
+        yield* Effect.promise(async () => {
+          await fs.mkdir(real)
+          await fs.writeFile(path.join(real, "file.txt"), "content")
+          await fs.symlink(real, link, process.platform === "win32" ? "junction" : undefined)
+        })
+
+        const access = yield* FileAccess.Service
+        // The location sits behind the link, so the real path only stays inside when the root is canonicalized too.
+        expect((yield* access.resolve({ path: path.join(real, "file.txt") })).externalDirectory).toBeUndefined()
+        expect((yield* access.resolve({ path: "file.txt" })).externalDirectory).toBeUndefined()
+      }).pipe(provide(link))
+    }),
+  )
+
   it.live("follows an in-location symlink using ordinary filesystem semantics", () =>
     withTempDir(({ path: directory }) =>
       Effect.gen(function* () {
