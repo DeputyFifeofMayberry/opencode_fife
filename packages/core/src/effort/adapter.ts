@@ -1,6 +1,6 @@
 export * as EffortAdapter from "./adapter.js"
 
-import { ReasoningEfforts } from "@opencode/ai/schema/options"
+import { ReasoningEfforts } from "@opencode/ai/effect"
 import type { Model } from "@opencode/schema/model"
 import { EFFORT_POLICY_PROTOCOL_VERSION, decide } from "./policy/index.js"
 import type { Decision, EffortCapability, EffortLevel, EffortState } from "./policy/types.js"

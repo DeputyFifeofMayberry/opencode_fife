@@ -26,6 +26,7 @@ import type { Instruction } from "@opencode/schema/instruction"
 import type { Snapshot } from "@opencode/schema/snapshot"
 import type { Shell } from "@opencode/schema/shell"
 import type { Form } from "@opencode/schema/form"
+import type { Generate } from "@opencode/schema/generate"
 import type { Provider } from "@opencode/schema/provider"
 import type { Integration } from "@opencode/schema/integration"
 import type { Mcp } from "@opencode/schema/mcp"
@@ -98,6 +99,13 @@ export type PluginListInput = { readonly location?: { readonly directory?: strin
 export type PluginListOutput = { readonly location: Location.PublicRef; readonly data: ReadonlyArray<Plugin.Info> }
 export type PluginListOperation<E = never> = (input?: PluginListInput) => Effect.Effect<PluginListOutput, E>
 
+export type PluginGuiInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly id: Plugin.ID
+}
+export type PluginGuiOutput = { readonly location: Location.PublicRef; readonly data: Plugin.GuiBundle }
+export type PluginGuiOperation<E = never> = (input: PluginGuiInput) => Effect.Effect<PluginGuiOutput, E>
+
 export type PluginCheckInput = {
   readonly location?: { readonly directory?: string | undefined } | undefined
   readonly target?: string | undefined
@@ -114,6 +122,7 @@ export type PluginUpdateOperation<E = never> = (input: PluginUpdateInput) => Eff
 
 export interface PluginApi<E = never> {
   readonly list: PluginListOperation<E>
+  readonly gui: PluginGuiOperation<E>
   readonly check: PluginCheckOperation<E>
   readonly update: PluginUpdateOperation<E>
 }
@@ -828,6 +837,13 @@ export type SessionLogOutput =
             readonly rawFinish?: string | undefined
             readonly native?: SessionMessage.Native | undefined
             readonly cost: Money.USD
+            readonly costProvenance?:
+              | {
+                  readonly provider?: Money.USD | undefined
+                  readonly estimated?: Money.USD | undefined
+                  readonly unpriced?: number | undefined
+                }
+              | undefined
             readonly tokens: {
               readonly input: number
               readonly output: number
@@ -861,6 +877,13 @@ export type SessionLogOutput =
             readonly rawFinish?: string | undefined
             readonly native?: SessionMessage.Native | undefined
             readonly cost?: Money.USD | undefined
+            readonly costProvenance?:
+              | {
+                  readonly provider?: Money.USD | undefined
+                  readonly estimated?: Money.USD | undefined
+                  readonly unpriced?: number | undefined
+                }
+              | undefined
             readonly tokens?:
               | {
                   readonly input: number
@@ -1127,6 +1150,13 @@ export type SessionLogOutput =
             readonly native?: SessionMessage.Native | undefined
             readonly text: string
             readonly cost?: Money.USD | undefined
+            readonly costProvenance?:
+              | {
+                  readonly provider?: Money.USD | undefined
+                  readonly estimated?: Money.USD | undefined
+                  readonly unpriced?: number | undefined
+                }
+              | undefined
             readonly tokens?:
               | {
                   readonly input: number
@@ -1158,6 +1188,13 @@ export type SessionLogOutput =
             }
             readonly inputID?: SessionMessage.ID | undefined
             readonly cost?: Money.USD | undefined
+            readonly costProvenance?:
+              | {
+                  readonly provider?: Money.USD | undefined
+                  readonly estimated?: Money.USD | undefined
+                  readonly unpriced?: number | undefined
+                }
+              | undefined
             readonly tokens?:
               | {
                   readonly input: number
@@ -1214,6 +1251,13 @@ export type SessionLogOutput =
             readonly sessionID: Session.ID
             readonly source: "title" | "compaction"
             readonly cost: Money.USD
+            readonly costProvenance?:
+              | {
+                  readonly provider?: Money.USD | undefined
+                  readonly estimated?: Money.USD | undefined
+                  readonly unpriced?: number | undefined
+                }
+              | undefined
             readonly tokens: {
               readonly input: number
               readonly output: number
@@ -1399,7 +1443,10 @@ export interface MessageApi<E = never> {
   readonly list: MessageListOperation<E>
 }
 
-export type ModelListInput = { readonly location?: { readonly directory?: string | undefined } | undefined }
+export type ModelListInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly types?: ReadonlyArray<Model.Type> | undefined
+}
 export type ModelListOutput = { readonly location: Location.PublicRef; readonly data: ReadonlyArray<Model.Info> }
 export type ModelListOperation<E = never> = (input?: ModelListInput) => Effect.Effect<ModelListOutput, E>
 
@@ -1416,8 +1463,31 @@ export type GenerateTextInput = { readonly prompt: string; readonly model?: Mode
 export type GenerateTextOutput = { readonly text: string }
 export type GenerateTextOperation<E = never> = (input: GenerateTextInput) => Effect.Effect<GenerateTextOutput, E>
 
+export type GenerateImageInput = {
+  readonly model: Model.Ref
+  readonly prompt: string
+  readonly images?: ReadonlyArray<Generate.File> | undefined
+  readonly n?: number | undefined
+  readonly aspect?: Generate.ImageAspect | undefined
+  readonly resolution?: Generate.ImageResolution | undefined
+}
+export type GenerateImageOutput = Generate.ImageResult
+export type GenerateImageOperation<E = never> = (input: GenerateImageInput) => Effect.Effect<GenerateImageOutput, E>
+
+export type GenerateDecisionsInput = {
+  readonly model: Model.Ref
+  readonly input: ReadonlyArray<Generate.DecisionPart>
+  readonly questions: ReadonlyArray<Generate.DecisionQuestion>
+}
+export type GenerateDecisionsOutput = Generate.DecisionResult
+export type GenerateDecisionsOperation<E = never> = (
+  input: GenerateDecisionsInput,
+) => Effect.Effect<GenerateDecisionsOutput, E>
+
 export interface GenerateApi<E = never> {
   readonly text: GenerateTextOperation<E>
+  readonly image: GenerateImageOperation<E>
+  readonly decisions: GenerateDecisionsOperation<E>
 }
 
 export type VoiceModelsOutput = {
@@ -1899,8 +1969,109 @@ export interface RpcApi<E = never> {
   readonly call: RpcCallOperation<E>
 }
 
+export type EventSubscribeInput = {
+  readonly types?:
+    | ReadonlyArray<
+        | "location.shutdown"
+        | "models-dev.refreshed"
+        | "credential.updated"
+        | "credential.switched"
+        | "integration.updated"
+        | "provider.updated"
+        | "model.updated"
+        | "agent.updated"
+        | "session.created"
+        | "session.agent.selected"
+        | "session.model.selected"
+        | "session.moved"
+        | "session.renamed"
+        | "session.metadata.updated"
+        | "session.permissions"
+        | "session.viewed"
+        | "session.archived"
+        | "session.unarchived"
+        | "session.usage.updated"
+        | "session.deleted"
+        | "session.forked"
+        | "session.inbox.delivered"
+        | "session.inbox.enqueued"
+        | "session.inbox.cancelled"
+        | "session.inbox.delivery.changed"
+        | "session.execution.started"
+        | "session.execution.succeeded"
+        | "session.execution.failed"
+        | "session.execution.interrupted"
+        | "session.instructions.updated"
+        | "session.synthetic"
+        | "session.skill.activated"
+        | "session.shell.started"
+        | "session.shell.ended"
+        | "session.step.started"
+        | "session.step.streamed"
+        | "session.step.ended"
+        | "session.step.failed"
+        | "session.text.started"
+        | "session.text.delta"
+        | "session.text.ended"
+        | "session.reasoning.started"
+        | "session.reasoning.delta"
+        | "session.reasoning.ended"
+        | "session.tool.input.started"
+        | "session.tool.input.delta"
+        | "session.tool.input.ended"
+        | "session.tool.called"
+        | "session.tool.progress"
+        | "session.tool.success"
+        | "session.tool.failed"
+        | "session.retry.scheduled"
+        | "session.compaction.started"
+        | "session.compaction.delta"
+        | "session.compaction.ended"
+        | "session.compaction.failed"
+        | "session.revert.staged"
+        | "session.revert.cleared"
+        | "session.revert.committed"
+        | "filesystem.changed"
+        | "reference.updated"
+        | "permission.asked"
+        | "permission.replied"
+        | "plugin.updated"
+        | "project.updated"
+        | "worktree.updated"
+        | "worktree.resolved"
+        | "command.updated"
+        | "config.updated"
+        | "skill.updated"
+        | "pty.created"
+        | "pty.updated"
+        | "pty.exited"
+        | "pty.deleted"
+        | "persistent-pty.added"
+        | "persistent-pty.removed"
+        | "shell.created"
+        | "shell.exited"
+        | "shell.deleted"
+        | "form.created"
+        | "form.replied"
+        | "form.cancelled"
+        | "websearch.updated"
+        | "session.status"
+        | "session.idle"
+        | "tui.prompt.append"
+        | "tui.command.execute"
+        | "tui.toast.show"
+        | "tui.session.select"
+        | "installation.updated"
+        | "installation.update-available"
+        | "vcs.branch.updated"
+        | "mcp.status.changed"
+        | "mcp.resources.changed"
+        | `${"rpc."}${string}`
+      >
+    | undefined
+}
 export type EventSubscribeOutput = OpenCodeEvent
-export type EventSubscribeOperation<E = never> = () => Stream.Stream<EventSubscribeOutput, E>
+export type EventSubscribeOperation<E = never> = (input?: EventSubscribeInput) => Stream.Stream<EventSubscribeOutput, E>
 
 export interface EventApi<E = never> {
   readonly subscribe: EventSubscribeOperation<E>
