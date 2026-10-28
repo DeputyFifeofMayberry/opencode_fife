@@ -16,6 +16,7 @@ import { AbsolutePath } from "@opencode/core/schema"
 import { Session } from "@opencode/core/session"
 import { SessionExecution } from "@opencode/core/session/execution"
 import { SessionRestart } from "@opencode/core/session/execution/restart"
+import { StepDeclinedError } from "@opencode/core/session/error"
 import { SessionEvent } from "@opencode/core/session/event"
 import { SessionInbox } from "@opencode/core/session/inbox"
 import { SessionMessage } from "@opencode/core/session/message"
@@ -46,10 +47,24 @@ describe("SessionExecution lifecycle", () => {
     ).toEqual({ type: "failed", error: { type: "provider.transport", message: "Disconnected" } })
   })
 
-  test("defaults owner-scope interruption to shutdown and preserves explicit reasons", () => {
+  test("classifies declines as user interruptions and defaults bare interrupts to shutdown", () => {
     const interrupted = Effect.runSyncExit(Effect.interrupt)
+    if (!Exit.isFailure(interrupted)) return
     expect(SessionExecution.terminal(interrupted)).toEqual({ type: "interrupted", reason: "shutdown" })
     expect(SessionExecution.terminal(interrupted, "user")).toEqual({ type: "interrupted", reason: "user" })
+    expect(SessionExecution.terminal(Exit.fail(new StepDeclinedError()))).toEqual({
+      type: "interrupted",
+      reason: "user",
+    })
+    // A decline racing an interrupt is still a deliberate stop; a real defect alongside one stays a failure.
+    const both = Exit.failCause(
+      Cause.combine(Cause.fail(new StepDeclinedError()))(interrupted.cause),
+    ) as Exit.Exit<void, SessionRunner.RunError>
+    expect(SessionExecution.terminal(both)).toEqual({ type: "interrupted", reason: "user" })
+    const defect = Exit.failCause(
+      Cause.combine(Cause.die(new Error("boom")))(Cause.fail(new StepDeclinedError())),
+    ) as Exit.Exit<void, SessionRunner.RunError>
+    expect(SessionExecution.terminal(defect).type).toBe("failed")
   })
 
   it.effect("the sweep only lists claimed top-level Sessions", () =>
@@ -139,6 +154,78 @@ describe("SessionExecution lifecycle", () => {
       expect(yield* execution.interrupt(sessionID)).toBeTrue()
       yield* execution.awaitIdle(sessionID)
       expect((yield* claims(database))[sessionID]).toBe(false)
+    }),
+  )
+
+  it.effect("a declined step releases the claim, cancels jobs, and settles as a user interruption", () =>
+    Effect.gen(function* () {
+      const database = yield* Database.Service
+      const bus = yield* Bus.Service
+      const sessionID = Session.ID.make("ses_decline_stopped")
+      yield* seedSessions(database, [sessionID])
+
+      const interrupted: SessionEvent.Execution.Interrupted["data"][] = []
+      const settledDecline = yield* Deferred.make<void>()
+      yield* bus.project(SessionEvent.Execution.Interrupted, (event) =>
+        Effect.sync(() => {
+          interrupted.push(event.data)
+          Deferred.doneUnsafe(settledDecline, Effect.void)
+        }),
+      )
+
+      const scope = yield* Scope.make()
+      yield* Effect.addFinalizer(() => Scope.close(scope, Exit.void))
+      const jobs = yield* Job.make.pipe(Effect.provideService(Scope.Scope, scope))
+      const context = yield* buildExecution(scope, () => Effect.fail(new StepDeclinedError()), undefined, jobs)
+      const execution = Context.get(context, SessionExecution.Service)
+
+      // The turn's background subagent job dies with the deliberate stop.
+      yield* jobs.start({
+        id: sessionID,
+        type: "subagent",
+        recovery: {
+          kind: "subagent",
+          parentSessionID: sessionID,
+          childSessionID: sessionID,
+          agent: "general",
+          description: "Declined turn",
+        },
+        run: Effect.never,
+      })
+      yield* jobs.background(sessionID)
+
+      yield* execution.resume(sessionID).pipe(Effect.forkScoped)
+      // The settlement, not the fork, is the synchronization point: the drain fails immediately,
+      // so only the Interrupted event proves the execution ran and released its claim.
+      yield* Deferred.await(settledDecline)
+      yield* execution.awaitIdle(sessionID)
+
+      expect(interrupted).toEqual([{ sessionID, reason: "user" }])
+      expect((yield* claims(database))[sessionID]).toBe(false)
+      expect((yield* jobs.wait({ id: sessionID })).info?.status).toBe("cancelled")
+    }),
+  )
+
+  it.effect("the sweep does not synthesize a resume for a session a decline stopped", () =>
+    Effect.gen(function* () {
+      const database = yield* Database.Service
+      const bus = yield* Bus.Service
+      const sessionID = Session.ID.make("ses_decline_no_resume")
+      yield* seedSessions(database, [sessionID])
+
+      const synthetic: SessionEvent.Synthetic[] = []
+      yield* bus.project(SessionEvent.Synthetic, (event) => Effect.sync(() => void synthetic.push(event)))
+
+      const scope = yield* Scope.make()
+      yield* Effect.addFinalizer(() => Scope.close(scope, Exit.void))
+      const context = yield* buildExecution(scope, () => Effect.fail(new StepDeclinedError()))
+      const execution = Context.get(context, SessionExecution.Service)
+      const restart = Context.get(context, SessionRestart.Service)
+      yield* execution.resume(sessionID).pipe(Effect.ignore)
+      expect((yield* claims(database))[sessionID]).toBe(false)
+
+      yield* restart.resumeSuspendedSessions
+      expect(synthetic).toEqual([])
     }),
   )
 

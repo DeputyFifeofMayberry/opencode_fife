@@ -7,6 +7,7 @@ import { Job } from "../job.js"
 import { Instance } from "../instance/service.js"
 import { makeGlobalNode } from "@opencode/util/effect/app-node"
 import { SessionEvent } from "./event.js"
+import { StepDeclinedError } from "./error.js"
 import { SessionRunCoordinator } from "./run-coordinator.js"
 import { SessionRunner } from "./runner/index.js"
 import { SessionSchema } from "./schema.js"
@@ -44,10 +45,30 @@ export class Service extends Context.Service<Service, Interface>()("@opencode/Se
 
 type InterruptReason = "user" | "shutdown"
 
-export function terminal(exit: Exit.Exit<void, SessionRunner.RunError>, reason?: InterruptReason) {
-  if (Exit.isSuccess(exit)) return { type: "succeeded" as const }
-  if (Cause.hasInterrupts(exit.cause)) return { type: "interrupted" as const, reason: reason ?? "shutdown" }
-  return { type: "failed" as const, error: toSessionError(Cause.squash(exit.cause)) }
+/**
+ * A declined tool call ends the turn on purpose: the step fails typed, so its cause holds
+ * decline failures and at most interrupts — never a defect or a real failure.
+ */
+const isDeclinedStop = (cause: Cause.Cause<SessionRunner.RunError>) =>
+  cause.reasons.some((reason) => Cause.isFailReason(reason) && reason.error instanceof StepDeclinedError) &&
+  cause.reasons.every(
+    (reason) => !Cause.isDieReason(reason) && (!Cause.isFailReason(reason) || reason.error instanceof StepDeclinedError),
+  )
+
+/** Interrupts and decline stops are expected endings; only defects and real failures are logged. */
+const isExpectedStop = (cause: Cause.Cause<SessionRunner.RunError>) =>
+  Cause.hasInterruptsOnly(cause) || isDeclinedStop(cause)
+
+export type Terminal =
+  | { readonly type: "succeeded" }
+  | { readonly type: "interrupted"; readonly reason: InterruptReason }
+  | { readonly type: "failed"; readonly error: ReturnType<typeof toSessionError> }
+
+export function terminal(exit: Exit.Exit<void, SessionRunner.RunError>, reason?: InterruptReason): Terminal {
+  if (Exit.isSuccess(exit)) return { type: "succeeded" }
+  if (isDeclinedStop(exit.cause)) return { type: "interrupted", reason: "user" }
+  if (Cause.hasInterrupts(exit.cause)) return { type: "interrupted", reason: reason ?? "shutdown" }
+  return { type: "failed", error: toSessionError(Cause.squash(exit.cause)) }
 }
 
 /** Process-local execution: drains run in this process using the selected instance. */
@@ -62,7 +83,7 @@ export const layer = Layer.effect(
     const reportLifecycle = <A>(sessionID: SessionSchema.ID, effect: Effect.Effect<A>) =>
       effect.pipe(
         Effect.tapCause((cause) =>
-          Cause.hasInterruptsOnly(cause)
+          isExpectedStop(cause)
             ? Effect.void
             : Effect.logError("Failed to publish Session execution lifecycle", cause).pipe(
                 Effect.annotateLogs({ sessionID }),
@@ -94,7 +115,7 @@ export const layer = Layer.effect(
       ).pipe(
         instances.provide(session),
         Effect.tapCause((cause) =>
-          Cause.hasInterruptsOnly(cause)
+          isExpectedStop(cause)
             ? Effect.void
             : Effect.logError("Failed to drain Session", cause).pipe(Effect.annotateLogs({ sessionID })),
         ),
