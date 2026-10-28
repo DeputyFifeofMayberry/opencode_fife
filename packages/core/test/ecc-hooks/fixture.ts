@@ -63,14 +63,22 @@ export async function fixture(plugin: Plugin, directory: string, options: Contex
     shell: { hook: shell.hook },
     session: { ...base.session, hook: session.hook },
     event: {
-      subscribe: () =>
+      // SAFETY: plugins receive only the event types they subscribe to, and the generic
+      // signature cannot track that runtime filter, so this matches the production host's
+      // cast in ../plugin/host.ts.
+      subscribe: ((input?: { readonly types?: ReadonlyArray<string> }) =>
         Stream.unwrap(
           Effect.gen(function* () {
             const queue = yield* PubSub.subscribe(events)
             yield* Deferred.succeed(ready, undefined)
-            return Stream.fromSubscription(queue)
+            return Stream.fromSubscription(queue).pipe(
+              Stream.filter(
+                (event) =>
+                  input?.types === undefined || input.types.length === 0 || input.types.includes(event.type),
+              ),
+            )
           }),
-        ),
+        )) as Context["event"]["subscribe"],
     },
   }
   try {
