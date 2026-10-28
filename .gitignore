@@ -38,3 +38,6 @@ logs/
 tsconfig.tsbuildinfo
 /artifacts/
 .playwright-mcp/
+
+# Code audit outputs
+.audit/
