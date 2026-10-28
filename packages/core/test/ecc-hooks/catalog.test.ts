@@ -114,6 +114,13 @@ test("helper command bodies reference installed paths and supported flags only",
   expect(exporter?.body).toContain("--domain")
 })
 
+test("deprecated learning v1 is manual-only while v2 stays advertised", async () => {
+  const v1 = await parseSkill("continuous-learning")
+  expect(v1.autoinvoke).toBe(false)
+  const v2 = await parseSkill("continuous-learning-v2")
+  expect(v2.autoinvoke).toBeUndefined()
+})
+
 test("automatic ECC instructions are the bridge only, within its char budget", async () => {
   expect(config.instructions).toEqual([".opencode/ecc/INSTRUCTIONS.md"])
   const bridge = await fs.readFile(path.join(openCode, "ecc", "INSTRUCTIONS.md"), "utf8")
