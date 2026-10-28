@@ -36,7 +36,7 @@ import type {
 } from "./types"
 import { canonicalToolName, normalizeTool, toolOutputText, toolView } from "./tool"
 import { toolDisplayContent } from "../util/tool-display"
-import { isRecord } from "../util/record"
+import { isRecord } from "@opencode/util/record"
 
 const CHILD_MESSAGE_LIMIT = 80
 const CHILD_FRAME_LIMIT = 80

@@ -1,4 +1,4 @@
-import { isRecord } from "./record"
+import { isRecord } from "@opencode/util/record"
 
 type ConfigIssue = { message: string; path: string[] }
 

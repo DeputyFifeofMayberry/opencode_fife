@@ -26,7 +26,7 @@ import {
   webSearchProviderLabel,
 } from "../util/tool-display"
 import { formatPath } from "../util/path-format"
-import { isRecord } from "../util/record"
+import { isRecord } from "@opencode/util/record"
 import { parseTodos, todoMarker } from "../util/todo"
 import type { RunEntryBody, StreamCommit, ToolSnapshot } from "./types"
 

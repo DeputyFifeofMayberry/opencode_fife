@@ -1,5 +1,5 @@
 import type { JsonSchema } from "../../schema/index.js"
-import { isRecord } from "../../utils/record.js"
+import { isRecord } from "@opencode/util/record"
 
 // Gemini's `parametersJsonSchema` accepts standard JSON Schema, but rejects a few shapes that
 // published tool schemas commonly contain. Rewrite only those and send everything else unchanged.

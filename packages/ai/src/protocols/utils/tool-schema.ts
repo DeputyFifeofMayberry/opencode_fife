@@ -1,5 +1,5 @@
 import { ToolDefinition, type JsonSchema, type LanguageModel, type LLMRequest } from "../../schema/index.js"
-import { isRecord } from "../../utils/record.js"
+import { isRecord } from "@opencode/util/record"
 import { GeminiJsonSchema } from "./gemini-json-schema.js"
 
 const { SCHEMA_MAPS, VALUES, mapValues } = GeminiJsonSchema
