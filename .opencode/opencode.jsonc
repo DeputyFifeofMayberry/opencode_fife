@@ -427,4 +427,12 @@
     ".opencode/ecc/rules/common/*.md",
     ".opencode/ecc/rules/typescript/*.md"
   ],
+  "plugins": [
+    {
+      "package": "./ecc/plugin",
+      "options": {
+        "enabled": true
+      }
+    }
+  ],
 }

@@ -2,7 +2,7 @@
   "source": "https://github.com/affaan-m/ECC",
   "version": "2.2.3",
   "commit": "25278e7d7b6cf6e6a4e7a6c8e10f14ff22f0eb5b",
-  "integration": "OpenCode v2 skills, agents, commands, rules, and manual script helpers",
+  "integration": "OpenCode v2 skills, agents, commands, rules, manual helpers, and native hook adapter",
   "legacyPlugin": {
     "enabled": false,
     "reason": "ECC exports a v1 Plugin function; this fork requires a v2 default definition with id and setup/effect."
@@ -428,5 +428,33 @@
     "update-codemaps",
     "update-docs",
     "verify"
-  ]
+  ],
+  "nativePlugin": {
+    "id": "ecc.fife",
+    "package": "./ecc/plugin",
+    "enabled": true,
+    "sourcePullRequest": "https://github.com/affaan-m/ECC/pull/3676",
+    "sourceCommit": "9f61fc050f10a47fab1a8abefabde44ad552f77d",
+    "profile": "standard",
+    "automaticChecks": false,
+    "capabilities": [
+      "shell environment",
+      "successful write/edit/patch tracking",
+      "advisory diagnostics",
+      "session compaction context",
+      "terminal execution audits",
+      "awaited teardown"
+    ],
+    "optional": "Explicit Bun argv check in strict profile",
+    "disabled": [
+      "legacy v1 plugin",
+      "custom tools",
+      "observer",
+      "telemetry",
+      "permission auto-approval",
+      "modal notifications",
+      "duplicate formatting"
+    ],
+    "verification": "plugin/verification.md"
+  }
 }
