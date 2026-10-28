@@ -77,5 +77,28 @@ console.log(file)`,
     const shellInstalled = Bun.spawnSync([path.join(home, ".opencode", "bin", "opencode.exe")], { env })
     expect(shellInstalled.exitCode).toBe(0)
     expect(shellInstalled.stdout.toString().trim()).toBe(path.join(home, ".opencode", "bin", native.name))
+    const local = path.join(root.path, "local repo")
+    const localHome = path.join(root.path, "local home")
+    const localBin = path.join(local, "packages/cli/dist/cli-windows-x64/bin")
+    await Bun.write(path.join(localBin, "opencode.exe"), Bun.file(executable))
+    await Bun.write(path.join(localBin, native.name), Bun.file(native.source))
+    await Bun.write(path.join(localHome, ".local/bin/opencode.exe"), Bun.file(executable))
+    const installer = path.resolve(import.meta.dir, "../../../script/install-local.ps1")
+    const localInstall = Bun.spawnSync(
+      [
+        "powershell.exe",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        `function bun { $global:LASTEXITCODE = 0 }; & '${installer.replaceAll("'", "''")}'`,
+      ],
+      { cwd: local, env: { ...env, USERPROFILE: localHome } },
+    )
+    expect(localInstall.stderr.toString()).toBe("")
+    expect(localInstall.exitCode).toBe(0)
+    const localInstalled = Bun.spawnSync([path.join(localHome, ".local/bin/opencode.exe")], { env })
+    expect(localInstalled.exitCode).toBe(0)
+    expect(localInstalled.stdout.toString().trim()).toBe(path.join(localHome, ".local/bin", native.name))
   },
 )
