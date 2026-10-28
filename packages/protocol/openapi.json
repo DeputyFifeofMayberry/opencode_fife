@@ -16613,6 +16613,22 @@
         "required": ["status", "message"],
         "additionalProperties": false
       },
+      "CostProvenance.Info": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/Money.USD"
+          },
+          "estimated": {
+            "$ref": "#/components/schemas/Money.USD"
+          },
+          "unpriced": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
       "Credential.CreateInput": {
         "type": "object",
         "properties": {
@@ -21474,6 +21490,9 @@
           "cost": {
             "$ref": "#/components/schemas/Money.USD"
           },
+          "costProvenance": {
+            "$ref": "#/components/schemas/CostProvenance.Info"
+          },
           "tokens": {
             "$ref": "#/components/schemas/TokenUsage.Info"
           },
@@ -21662,6 +21681,9 @@
           "cost": {
             "$ref": "#/components/schemas/Money.USD"
           },
+          "costProvenance": {
+            "$ref": "#/components/schemas/CostProvenance.Info"
+          },
           "tokens": {
             "$ref": "#/components/schemas/TokenUsage.Info"
           }
@@ -21705,6 +21727,9 @@
           },
           "cost": {
             "$ref": "#/components/schemas/Money.USD"
+          },
+          "costProvenance": {
+            "$ref": "#/components/schemas/CostProvenance.Info"
           },
           "tokens": {
             "$ref": "#/components/schemas/TokenUsage.Info"

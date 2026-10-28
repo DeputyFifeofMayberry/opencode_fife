@@ -425,6 +425,8 @@ export type SessionMessageCompactionRunning = {
   summary: string
 }
 
+export type CostProvenanceInfo = { provider?: MoneyUSD; estimated?: MoneyUSD; unpriced?: number }
+
 export type UsageLimitsBudgetModel = { providerID: ProviderID; modelID: string; name: string; spent?: MoneyUSD }
 
 export type FileSystemEntry = { path: RelativePath; type: "file" | "directory" }
@@ -527,18 +529,6 @@ export type SessionMessageAssistantReasoning = {
 export type ToolContent = ToolTextContent | ToolFileContent
 
 export type SessionMessageAssistantRetry = { attempt: number; at: number; error: SessionStructuredError }
-
-export type SessionMessageCompactionFailed = {
-  type: "compaction"
-  id: SessionMessageID
-  metadata?: { [x: string]: JsonValue }
-  time: { created: number }
-  status: "failed"
-  reason: "auto" | "manual"
-  error: SessionStructuredError
-  cost?: MoneyUSD
-  tokens?: TokenUsageInfo
-}
 
 export type SessionMessageIdle = {
   id: SessionMessageID
@@ -962,20 +952,6 @@ export type SessionMessageModelSelected = {
   previous?: ModelRef
 }
 
-export type SessionMessageCompactionCompleted = {
-  type: "compaction"
-  id: SessionMessageID
-  metadata?: { [x: string]: JsonValue }
-  time: { created: number }
-  status: "completed"
-  reason: "auto" | "manual"
-  model?: ModelRef
-  native?: SessionMessageNative
-  summary: string
-  cost?: MoneyUSD
-  tokens?: TokenUsageInfo
-}
-
 export type ProviderSettings = {
   timeout?: number | false
   headerTimeout?: number | false
@@ -1007,6 +983,34 @@ export type ConfigModelSettings = {
 } & { [x: string]: JsonValue | null }
 
 export type PermissionRuleset = Array<PermissionRule>
+
+export type SessionMessageCompactionCompleted = {
+  type: "compaction"
+  id: SessionMessageID
+  metadata?: { [x: string]: JsonValue }
+  time: { created: number }
+  status: "completed"
+  reason: "auto" | "manual"
+  model?: ModelRef
+  native?: SessionMessageNative
+  summary: string
+  cost?: MoneyUSD
+  costProvenance?: CostProvenanceInfo
+  tokens?: TokenUsageInfo
+}
+
+export type SessionMessageCompactionFailed = {
+  type: "compaction"
+  id: SessionMessageID
+  metadata?: { [x: string]: JsonValue }
+  time: { created: number }
+  status: "failed"
+  reason: "auto" | "manual"
+  error: SessionStructuredError
+  cost?: MoneyUSD
+  costProvenance?: CostProvenanceInfo
+  tokens?: TokenUsageInfo
+}
 
 export type UsageLimitsBudget = {
   id: string
@@ -1345,6 +1349,7 @@ export type SessionStepEnded = {
     rawFinish?: string
     native?: SessionMessageNative1
     cost: MoneyUSD
+    costProvenance?: CostProvenanceInfo
     tokens: TokenUsageInfo
     snapshot?: SnapshotID
     files?: Array<RelativePath>
@@ -1366,6 +1371,7 @@ export type SessionStepFailed = {
     rawFinish?: string
     native?: SessionMessageNative1
     cost?: MoneyUSD
+    costProvenance?: CostProvenanceInfo
     tokens?: TokenUsageInfo
     snapshot?: SnapshotID
     files?: Array<RelativePath>
@@ -1501,6 +1507,7 @@ export type SessionCompactionEnded = {
     native?: SessionMessageNative1
     text: string
     cost?: MoneyUSD
+    costProvenance?: CostProvenanceInfo
     tokens?: TokenUsageInfo
   }
 }
@@ -1518,6 +1525,7 @@ export type SessionCompactionFailed = {
     error: SessionStructuredError
     inputID?: SessionMessageID
     cost?: MoneyUSD
+    costProvenance?: CostProvenanceInfo
     tokens?: TokenUsageInfo
   }
 }
@@ -1559,7 +1567,13 @@ export type SessionUsageRecorded = {
   type: "session.usage.recorded"
   durable: { aggregateID: string; seq: EventSeq; version: 1 }
   location?: LocationRef
-  data: { sessionID: SessionID; source: "title" | "compaction"; cost: MoneyUSD; tokens: TokenUsageInfo }
+  data: {
+    sessionID: SessionID
+    source: "title" | "compaction"
+    cost: MoneyUSD
+    costProvenance?: CostProvenanceInfo
+    tokens: TokenUsageInfo
+  }
 }
 
 export type LocationShutdown = {
@@ -2163,11 +2177,6 @@ export type SessionStatsInfo = {
   models: Array<SessionStatsModelUsage>
 }
 
-export type SessionMessageCompaction =
-  | SessionMessageCompactionRunning
-  | SessionMessageCompactionCompleted
-  | SessionMessageCompactionFailed
-
 export type ProviderRequest = {
   settings: ProviderSettings
   headers: { [x: string]: string }
@@ -2440,6 +2449,11 @@ export type ConfigEntry =
     }
   | { type: "directory"; path: AbsolutePath }
 
+export type SessionMessageCompaction =
+  | SessionMessageCompactionRunning
+  | SessionMessageCompactionCompleted
+  | SessionMessageCompactionFailed
+
 export type UsageLimitsInfo = {
   workspace: { id: string; name?: string; usageURL: string }
   go?: UsageLimitsGo
@@ -2566,6 +2580,7 @@ export type SessionMessageAssistant = {
   rawFinish?: string
   native?: SessionMessageNative
   cost?: MoneyUSD
+  costProvenance?: CostProvenanceInfo
   tokens?: TokenUsageInfo
   error?: SessionStructuredError
   retry?: SessionMessageAssistantRetry
