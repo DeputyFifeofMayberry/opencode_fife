@@ -12,6 +12,18 @@ if (-not (Test-Path $source)) { throw "Build output not found: $source" }
 
 $target = Join-Path $env:USERPROFILE ".local/bin/opencode.exe"
 $staged = "$target.new"
+
+# Install the native renderer before the executable so startup does not depend on
+# Bun extracting its embedded DLL. Hash-named DLLs may still be loaded by a session.
+$renderers = @(Get-ChildItem -LiteralPath (Split-Path $source) -Filter "opentui-*.dll" -File)
+if ($renderers.Count -eq 0) { throw "OpenTUI DLL not found beside build output: $source" }
+foreach ($renderer in $renderers) {
+    $destination = Join-Path (Split-Path $target) $renderer.Name
+    if (-not (Test-Path -LiteralPath $destination)) {
+        Copy-Item -LiteralPath $renderer.FullName -Destination $destination
+    }
+}
+
 Copy-Item $source $staged -Force
 
 # Windows locks a running image against writes but allows renaming it, so move the
