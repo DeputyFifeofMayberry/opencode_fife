@@ -22,8 +22,13 @@ type Driver = {
 
 export type DraftStore = AsyncStorage & {
   putBlob(blob: Blob): Promise<BlobReference>
-  /** Persist an already-encoded document without re-parsing its serialized form. */
-  setDocument(key: string, document: Schema.Json): Promise<void>
+  /**
+   * Persist an already-encoded document without re-parsing its serialized form. The encoded side
+   * of a persisted schema is opaque (`unknown`), so the store takes the document untyped and the
+   * tree walk below is the boundary handling.
+   */
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- encoded documents are untyped by the persisted-schema contract; the walk guards below validate structure.
+  setDocument(key: string, document: unknown): Promise<void>
 }
 
 // Strings at least this long leave the document as fixed-size content-addressed chunks. Typing
@@ -374,11 +379,19 @@ export function createDraftStore(driver: Driver, options: { grace?: number } = {
     return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, rename(entry, renamed)]))
   }
 
-  const setDocument = async (key: string, document: Schema.Json) => {
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- encoded documents are untyped by the persisted-schema contract; they are schema-decoded below.
+  const setDocument = async (key: string, document: unknown) => {
     const version = (versions.get(key) ?? 0) + 1
     versions.set(key, version)
     const sources: Sources = new Map()
-    const encoded = await encode(document, sources)
+    // Encoded documents are JSON (the store string is their serialization), so the decode recovers
+    // the tree type the walkers consume.
+    const parsed = Schema.decodeUnknownOption(Schema.Json)(document)
+    // SAFETY: a non-JSON document is walked as-is — every guard in `encode` is structural, as
+    // before the schema decode existed, and JSON.stringify drops whatever leaves it cannot
+    // represent.
+    const tree = Option.isNone(parsed) ? (document as Schema.Json) : parsed.value
+    const encoded = await encode(tree, sources)
 
     if (versions.get(key) !== version) return
     // The store refuses the write while any referenced blob is missing, so the previous document
