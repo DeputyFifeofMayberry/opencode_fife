@@ -9,7 +9,7 @@
 - Use relevant ECC skills and configured specialist agents. Complex changes: `planner` or `/plan`; implementation: `tdd-workflow`; final verification: `verification-loop`; security: `security-review`; interfaces: `api-design`; review: `code-reviewer` or `/code-review`. Project and package instructions take precedence over generic ECC examples.
 - Keep the custom and package test skills alongside ECC. Before changing tests, follow the test-skill routing in the Testing section below.
 - Definition of Done (`.opencode/references/definition-of-done.md`): project completion criteria. Shared checklists remain in `.opencode/references/`.
-- ECC's automatic hook plugin targets OpenCode v1 and is disabled in this v2 fork. Skills, agents, commands, rules, and manual helpers are installed. The existing `/learn` command is preserved; ECC uses `/ecc-learn`.
+- ECC's native v2 hook adapter is enabled at `.opencode/ecc/plugin`; capability and verification notes: `.opencode/ecc/plugin/verification.md`. The legacy v1 plugin and its custom tools remain disabled. The existing `/learn` command is preserved; ECC uses `/ecc-learn`.
 
 ## Workflow
 
