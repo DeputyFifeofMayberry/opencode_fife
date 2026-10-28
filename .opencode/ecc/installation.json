@@ -2,6 +2,20 @@
   "source": "https://github.com/affaan-m/ECC",
   "version": "2.2.3",
   "commit": "25278e7d7b6cf6e6a4e7a6c8e10f14ff22f0eb5b",
+  "provenance": {
+    "sourceBranch": "main",
+    "packageVersion": "2.2.3",
+    "stableTag": "v2.2.3",
+    "stableCommit": "93f9f6154d164ccb9f4dc38858a2bc2d5dcab222",
+    "note": "commit is the upstream main snapshot installed here, not the stable tag payload; main was 1,017 commits past the stable tag when installed",
+    "localPatches": [
+      "instructions: config carries only the ECC bridge (no ecc/rules globs)",
+      ".opencode/ecc/INSTRUCTIONS.md: rewritten bridge (<=800 chars)",
+      "ecc/commands/{harness-audit,evolve,projects,promote,instinct-status,instinct-export,instinct-import}.md: corrected paths, shell commands, flags, formats",
+      ".opencode/skills/continuous-learning/SKILL.md: metadata opencode/autoinvoke: false",
+      "ecc/prompts/agents/docs-lookup.txt + config description: source-backed fallback"
+    ]
+  },
   "integration": "OpenCode v2 skills, agents, commands, rules, manual helpers, and native hook adapter",
   "legacyPlugin": {
     "enabled": false,

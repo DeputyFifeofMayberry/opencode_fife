@@ -16,10 +16,10 @@ Run a deterministic repository harness audit and return a prioritized scorecard.
 
 ## Deterministic Engine
 
-Always run:
+Always run from the repository root (the helper path is relative to it):
 
 ```bash
-node scripts/harness-audit.js <scope> --format <text|json> [--root <path>]
+node .opencode/scripts/harness-audit.js <scope> --format <text|json> [--root <path>]
 ```
 
 This script is the source of truth for scoring and checks. Do not invent additional dimensions or ad-hoc points.
