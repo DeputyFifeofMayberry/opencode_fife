@@ -6,12 +6,13 @@ import { ConfigNormalize } from "@opencode/core/config/normalize"
 import { SkillFile } from "@opencode/core/config/plugin/skill-file"
 import { Permission } from "@opencode/core/permission"
 import { Skill } from "@opencode/core/skill"
+import { isRecord } from "@opencode/util/record"
 
 const root = path.resolve(import.meta.dir, "../../../..")
 const openCode = path.join(root, ".opencode")
 
 function record(value: unknown): Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("expected an object")
+  if (!isRecord(value)) throw new Error("expected an object")
   return value
 }
 
@@ -42,6 +43,14 @@ const parseSkill = async (id: string) => {
   if (parsed._tag !== "Parsed") throw new Error(`expected skill ${id} to parse`)
   return parsed.skill
 }
+
+const ruleInstructionSources = (instructions: unknown): string[] =>
+  (Array.isArray(instructions) ? instructions.map(String) : []).filter((source) => source.includes("ecc/rules/"))
+
+const suffixTemplates = (commands: unknown): string[] =>
+  Object.values(record(commands))
+    .map((entry) => String(record(entry).template))
+    .filter((template) => template.endsWith("\n\n$ARGUMENTS"))
 
 test("the installed project config normalizes without invalid diagnostics", () => {
   if (normalized.type === "rejected") throw new Error(`config rejected: ${JSON.stringify(normalized.diagnostics)}`)
@@ -80,10 +89,8 @@ test("exactly one enabled native plugin entry is configured", () => {
 })
 
 test("command templates carry no wrapper argument suffix", () => {
-  const commands = record(config.commands)
-  const templates = Object.values(commands).map((entry) => String(record(entry).template))
-  expect(templates.length).toBe(35)
-  for (const template of templates) expect(template.endsWith("\n\n$ARGUMENTS")).toBe(false)
+  expect(Object.keys(record(config.commands)).length).toBe(35)
+  expect(suffixTemplates(config.commands)).toEqual([])
 })
 
 test("helper command bodies reference installed paths and supported flags only", async () => {
@@ -135,10 +142,32 @@ test("docs-lookup stays source-backed without growing its advertised description
 })
 
 test("automatic ECC instructions are the bridge only, within its char budget", async () => {
+  expect(ruleInstructionSources(config.instructions)).toEqual([])
   expect(config.instructions).toEqual([".opencode/ecc/INSTRUCTIONS.md"])
   const bridge = await fs.readFile(path.join(openCode, "ecc", "INSTRUCTIONS.md"), "utf8")
   // The bridge replaces 15 always-loaded rule files; a larger budget requires a new explicit policy decision.
   expect(bridge.length).toBeLessThanOrEqual(800)
+})
+
+test("the contract detects reintroduced rule globs and argument suffixes", () => {
+  const driftedConfig = structuredClone(config) as Record<string, unknown>
+  driftedConfig.instructions = [...(driftedConfig.instructions as string[]), ".opencode/ecc/rules/common/*.md"]
+  expect(ruleInstructionSources(driftedConfig.instructions).length).toBe(1)
+
+  const driftedCommands = structuredClone(config.commands)
+  const first = Object.keys(record(driftedCommands))[0]!
+  const template = record(record(driftedCommands)[first])
+  template.template = `${String(template.template)}\n\n$ARGUMENTS`
+  expect(suffixTemplates(driftedCommands).length).toBe(1)
+})
+
+test("installation provenance distinguishes snapshot, stable tag, and package version", () => {
+  const provenance = record(installation.provenance)
+  expect(provenance.sourceBranch).toBe("main")
+  expect(provenance.stableCommit).not.toBe(installation.commit)
+  expect(provenance.packageVersion).toBe(installation.version)
+  expect(String(provenance.note)).toContain("not the stable tag payload")
+  expect((provenance.localPatches as unknown[]).length).toBeGreaterThanOrEqual(5)
 })
 
 test("reference-protected skills survive the configured skill permission ruleset", async () => {
@@ -148,5 +177,5 @@ test("reference-protected skills survive the configured skill permission ruleset
   const protectedIds = ["django-tdd", "tdd-workflow", "continuous-learning-v2"]
   const skills = await Promise.all(protectedIds.map(parseSkill))
   const available = Skill.available(skills, ruleset)
-  expect(available.map((skill) => skill.id).toSorted()).toEqual([...protectedIds].toSorted())
+  expect(available.map((skill) => String(skill.id)).toSorted()).toEqual([...protectedIds].toSorted())
 })
