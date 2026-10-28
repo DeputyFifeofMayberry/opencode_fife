@@ -39,17 +39,16 @@ import {
 import { stringWidth } from "../util/string-width"
 import { errorMessage } from "../util/error"
 import {
-  createPromptHistory,
   EXIT_COMMANDS,
   isExitCommand,
   isCompactCommand,
   mentionTriggerIndex,
   slashTriggerIndex,
   isNewCommand,
-  movePromptHistory,
   promptCopy,
-  pushPromptHistory,
+  promptHistoryPolicy,
 } from "./prompt.shared"
+import { createPromptHistory, movePromptHistory, pushPromptHistory } from "../prompt/history-machine"
 import { parseFileLineRange, parseSlashHead, stripFileLineRange } from "../prompt/parse"
 import { Keymap } from "../context/keymap"
 import { realignEditorPromptParts, resolveEditorSlashValue } from "./prompt.editor"
@@ -356,12 +355,11 @@ export function createPromptState(input: PromptInput): PromptState {
     ])
   })
 
-  let history = createPromptHistory(input.history?.())
+  let history = createPromptHistory(input.history?.(), promptHistoryPolicy)
   createEffect(() => {
-    history = createPromptHistory(input.history?.())
+    history = createPromptHistory(input.history?.(), promptHistoryPolicy)
   })
   let draft: RunPrompt = { text: "", parts: [] }
-  let stash: RunPrompt = { text: "", parts: [] }
   let area: TextareaRenderable | undefined
   const measure = (text: string) => measureEditText(text, { widthMethod: renderer.widthMethod })
   let tick = false
@@ -917,7 +915,7 @@ export function createPromptState(input: PromptInput): PromptState {
   }
 
   const push = (value: RunPrompt) => {
-    history = pushPromptHistory(history, value)
+    history = pushPromptHistory(history, value, promptHistoryPolicy)
   }
 
   const move = (dir: -1 | 1, event: KeyEvent) => {
@@ -925,48 +923,39 @@ export function createPromptState(input: PromptInput): PromptState {
       return false
     }
 
-    if (history.index === null && dir === -1) {
-      stash = promptCopy(draft)
-    }
-
-    const next = movePromptHistory(history, dir, area.plainText, area.cursorOffset, renderer.widthMethod)
-    if (!next.apply || next.text === undefined || next.cursor === undefined) {
+    const next = movePromptHistory(history, dir, draft, renderer.widthMethod)
+    const value = next.apply ? next.prompt : undefined
+    if (!value) {
       return false
     }
 
     history = next.state
-    const value =
-      next.state.index === null ? stash : (next.state.items[next.state.index] ?? { text: next.text, parts: [] })
     restore(value, next.cursor)
     event.preventDefault()
     return true
   }
 
+  // Up engages history on the first visual row and moves the cursor elsewhere;
+  // down mirrors that on the last visual row. When nothing in history answers,
+  // the keypress keeps the pre-history contract: unhandled at the exact edge
+  // (so other bindings, like the subagent picker, stay reachable) and a snap
+  // to the near edge of the text otherwise.
   const historyCommand = (dir: -1 | 1, event: KeyEvent) => {
-    if (move(dir, event)) return
     if (!area || area.isDestroyed) return false
 
-    const endOffset = measure(area.plainText)
-    if (dir === -1) {
-      if (area.cursorOffset === 0) return false
-      if (area.visualCursor.visualRow === 0) {
-        area.cursorOffset = 0
-        return
-      }
-      area.moveCursorUp()
+    const row = area.scrollY + area.visualCursor.visualRow
+    const last = Math.max(0, area.editorView.getTotalVirtualLineCount() - 1)
+    const boundary = dir === -1 ? row === 0 : row === last
+    if (!boundary) {
+      if (dir === -1) area.moveCursorUp()
+      else area.moveCursorDown()
       return
     }
 
-    const end =
-      typeof area.height === "number" && Number.isFinite(area.height) && area.height > 0
-        ? area.height - 1
-        : Math.max(0, (area.virtualLineCount ?? 1) - 1)
-    if (area.cursorOffset === endOffset) return false
-    if (area.visualCursor.visualRow === end) {
-      area.cursorOffset = endOffset
-      return
-    }
-    area.moveCursorDown()
+    if (move(dir, event)) return
+    const edge = dir === -1 ? 0 : measure(area.plainText)
+    if (area.cursorOffset === edge) return false
+    area.cursorOffset = edge
   }
 
   const requestExit = () => {
