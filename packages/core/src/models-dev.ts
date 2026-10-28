@@ -350,6 +350,7 @@ function cost(input: SourceCost | undefined): Model.Info["cost"] {
 
 // opencode has one cache write price: the first TTL listed, else the explicit cache's.
 function cacheWrite(cache: typeof CachePrices.Type | undefined) {
+  // SAFETY: CacheWrite is `number | Record<string, number>` — only the record branch is an object.
   const first = (write: typeof CacheWrite.Type | undefined) =>
     typeof write === "object" ? Object.values(write)[0] : write
   return first(cache?.write) ?? first(cache?.explicit?.write)

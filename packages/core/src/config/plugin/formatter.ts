@@ -65,6 +65,8 @@ function resolve(entries: readonly Entry[]) {
   return entries.reduce<boolean | Record<string, ConfigFormatter.Entry> | undefined>((result, entry) => {
     if (entry.type !== "document" || entry.info.formatter === undefined) return result
     if (typeof entry.info.formatter === "boolean") return entry.info.formatter
+    // SAFETY: the accumulator is `boolean | Record<...> | undefined` — only the record branch is
+    // an object, so this keeps the accumulated merge state and resets on a boolean or undefined.
     return Object.entries(entry.info.formatter).reduce(
       (merged, [name, item]) => ({
         ...merged,

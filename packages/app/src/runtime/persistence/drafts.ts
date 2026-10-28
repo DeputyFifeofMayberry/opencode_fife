@@ -1,5 +1,9 @@
 import type { AsyncStorage } from "@solid-primitives/storage"
 import { Option, Schema } from "effect"
+import { recordValue, stringValue } from "@opencode/util/boundary"
+
+// Records are the only object branch of a JSON tree; the schema guard keeps the object member type.
+const isJsonObject = (value: Schema.Json): value is Schema.JsonObject => Schema.is(Schema.JsonObject)(value)
 
 type BlobReference = { id: string; url: string }
 
@@ -19,7 +23,7 @@ type Driver = {
 export type DraftStore = AsyncStorage & {
   putBlob(blob: Blob): Promise<BlobReference>
   /** Persist an already-encoded document without re-parsing its serialized form. */
-  setDocument(key: string, document: unknown): Promise<void>
+  setDocument(key: string, document: Schema.Json): Promise<void>
 }
 
 // Strings at least this long leave the document as fixed-size content-addressed chunks. Typing
@@ -109,26 +113,25 @@ function revoke(id: string) {
 }
 
 // Image ids a document references: `{ blob: { id } }` parts, not text chunk lists.
-function imageIDs(value: unknown, into = new Set<string>()): Set<string> {
+function imageIDs(value: Schema.Json, into = new Set<string>()): Set<string> {
   if (Array.isArray(value)) {
     value.forEach((entry) => imageIDs(entry, into))
 
     return into
   }
 
-  if (!value || typeof value !== "object") return into
-  const item = value as Record<string, unknown>
-  const blob = item.blob
+  if (!isJsonObject(value)) return into
+  const blob = value.blob
 
-  if (blob && typeof blob === "object" && !("kind" in blob)) {
-    const id = (blob as Record<string, unknown>).id
+  if (isJsonObject(blob) && !("kind" in blob)) {
+    const id = stringValue(blob.id)
 
-    if (typeof id === "string") into.add(id)
+    if (id !== undefined) into.add(id)
 
     return into
   }
 
-  Object.values(item).forEach((entry) => imageIDs(entry, into))
+  Object.values(value).forEach((entry) => imageIDs(entry, into))
 
   return into
 }
@@ -203,7 +206,7 @@ export function createDraftStore(driver: Driver, options: { grace?: number } = {
 
         return id
       },
-      (error: unknown) => {
+      (error) => {
         // A failed upload must not be reused as the answer for this content on later saves.
         if (chunkIds.get(chunk) === id) chunkIds.delete(chunk)
         throw error
@@ -229,10 +232,12 @@ export function createDraftStore(driver: Driver, options: { grace?: number } = {
   // bytes again: the chunk text itself, or the image Blob (or object URL) the reference carries.
   type Sources = Map<string, { blob: () => Promise<Blob>; chunk?: string }>
 
-  const encode = async (value: unknown, sources: Sources): Promise<unknown> => {
-    if (typeof value === "string" && value.length >= draftTextThreshold) {
-      const pieces = split(value)
-      const ids = await externalize(value)
+  const encode = async (value: Schema.Json, sources: Sources): Promise<Schema.Json> => {
+    const text = stringValue(value)
+
+    if (text !== undefined && text.length >= draftTextThreshold) {
+      const pieces = split(text)
+      const ids = await externalize(text)
       ids.forEach((id, index) =>
         sources.set(id, { blob: async () => new Blob([pieces[index]!]), chunk: pieces[index] }),
       )
@@ -242,75 +247,77 @@ export function createDraftStore(driver: Driver, options: { grace?: number } = {
 
     if (Array.isArray(value)) return Promise.all(value.map((entry) => encode(entry, sources)))
 
-    if (!value || typeof value !== "object") return value
-    const item = value as Record<string, unknown>
+    if (!isJsonObject(value)) return value
+    const dataUrl = stringValue(value.dataUrl)
 
-    if (item.type === "image" && typeof item.dataUrl === "string") {
-      const blob = await fetch(item.dataUrl).then((response) => response.blob())
-      const { dataUrl: _, ...rest } = item
+    if (value.type === "image" && dataUrl !== undefined) {
+      const blob = await fetch(dataUrl).then((response) => response.blob())
+      const { dataUrl: _, ...rest } = value
       const id = await driver.putBlob(blob)
       sources.set(id, { blob: async () => blob })
 
       return { ...rest, blob: { id } }
     }
 
-    if ("blob" in item && item.blob && typeof item.blob === "object") {
-      const blob = item.blob as Record<string, unknown>
+    const blob = value.blob
 
-      if (blob.kind === "text") return item
+    if (isJsonObject(blob)) {
+      if (blob.kind === "text") return value
 
-      if (typeof blob.id === "string" && blob.id.startsWith("data:")) {
-        const data = await fetch(blob.id).then((response) => response.blob())
-        const id = await driver.putBlob(data)
-        sources.set(id, { blob: async () => data })
+      const id = stringValue(blob.id)
 
-        return { ...item, blob: { id } }
+      if (id?.startsWith("data:")) {
+        const data = await fetch(id).then((response) => response.blob())
+        const stored = await driver.putBlob(data)
+        sources.set(stored, { blob: async () => data })
+
+        return { ...value, blob: { id: stored } }
       }
 
-      if (typeof blob.id === "string") {
+      if (id !== undefined) {
         // A live reference keeps the id it was created with; publish the id its bytes now live under.
-        const id = aliases.get(blob.id) ?? blob.id
-        const kept = retained.get(id)?.blob
-        const url = typeof blob.url === "string" ? blob.url : retained.get(id)?.url
+        const alias = aliases.get(id) ?? id
+        const kept = retained.get(alias)?.blob
+        const url = stringValue(blob.url) ?? retained.get(alias)?.url
 
-        if (kept) sources.set(id, { blob: async () => kept })
-        else if (url) sources.set(id, { blob: () => fetch(url).then((response) => response.blob()) })
+        if (kept) sources.set(alias, { blob: async () => kept })
+        else if (url) sources.set(alias, { blob: () => fetch(url).then((response) => response.blob()) })
 
-        return { ...item, blob: { id } }
+        return { ...value, blob: { id: alias } }
       }
 
-      return { ...item, blob: { id: blob.id } }
+      return { ...value, blob: { id: blob.id } }
     }
 
     return Object.fromEntries(
-      await Promise.all(Object.entries(item).map(async ([key, entry]) => [key, await encode(entry, sources)])),
+      await Promise.all(Object.entries(value).map(async ([key, entry]) => [key, await encode(entry, sources)])),
     )
   }
 
-  const decode = async (value: unknown): Promise<unknown> => {
+  const decode = async (value: Schema.Json): Promise<Schema.Json> => {
     if (Array.isArray(value)) return Promise.all(value.map(decode))
 
-    if (!value || typeof value !== "object") return value
-    const item = value as Record<string, unknown>
+    if (!isJsonObject(value)) return value
+    const ref = value.blob
 
-    if (item.blob && typeof item.blob === "object") {
-      const ref = item.blob as Record<string, unknown>
-
+    if (isJsonObject(ref)) {
       if (ref.kind === "text" && Array.isArray(ref.ids)) {
         return (await Promise.all(ref.ids.map((id) => loadChunk(String(id))))).join("")
       }
 
+      const id = stringValue(ref.id)
+
       // Bytes stay in the store until something renders or sends the image (see resolveBlobUrl);
       // only an image already pinned in this page gets its URL back immediately.
-      if (typeof ref.id === "string") {
-        const url = retained.get(aliases.get(ref.id) ?? ref.id)?.url
+      if (id !== undefined) {
+        const url = retained.get(aliases.get(id) ?? id)?.url
 
-        return { ...item, blob: url ? { id: ref.id, url } : { id: ref.id } }
+        return { ...value, blob: url ? { id, url } : { id } }
       }
     }
 
     return Object.fromEntries(
-      await Promise.all(Object.entries(item).map(async ([key, entry]) => [key, await decode(entry)])),
+      await Promise.all(Object.entries(value).map(async ([key, entry]) => [key, await decode(entry)])),
     )
   }
 
@@ -349,25 +356,25 @@ export function createDraftStore(driver: Driver, options: { grace?: number } = {
     return renamed
   }
 
-  const rename = (value: unknown, renamed: Map<string, string>): unknown => {
+  const rename = (value: Schema.Json, renamed: Map<string, string>): Schema.Json => {
     if (Array.isArray(value)) return value.map((entry) => rename(entry, renamed))
 
-    if (!value || typeof value !== "object") return value
-    const item = value as Record<string, unknown>
+    if (!isJsonObject(value)) return value
+    const ref = value.blob
 
-    if (item.blob && typeof item.blob === "object") {
-      const ref = item.blob as Record<string, unknown>
-
+    if (isJsonObject(ref)) {
       if (Array.isArray(ref.ids))
-        return { ...item, blob: { ...ref, ids: ref.ids.map((id) => renamed.get(String(id)) ?? id) } }
+        return { ...value, blob: { ...ref, ids: ref.ids.map((id) => renamed.get(String(id)) ?? id) } }
 
-      if (typeof ref.id === "string") return { ...item, blob: { ...ref, id: renamed.get(ref.id) ?? ref.id } }
+      const id = stringValue(ref.id)
+
+      if (id !== undefined) return { ...value, blob: { ...ref, id: renamed.get(id) ?? id } }
     }
 
-    return Object.fromEntries(Object.entries(item).map(([key, entry]) => [key, rename(entry, renamed)]))
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, rename(entry, renamed)]))
   }
 
-  const setDocument = async (key: string, document: unknown) => {
+  const setDocument = async (key: string, document: Schema.Json) => {
     const version = (versions.get(key) ?? 0) + 1
     versions.set(key, version)
     const sources: Sources = new Map()
@@ -403,7 +410,7 @@ export function createDraftStore(driver: Driver, options: { grace?: number } = {
       const value = await driver.get(key)
 
       if (value === null) return null
-      const parsed = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Unknown))(value)
+      const parsed = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Json))(value)
 
       // Let the owning persistence codec apply its invalid-document policy.
       if (Option.isNone(parsed)) return value
@@ -479,7 +486,7 @@ export function createBrowserDraftStore(): DraftStore {
     })
   }
 
-  const write = async (store: string, key: string, value?: unknown) => {
+  const write = async (store: string, key: string, value?: string | Blob) => {
     const transaction = (await db).transaction(store, "readwrite")
 
     if (value === undefined) transaction.objectStore(store).delete(key)
@@ -492,7 +499,9 @@ export function createBrowserDraftStore(): DraftStore {
   }
 
   return createDraftStore({
-    get: async (key) => ((await get("documents", key)) as string | undefined) ?? null,
+    get: async (key) =>
+      // SAFETY: only ever `put` JSON strings under the "documents" store.
+      ((await get("documents", key)) as string | undefined) ?? null,
     set: async (key, value, strict) => {
       // One readwrite transaction over both stores: IndexedDB serialises overlapping readwrite
       // transactions in creation order, so a later save or removal cannot commit between the
@@ -532,7 +541,9 @@ export function createBrowserDraftStore(): DraftStore {
 
       return id
     },
-    getBlob: async (id) => ((await get("blobs", id)) as Blob | undefined) ?? null,
+    getBlob: async (id) =>
+      // SAFETY: only ever `put` Blobs under the "blobs" store.
+      ((await get("blobs", id)) as Blob | undefined) ?? null,
   })
 }
 
@@ -540,9 +551,12 @@ export function createBrowserDraftStore(): DraftStore {
 function referenced(json: string) {
   const ids = new Set<string>()
   JSON.parse(json, (_key, item) => {
-    if (item?.blob && typeof item.blob.id === "string") ids.add(item.blob.id)
+    const blob = recordValue(recordValue(item)?.blob)
+    const id = stringValue(blob?.id)
 
-    if (item?.blob && Array.isArray(item.blob.ids)) item.blob.ids.forEach((id: unknown) => ids.add(String(id)))
+    if (id !== undefined) ids.add(id)
+
+    if (Array.isArray(blob?.ids)) blob.ids.forEach((entry) => ids.add(String(entry)))
 
     return item
   })
@@ -561,7 +575,7 @@ export async function blobDataUrl(blob: BlobReference, mime: string) {
     const reader = new FileReader()
     reader.addEventListener("error", () => reject(reader.error))
     reader.addEventListener("load", () => {
-      const value = typeof reader.result === "string" ? reader.result : ""
+      const value = stringValue(reader.result) ?? ""
       resolve(`data:${mime};base64,${value.slice(value.indexOf(",") + 1)}`)
     })
     reader.readAsDataURL(data)

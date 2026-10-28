@@ -242,6 +242,8 @@ function isRemoved(value: unknown): value is Removed {
 
 function canonical(value: Schema.Json): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`
+  // SAFETY: after the array branch, only the object member of Json has an object typeof; null and
+  // the primitives fall through to JSON.stringify.
   if (value !== null && typeof value === "object")
     return `{${Object.entries(value)
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
