@@ -18,6 +18,7 @@ import { Session } from "@opencode/core/session"
 import { SessionEvent } from "@opencode/core/session/event"
 import { SessionMessage } from "@opencode/core/session/message"
 import { Money } from "@opencode/schema/money"
+import { Worktree } from "@opencode/schema/worktree"
 import { SessionProjector } from "@opencode/core/session/projector"
 import { SessionExecution } from "@opencode/core/session/execution"
 import { fromRow } from "@opencode/core/session/info"
@@ -1596,5 +1597,37 @@ describe("SessionProjector", () => {
       expect(yield* db.select().from(BlobRefTable).all().pipe(Effect.orDie)).toEqual([])
       expect(yield* db.select().from(BlobTable).all().pipe(Effect.orDie)).toEqual([])
     }).pipe(Effect.provide(mediaBlob)),
+  )
+
+  it.effect("adopts a session in an astral-plane subdirectory", () =>
+    Effect.gen(function* () {
+      const db = yield* seedSession()
+      // U+1F600 sorts above the old `\uffff` SQL upper bound in UTF-8 byte order.
+      const previous = Project.ID.make("proj_astral_previous")
+      const adopting = Project.ID.make("proj_astral_adopting")
+      yield* db
+        .insert(ProjectTable)
+        .values([
+          { id: previous, worktree: AbsolutePath.make("/project"), sandboxes: [] },
+          { id: adopting, worktree: AbsolutePath.make("/project"), sandboxes: [] },
+        ])
+        .run()
+        .pipe(Effect.orDie)
+      yield* db
+        .update(SessionTable)
+        .set({ project_id: previous, directory: AbsolutePath.make("/project/😀/nested") })
+        .where(eq(SessionTable.id, sessionID))
+        .run()
+        .pipe(Effect.orDie)
+      const bus = yield* Bus.Service
+      yield* bus.publish(Worktree.Event.Resolved, {
+        projectID: adopting,
+        directory: AbsolutePath.make("/project"),
+        previous,
+      })
+      expect(
+        yield* db.select().from(SessionTable).where(eq(SessionTable.id, sessionID)).get().pipe(Effect.orDie),
+      ).toMatchObject({ project_id: adopting, path: "😀/nested" })
+    }),
   )
 })
