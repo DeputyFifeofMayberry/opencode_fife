@@ -9,14 +9,16 @@ Promote instincts in continuous-learning-v2: $ARGUMENTS
 
 ## Your Task
 
-Run:
+Run from the repository root:
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/continuous-learning-v2/scripts/instinct-cli.py" promote $ARGUMENTS
+```powershell
+python .opencode/skills/continuous-learning-v2/scripts/instinct-cli.py promote $ARGUMENTS
 ```
 
-If `CLAUDE_PLUGIN_ROOT` is unavailable, use:
+On POSIX, use `python3` instead of `python`.
 
-```bash
-python3 ~/.claude/skills/continuous-learning-v2/scripts/instinct-cli.py promote $ARGUMENTS
-```
+## Supported Args (v2.1)
+
+- `instinct_id`: promote one specific instinct
+- `--dry-run`: preview without promoting
+- `--force`: skip the confirmation prompt

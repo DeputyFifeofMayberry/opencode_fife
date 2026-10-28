@@ -79,6 +79,41 @@ test("exactly one enabled native plugin entry is configured", () => {
   expect(record(plugin.options).enabled).toBe(true)
 })
 
+test("command templates carry no wrapper argument suffix", () => {
+  const commands = record(config.commands)
+  const templates = Object.values(commands).map((entry) => String(record(entry).template))
+  expect(templates.length).toBe(35)
+  for (const template of templates) expect(template.endsWith("\n\n$ARGUMENTS")).toBe(false)
+})
+
+test("helper command bodies reference installed paths and supported flags only", async () => {
+  await fs.access(path.join(openCode, "scripts", "harness-audit.js"))
+  await fs.access(path.join(openCode, "skills", "continuous-learning-v2", "scripts", "instinct-cli.py"))
+  const helperNames = [
+    "harness-audit",
+    "evolve",
+    "projects",
+    "promote",
+    "instinct-status",
+    "instinct-export",
+    "instinct-import",
+  ]
+  const bodies = await Promise.all(
+    helperNames.map(async (name) => ({
+      name,
+      body: await fs.readFile(path.join(openCode, "ecc", "commands", `${name}.md`), "utf8"),
+    })),
+  )
+  for (const helper of bodies) {
+    expect(helper.body).not.toContain("CLAUDE_PLUGIN_ROOT")
+    expect(helper.body).not.toContain("/instinct-import @teammate") // usage form must go; the limitation note may stay
+    expect(helper.body).not.toContain("--category")
+    expect(helper.body).not.toContain("homunculus/projects/<project-id>") // legacy ~/.claude path shape
+  }
+  const exporter = bodies.find((helper) => helper.name === "instinct-export")
+  expect(exporter?.body).toContain("--domain")
+})
+
 test("automatic ECC instructions are the bridge only, within its char budget", async () => {
   expect(config.instructions).toEqual([".opencode/ecc/INSTRUCTIONS.md"])
   const bridge = await fs.readFile(path.join(openCode, "ecc", "INSTRUCTIONS.md"), "utf8")

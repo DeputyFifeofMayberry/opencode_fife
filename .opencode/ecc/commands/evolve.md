@@ -9,17 +9,13 @@ Analyze and evolve instincts in continuous-learning-v2: $ARGUMENTS
 
 ## Your Task
 
-Run:
+Run from the repository root:
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/continuous-learning-v2/scripts/instinct-cli.py" evolve $ARGUMENTS
+```powershell
+python .opencode/skills/continuous-learning-v2/scripts/instinct-cli.py evolve $ARGUMENTS
 ```
 
-If `CLAUDE_PLUGIN_ROOT` is unavailable, use:
-
-```bash
-python3 ~/.claude/skills/continuous-learning-v2/scripts/instinct-cli.py evolve $ARGUMENTS
-```
+On POSIX, use `python3` instead of `python`.
 
 ## Supported Args (v2.1)
 
@@ -31,6 +27,7 @@ python3 ~/.claude/skills/continuous-learning-v2/scripts/instinct-cli.py evolve $
 - Uses project + global instincts for analysis.
 - Shows skill/command/agent candidates from trigger and domain clustering.
 - Shows project -> global promotion candidates.
+- State root resolution: absolute `CLV2_HOMUNCULUS_DIR` if set, otherwise absolute `XDG_DATA_HOME` plus `ecc-homunculus`, otherwise `~/.local/share/ecc-homunculus`.
 - With `--generate`, output path is:
-  - project context: `~/.claude/homunculus/projects/<project-id>/evolved/`
-  - global fallback: `~/.claude/homunculus/evolved/`
+  - project context: `<state-root>/projects/<project-id>/evolved/`
+  - global fallback: `<state-root>/evolved/`
