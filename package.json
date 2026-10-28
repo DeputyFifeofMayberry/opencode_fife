@@ -36,6 +36,7 @@
     "prepare": "husky",
     "sso": "aws sso login --sso-session=opencode --no-browser",
     "test:pkg": "bun script/test-pkg.ts",
+    "test:github": "cd script/github && bun test",
     "test": "echo 'do not run tests from root' && exit 1"
   },
   "workspaces": {
