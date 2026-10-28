@@ -18,11 +18,13 @@ The two are complementary. A task is done only when **its** acceptance criteria 
 
 Apply this to every change before declaring it done.
 
+For this personal fork, ordinary changes are verified locally. GitHub CI, PR administration, multi-platform distribution matrices, registry publication checks, release notes, and deployments apply only when the task affects those outputs or the user explicitly requests a public release. Documentation-only changes need accurate content and a reviewed diff, not an application rebuild. Keep relevant lint, typechecks, regression tests, generated-contract checks, and runtime verification for code changes.
+
 ### Correctness
 - [ ] All acceptance criteria for the task are met
 - [ ] Code runs and behaves as intended, verified at runtime, not just compiled or typechecked
 - [ ] New behavior is covered by tests that fail without the change and pass with it
-- [ ] Existing tests still pass; no regressions introduced
+- [ ] Relevant existing tests still pass; broaden coverage for shared-code or dependency changes
 - [ ] Edge cases and error paths are handled, not just the happy path
 
 ### Quality
@@ -48,7 +50,7 @@ The depth behind these items lives in `code-review-and-quality` (the five-axis r
 - [ ] Security implications reviewed for any untrusted input, auth, or data handling (see `security-and-hardening`)
 - [ ] Observability in place for new critical paths (logs, metrics, traces) (see `observability-and-instrumentation`)
 - [ ] Rollback path exists for anything risky (see `shipping-and-launch`)
-- [ ] The human has reviewed and approved before merge or deploy
+- [ ] Remote publication, public releases, deployments, and disruptive service restarts have the required user authorization; ordinary local integration follows `AGENTS.md`
 
 ## How to Apply
 

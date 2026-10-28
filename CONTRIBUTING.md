@@ -1,5 +1,7 @@
 # Contributing to OpenCode
 
+This personal fork uses local development and local Windows CLI builds. Follow [the local workflow](docs/local-development.md): work on `dev`, run applicable checks locally, and install with `bun run install:local`. GitHub provides source history and backup; `main` is preserved for future release work. PRs and public release steps are optional unless explicitly requested. The upstream contribution rules below apply when preparing an upstream submission.
+
 The changes most likely to be accepted are:
 
 - Bug fixes
@@ -22,7 +24,7 @@ New providers should rarely require OpenCode changes. Add the provider to [model
 
 ## Development
 
-OpenCode requires Bun 1.3 or newer. From the repository root:
+Use the Bun version pinned in root `package.json` (currently 1.4.4). From the repository root:
 
 ```bash
 bun install

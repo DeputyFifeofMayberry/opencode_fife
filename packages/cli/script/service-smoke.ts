@@ -18,6 +18,10 @@ const binary = path.join(
 if (!(await Bun.file(binary).exists())) throw new Error(`Missing compiled CLI in ${directory}`)
 
 const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "opencode-service-smoke-")))
+// Contenders must share a port to elect one owner, without occupying the live service's port.
+const reservation = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response() })
+const port = reservation.port
+await reservation.stop(true)
 const env = {
   ...process.env,
   HOME: root,
@@ -105,7 +109,11 @@ if (failure)
   })
 
 function spawnService() {
-  const process = Bun.spawn([binary, "serve", "--service"], { env, stdout: "ignore", stderr: "pipe" })
+  const process = Bun.spawn([binary, "serve", "--service", "--port", String(port)], {
+    env,
+    stdout: "ignore",
+    stderr: "pipe",
+  })
   processes.push(process)
   errors.push(new Response(process.stderr).text())
   return process
