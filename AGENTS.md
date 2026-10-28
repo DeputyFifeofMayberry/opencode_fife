@@ -6,10 +6,22 @@
 ## Agent Skills
 
 - ECC skills: `.opencode/skills/<name>/SKILL.md`; setup, source version, and compatibility notes: `.opencode/ecc/README.md`.
-- Use relevant ECC skills and configured specialist agents. Complex changes: `planner` or `/plan`; implementation: `tdd-workflow`; final verification: `verification-loop`; security: `security-review`; interfaces: `api-design`; review: `code-reviewer` or `/code-review`. Project and package instructions take precedence over generic ECC examples.
+- Use relevant ECC skills and configured specialist agents when they add a distinct perspective or bounded parallelism. Complex changes: `planner` or `/plan`; implementation: `tdd-workflow`; final verification: `verification-loop`; security: `security-review`; interfaces: `api-design`; review: `code-reviewer` or `/code-review`. Project and package instructions take precedence over generic ECC examples.
 - Keep the custom and package test skills alongside ECC. Before changing tests, follow the test-skill routing in the Testing section below.
 - Definition of Done (`.opencode/references/definition-of-done.md`): project completion criteria. Shared checklists remain in `.opencode/references/`.
 - ECC's native v2 hook adapter is enabled at `.opencode/ecc/plugin`; capability and verification notes: `.opencode/ecc/plugin/verification.md`. The legacy v1 plugin and its custom tools remain disabled. The existing `/learn` command is preserved; ECC uses `/ecc-learn`.
+
+## Delegation
+
+- The primary agent, Build by default, owns the task, the final diff, verification, and the final report. Delegate bounded work, not accountability.
+- Do simple work directly. Delegate only when a specialist adds a distinct perspective, bounded research, or genuine parallelism.
+- Good delegation cases: broad read-only exploration, independent review, security review, strict test-first work, large mechanical refactors, E2E authoring, documentation updates, and written planning.
+- Do not delegate final verification, small context-heavy edits, sequential work that depends on the parent conversation, or multiple write-capable agents on overlapping files.
+- When delegating, state the goal, scope and allowed paths, constraints, relevant context, output contract, and what to verify. Subagents start with fresh context, so restate anything they need.
+- One writer per file. Do not run parallel write-capable specialists on the same files.
+- Report what was delegated, why, and what came back. Do not hide child-session cost or failures.
+- Use native Plan for high-risk or ambiguous work. Do not silently implement after planning.
+- Prefer existing slash commands for deterministic specialist workflows.
 
 ## Workflow
 

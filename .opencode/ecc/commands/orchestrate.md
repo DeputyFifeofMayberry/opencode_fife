@@ -1,88 +1,74 @@
 ---
-description: Orchestrate multiple agents for complex tasks
+description: Plan a multi-agent workflow; does not execute it
 agent: planner
 subtask: true
 ---
 
 # Orchestrate Command
 
-Orchestrate multiple specialized agents for this complex task: $ARGUMENTS
+Plan a multi-agent workflow for this task: $ARGUMENTS
 
 ## Your Task
 
-1. **Analyze task complexity** and break into subtasks
-2. **Identify optimal agents** for each subtask
-3. **Create execution plan** with dependencies
-4. **Coordinate execution** - parallel where possible
-5. **Synthesize results** into unified output
+1. **Analyze the task** and break it into phases.
+2. **Map each phase** to an available specialist or slash command.
+3. **State dependencies** and which phases can run in parallel.
+4. **State verification gates** after each phase.
+5. **Produce a copy-pasteable workflow** for the user.
 
-## Available Agents
+This command only plans. It does not execute other agents. The planner is a read-only subagent with fresh context. Do not claim to coordinate, spawn, or synthesize results from other agents. Tell the user to run the commands, or ask Build to execute them one at a time.
 
-| Agent | Specialty | Use For |
-|-------|-----------|---------|
-| planner | Implementation planning | Complex feature design |
-| architect | System design | Architectural decisions |
-| code-reviewer | Code quality | Review changes |
-| security-reviewer | Security analysis | Vulnerability detection |
-| tdd-guide | Test-driven dev | Feature implementation |
-| build-error-resolver | Build fixes | TypeScript/build errors |
-| e2e-runner | E2E testing | User flow testing |
-| doc-updater | Documentation | Updating docs |
-| refactor-cleaner | Code cleanup | Dead code removal |
-| go-reviewer | Go code | Go-specific review |
-| go-build-resolver | Go builds | Go build errors |
-| database-reviewer | Database | Query optimization |
+## Available Specialists
 
-## Orchestration Patterns
+| Specialist | Use for |
+|------------|---------|
+| planner | Implementation planning |
+| architect | System design and trade-offs |
+| code-reviewer | Read-only code review |
+| security-reviewer | Security review; instruct it not to edit |
+| tdd-guide | Test-first implementation |
+| build-error-resolver | TypeScript/build error clusters |
+| e2e-runner | Playwright E2E tests |
+| doc-updater | Documentation and codemaps |
+| refactor-cleaner | Dead code and duplication |
+| database-reviewer | Query and schema review |
+| docs-lookup | Current library/API documentation |
+| explore | Read-only codebase exploration |
+| general | Bounded multi-step work or parallel research |
 
-### Sequential Execution
-```
-planner → tdd-guide → code-reviewer → security-reviewer
-```
-Use when: Later tasks depend on earlier results
+## Preferred Commands
 
-### Parallel Execution
-```
-┌→ security-reviewer
-planner →├→ code-reviewer
-└→ architect
-```
-Use when: Tasks are independent
+Use existing commands where they fit: `/plan`, `/tdd`, `/code-review`, `/security`, `/e2e`, `/refactor-clean`, `/update-docs`, `/verify`.
 
-### Fan-Out/Fan-In
-```
-         ┌→ agent-1 ─┐
-planner →├→ agent-2 ─┼→ synthesizer
-         └→ agent-3 ─┘
-```
-Use when: Multiple perspectives needed
+## Output Format
 
-## Execution Plan Format
+### Task Summary
 
-### Phase 1: [Name]
-- Agent: [agent-name]
+Restate the goal, constraints, and acceptance criteria.
+
+### Phases
+
+#### Phase 1: [Name]
+
+- Command or specialist: [exact command or agent id]
 - Task: [specific task]
 - Depends on: [none or previous phase]
+- Verification: [check to run]
 
-### Phase 2: [Name] (parallel)
-- Agent A: [agent-name]
-  - Task: [specific task]
-- Agent B: [agent-name]
-  - Task: [specific task]
+#### Phase 2: [Name] (parallel)
+
+- Command or specialist: [exact command or agent id]
+- Task: [specific task]
 - Depends on: Phase 1
+- Verification: [check to run]
 
-### Phase 3: Synthesis
-- Combine results from Phase 2
-- Generate unified output
+### Verification Gates
 
-## Coordination Rules
+- After each implementation phase, run the relevant package checks.
+- Final gate: run `bun run check` and inspect the diff.
 
-1. **Plan before execute** - Create full execution plan first
-2. **Minimize handoffs** - Reduce context switching
-3. **Parallelize when possible** - Independent tasks in parallel
-4. **Clear boundaries** - Each agent has specific scope
-5. **Single source of truth** - One agent owns each artifact
+### Execution
 
----
-
-**NOTE**: Complex tasks benefit from multi-agent orchestration. Simple tasks should use single agents directly.
+- Run the commands in order.
+- Do not ask the planner to run them.
+- Stop and ask the user when a phase changes scope or fails verification.

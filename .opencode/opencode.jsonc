@@ -159,6 +159,9 @@
   "tools": {
     "github-pr-search": false,
   },
+  "effort_policy": {
+    "verification_commands": ["bun run check"]
+  },
   "agents": {
     "build": {
       "description": "Primary coding agent for development work",
@@ -465,7 +468,7 @@
       "template": "{file:ecc/commands/model-route.md}"
     },
     "orchestrate": {
-      "description": "Orchestrate multiple agents for complex tasks",
+      "description": "Plan a multi-agent workflow; does not execute it",
       "template": "{file:ecc/commands/orchestrate.md}",
       "agent": "planner",
       "subagent": true
