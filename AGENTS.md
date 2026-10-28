@@ -5,11 +5,11 @@
 
 ## Agent Skills
 
-- Skills: `.opencode/skills/<name>/SKILL.md`; shared checklists: `.opencode/references/` (`definition-of-done`, testing, security, performance, accessibility, observability, orchestration).
-- Task matches a skill → invoke it, follow it exactly: no partial application, no reimplementing from memory. Never skip because the task seems small or quick; routing unclear → read `using-agent-skills`.
-- Intent routing: feature or significant change → `spec-driven-development`, then `incremental-implementation` + `test-driven-development` (plan first with `planning-and-task-breakdown` when multi-step); bug or unexpected behavior → `debugging-and-error-recovery`; review before merge → `code-review-and-quality`; refactor for clarity → `code-simplification`; API/interface design → `api-and-interface-design`; UI work → `frontend-ui-engineering`; security → `security-and-hardening`; performance → `performance-optimization`; launch → `shipping-and-launch`.
-- Definition of Done (`.opencode/references/definition-of-done.md`): project-wide completion bar for every change, on top of per-task acceptance criteria.
-- Skill/reference docs guide, never override this file; read only task-relevant sections.
+- ECC skills: `.opencode/skills/<name>/SKILL.md`; setup, source version, and compatibility notes: `.opencode/ecc/README.md`.
+- Use relevant ECC skills and configured specialist agents. Complex changes: `planner` or `/plan`; implementation: `tdd-workflow`; final verification: `verification-loop`; security: `security-review`; interfaces: `api-design`; review: `code-reviewer` or `/code-review`. Project and package instructions take precedence over generic ECC examples.
+- Keep the custom and package test skills alongside ECC. Before changing tests, follow the test-skill routing in the Testing section below.
+- Definition of Done (`.opencode/references/definition-of-done.md`): project completion criteria. Shared checklists remain in `.opencode/references/`.
+- ECC's automatic hook plugin targets OpenCode v1 and is disabled in this v2 fork. Skills, agents, commands, rules, and manual helpers are installed. The existing `/learn` command is preserved; ECC uses `/ecc-learn`.
 
 ## Workflow
 

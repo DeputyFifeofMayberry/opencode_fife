@@ -16,4 +16,415 @@
   "tools": {
     "github-pr-search": false,
   },
+  "agents": {
+    "build": {
+      "description": "Primary coding agent for development work",
+      "mode": "primary"
+    },
+    "planner": {
+      "description": "Expert planning specialist for complex features and refactoring. Use for implementation planning, architectural changes, or complex refactoring.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/planner.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "architect": {
+      "description": "Software architecture specialist for system design, scalability, and technical decision-making.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/architect.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "code-reviewer": {
+      "description": "Expert code review specialist. Reviews code for quality, security, and maintainability. Use immediately after writing or modifying code.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/code-reviewer.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "security-reviewer": {
+      "description": "Security vulnerability detection and remediation specialist. Use after writing code that handles user input, authentication, API endpoints, or sensitive data.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/security-reviewer.txt}"
+    },
+    "tdd-guide": {
+      "description": "Test-Driven Development specialist enforcing write-tests-first methodology. Use when writing new features, fixing bugs, or refactoring code. Ensures 80%+ test coverage.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/tdd-guide.txt}"
+    },
+    "build-error-resolver": {
+      "description": "Build and TypeScript error resolution specialist. Use when build fails or type errors occur. Fixes build/type errors only with minimal diffs.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/build-error-resolver.txt}"
+    },
+    "e2e-runner": {
+      "description": "End-to-end testing specialist using Playwright. Generates, maintains, and runs E2E tests for critical user flows.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/e2e-runner.txt}"
+    },
+    "doc-updater": {
+      "description": "Documentation and codemap specialist. Use for updating codemaps and documentation.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/doc-updater.txt}"
+    },
+    "refactor-cleaner": {
+      "description": "Dead code cleanup and consolidation specialist. Use for removing unused code, duplicates, and refactoring.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/refactor-cleaner.txt}"
+    },
+    "go-reviewer": {
+      "description": "Expert Go code reviewer specializing in idiomatic Go, concurrency patterns, error handling, and performance.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/go-reviewer.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "go-build-resolver": {
+      "description": "Go build, vet, and compilation error resolution specialist. Fixes Go build errors with minimal changes.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/go-build-resolver.txt}"
+    },
+    "database-reviewer": {
+      "description": "PostgreSQL database specialist for query optimization, schema design, security, and performance. Incorporates Supabase best practices.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/database-reviewer.txt}"
+    },
+    "cpp-reviewer": {
+      "description": "Expert C++ code reviewer specializing in memory safety, modern C++ idioms, concurrency, and performance. Use for all C++ code changes.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/cpp-reviewer.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "cpp-build-resolver": {
+      "description": "C++ build, CMake, and compilation error resolution specialist. Fixes build errors, linker issues, and template errors with minimal changes.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/cpp-build-resolver.txt}"
+    },
+    "docs-lookup": {
+      "description": "Documentation specialist using Context7 MCP to fetch current library and API documentation with code examples.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/docs-lookup.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "harness-optimizer": {
+      "description": "Analyze and improve the local agent harness configuration for reliability, cost, and throughput.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/harness-optimizer.txt}"
+    },
+    "java-reviewer": {
+      "description": "Expert Java and Spring Boot code reviewer specializing in layered architecture, JPA patterns, security, and concurrency.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/java-reviewer.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "java-build-resolver": {
+      "description": "Java/Maven/Gradle build, compilation, and dependency error resolution specialist. Fixes build errors with minimal changes.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/java-build-resolver.txt}"
+    },
+    "kotlin-reviewer": {
+      "description": "Kotlin and Android/KMP code reviewer. Reviews Kotlin code for idiomatic patterns, coroutine safety, Compose best practices.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/kotlin-reviewer.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "kotlin-build-resolver": {
+      "description": "Kotlin/Gradle build, compilation, and dependency error resolution specialist. Fixes Kotlin build errors with minimal changes.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/kotlin-build-resolver.txt}"
+    },
+    "loop-operator": {
+      "description": "Operate autonomous agent loops, monitor progress, and intervene safely when loops stall.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/loop-operator.txt}"
+    },
+    "php-reviewer": {
+      "description": "Expert PHP code reviewer specializing in PSR-12 compliance, PHP type system, Eloquent ORM patterns, security, and performance.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/php-reviewer.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "python-reviewer": {
+      "description": "Expert Python code reviewer specializing in PEP 8 compliance, Pythonic idioms, type hints, security, and performance.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/python-reviewer.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "ruby-reviewer": {
+      "description": "Expert Ruby and Rails code reviewer specializing in idiomatic Ruby, Active Record query safety, Rails security defaults, and RSpec/Minitest quality.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/ruby-reviewer.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "rust-reviewer": {
+      "description": "Expert Rust code reviewer specializing in idiomatic Rust, ownership, lifetimes, concurrency, and performance.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/rust-reviewer.txt}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "rust-build-resolver": {
+      "description": "Rust build, Cargo, and compilation error resolution specialist. Fixes Rust build errors with minimal changes.",
+      "mode": "subagent",
+      "system": "{file:ecc/prompts/agents/rust-build-resolver.txt}"
+    }
+  },
+  "commands": {
+    "build-fix": {
+      "description": "Fix build and TypeScript errors with minimal changes",
+      "template": "{file:ecc/commands/build-fix.md}\n\n$ARGUMENTS",
+      "agent": "build-error-resolver",
+      "subagent": true
+    },
+    "checkpoint": {
+      "description": "Save verification state and progress",
+      "template": "{file:ecc/commands/checkpoint.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "code-review": {
+      "description": "Review code for quality, security, and maintainability",
+      "template": "{file:ecc/commands/code-review.md}\n\n$ARGUMENTS",
+      "agent": "code-reviewer",
+      "subagent": true
+    },
+    "e2e": {
+      "description": "Generate and run E2E tests with Playwright",
+      "template": "{file:ecc/commands/e2e.md}\n\n$ARGUMENTS",
+      "agent": "e2e-runner",
+      "subagent": true
+    },
+    "eval": {
+      "description": "Run evaluation against criteria",
+      "template": "{file:ecc/commands/eval.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "evolve": {
+      "description": "Cluster instincts into skills",
+      "template": "{file:ecc/commands/evolve.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "go-build": {
+      "description": "Fix Go build errors",
+      "template": "{file:ecc/commands/go-build.md}\n\n$ARGUMENTS",
+      "agent": "go-build-resolver",
+      "subagent": true
+    },
+    "go-review": {
+      "description": "Go code review",
+      "template": "{file:ecc/commands/go-review.md}\n\n$ARGUMENTS",
+      "agent": "go-reviewer",
+      "subagent": true
+    },
+    "go-test": {
+      "description": "Go TDD workflow",
+      "template": "{file:ecc/commands/go-test.md}\n\n$ARGUMENTS",
+      "agent": "tdd-guide",
+      "subagent": true
+    },
+    "harness-audit": {
+      "description": "Run a deterministic repository harness audit and return a prioritized scorecard.",
+      "template": "{file:ecc/commands/harness-audit.md}\n\n$ARGUMENTS"
+    },
+    "instinct-export": {
+      "description": "Export instincts",
+      "template": "{file:ecc/commands/instinct-export.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "instinct-import": {
+      "description": "Import instincts",
+      "template": "{file:ecc/commands/instinct-import.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "instinct-status": {
+      "description": "View learned instincts",
+      "template": "{file:ecc/commands/instinct-status.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "ecc-learn": {
+      "description": "Extract patterns and learnings from session",
+      "template": "{file:ecc/commands/learn.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "loop-start": {
+      "template": "{file:ecc/commands/loop-start.md}\n\n$ARGUMENTS"
+    },
+    "loop-status": {
+      "template": "{file:ecc/commands/loop-status.md}\n\n$ARGUMENTS"
+    },
+    "model-route": {
+      "template": "{file:ecc/commands/model-route.md}\n\n$ARGUMENTS"
+    },
+    "orchestrate": {
+      "description": "Orchestrate multiple agents for complex tasks",
+      "template": "{file:ecc/commands/orchestrate.md}\n\n$ARGUMENTS",
+      "agent": "planner",
+      "subagent": true
+    },
+    "plan": {
+      "description": "Create a detailed implementation plan for complex features",
+      "template": "{file:ecc/commands/plan.md}\n\n$ARGUMENTS",
+      "agent": "planner",
+      "subagent": true
+    },
+    "projects": {
+      "description": "List known projects and instinct stats",
+      "template": "{file:ecc/commands/projects.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "promote": {
+      "description": "Promote project instincts to global scope",
+      "template": "{file:ecc/commands/promote.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "quality-gate": {
+      "template": "{file:ecc/commands/quality-gate.md}\n\n$ARGUMENTS"
+    },
+    "refactor-clean": {
+      "description": "Remove dead code and consolidate duplicates",
+      "template": "{file:ecc/commands/refactor-clean.md}\n\n$ARGUMENTS",
+      "agent": "refactor-cleaner",
+      "subagent": true
+    },
+    "rust-build": {
+      "description": "Fix Rust build errors and borrow checker issues",
+      "template": "{file:ecc/commands/rust-build.md}\n\n$ARGUMENTS",
+      "agent": "rust-build-resolver",
+      "subagent": true
+    },
+    "rust-review": {
+      "description": "Rust code review for ownership, safety, and idiomatic patterns",
+      "template": "{file:ecc/commands/rust-review.md}\n\n$ARGUMENTS",
+      "agent": "rust-reviewer",
+      "subagent": true
+    },
+    "rust-test": {
+      "description": "Rust TDD workflow with unit and property tests",
+      "template": "{file:ecc/commands/rust-test.md}\n\n$ARGUMENTS",
+      "agent": "tdd-guide",
+      "subagent": true
+    },
+    "security-scan": {
+      "description": "Run AgentShield against agent, hook, MCP, permission, and secret surfaces.",
+      "template": "{file:ecc/commands/security-scan.md}\n\n$ARGUMENTS",
+      "agent": "security-reviewer",
+      "subagent": true
+    },
+    "security": {
+      "description": "Run comprehensive security review",
+      "template": "{file:ecc/commands/security.md}\n\n$ARGUMENTS",
+      "agent": "security-reviewer",
+      "subagent": true
+    },
+    "setup-pm": {
+      "description": "Configure package manager",
+      "template": "{file:ecc/commands/setup-pm.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "skill-create": {
+      "description": "Generate skills from git history",
+      "template": "{file:ecc/commands/skill-create.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    },
+    "tdd": {
+      "description": "Enforce TDD workflow with 80%+ test coverage",
+      "template": "{file:ecc/commands/tdd.md}\n\n$ARGUMENTS",
+      "agent": "tdd-guide",
+      "subagent": true
+    },
+    "test-coverage": {
+      "description": "Analyze test coverage",
+      "template": "{file:ecc/commands/test-coverage.md}\n\n$ARGUMENTS",
+      "agent": "tdd-guide",
+      "subagent": true
+    },
+    "update-codemaps": {
+      "description": "Update codemaps",
+      "template": "{file:ecc/commands/update-codemaps.md}\n\n$ARGUMENTS",
+      "agent": "doc-updater",
+      "subagent": true
+    },
+    "update-docs": {
+      "description": "Update documentation",
+      "template": "{file:ecc/commands/update-docs.md}\n\n$ARGUMENTS",
+      "agent": "doc-updater",
+      "subagent": true
+    },
+    "verify": {
+      "description": "Run verification loop",
+      "template": "{file:ecc/commands/verify.md}\n\n$ARGUMENTS",
+      "agent": "build"
+    }
+  },
+  "instructions": [
+    ".opencode/ecc/INSTRUCTIONS.md",
+    ".opencode/ecc/rules/common/*.md",
+    ".opencode/ecc/rules/typescript/*.md"
+  ],
 }
