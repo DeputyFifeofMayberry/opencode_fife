@@ -214,3 +214,25 @@ describe("EffortBenchmark.budget", () => {
     expect(guard.total).toBe(0.4)
   })
 })
+
+describe("EffortBenchmark.providerRequests", () => {
+  const efficiency = `${import.meta.dir}/../../../../perf/token-reasoning/fixtures/session-efficiency.json`
+  const legacy = `${import.meta.dir}/../../../../perf/token-reasoning/fixtures/session-legacy.json`
+  const stream = (...types: string[]) =>
+    types.map((type) => JSON.stringify({ type, sessionID: "ses_root" })).join("\n") + "\nprovider banner\n"
+
+  it("counts streamed step attempts plus attempted compactions", async () => {
+    const exportJson = await Bun.file(efficiency).text()
+    expect(EffortBenchmark.providerRequests(stream("step_start", "text", "step_start"), exportJson)).toBe(3)
+  })
+
+  it("reports zero attempts when only non-step events arrived", async () => {
+    const exportJson = await Bun.file(legacy).text()
+    expect(EffortBenchmark.providerRequests(stream("text"), exportJson)).toBe(0)
+  })
+
+  it("leaves attempts unknown when the stream carried no events", async () => {
+    const exportJson = await Bun.file(efficiency).text()
+    expect(EffortBenchmark.providerRequests("provider banner only", exportJson)).toBeUndefined()
+  })
+})

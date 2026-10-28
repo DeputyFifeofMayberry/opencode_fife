@@ -216,12 +216,14 @@ repetitions = 18 runs, $5 stage / $0.25 run admission ceilings; total spend $0.4
 | Arm | Wire tier | Pass | Timeout | Fail | Gross tokens | Cost | Mean wall |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | efficiency | `low` | 0/6 | 0 | 6 | 990,733 | $0.0515 | ~25s |
-| balanced | default | 2/6 | 0 | 4 | 4,004,088 | $0.1805 | ~150s |
-| quality | `max`/`deep` | 3/6 | 2 | 1 | 4,320,313 | $0.1958 | ~240s+ |
+| balanced | default | 3/6 | 0 | 3 | 4,004,088 | $0.1805 | ~150s |
+| quality | `max`/`deep` | 2/6 | 2 | 2 | 4,320,313 | $0.1958 | ~240s+ |
 
-- **Verified success rises with effort**: 0/6 → 2/6 → 3/6 (+2 timeouts). Cost per verified
-  success: efficiency undefined (no passes), balanced $0.090, quality $0.065 — quality's extra
-  spend bought more passes at screening grade (n=6 per arm; not confirmatory).
+- **Verified success does not rise with effort**: 0/6 (efficiency) → 3/6 (balanced) → 2/6 plus two
+  timeouts (quality). Cost per verified success: efficiency undefined (no passes), balanced $0.060,
+  quality $0.098 — balanced is the cheaper verified success at screening grade (n=6 per arm; not
+  confirmatory). The first write-up of this section transposed the balanced and quality rows;
+  corrected 2026-10-27 against `manifest.json` and `report.json`.
 - **The efficiency arm is rejected for this task class**: `low` passed nothing.
 - **Route-dependent tier aliasing confirmed**: the quality arm's `#max` request ran as `max` in
   four runs and `deep` in two on the openrouter route (Stage 0's zai route applied `max`
@@ -233,6 +235,70 @@ repetitions = 18 runs, $5 stage / $0.25 run admission ceilings; total spend $0.4
 - The two pre-timeout hangs exposed a Windows process-tree gap: `proc.kill()` only terminated the
   `cmd` shim while `opencode` kept the pipes open. The backend now runs `opencode run --auto`
   (permission-free, non-interactive) and tree-kills via `taskkill /t /f` on timeout.
+
+## Stage 2 confirmatory design (predeclared)
+
+`confirmatory.json` defines the confirmatory stage approved on 2026-10-27: the screened pair
+(balanced vs quality; efficiency rejected at screening) across five seeded implementation tasks ×
+four repetitions = 40 runs on `zai-coding-plan/glm-5.3-flash`, the route whose tiers resolved
+distinctly in Stage 0. Stage ceiling $3, per-run ceiling $0.07.
+
+The per-run ceiling is an admission quantum, not a billing estimate: the runner charges each run
+at the run ceiling, so 40 × $0.25 would need a $10 stage ceiling. $0.07 keeps the whole matrix
+inside the approved $3 while leaving the stage ceiling as the authorized cap. This route is a
+subscription plan that reports an authoritative zero cost, so Stage 2 cost evidence confirms zero
+marginal spend but cannot discriminate arms; the priced Stage 1 openrouter route remains the cost
+reference.
+
+Provider attempts are captured per run: the harness counts streamed `step_start` events (one per
+provider attempt, because a retry re-publishes the step) plus attempted compactions in the export,
+and feeds the total into the ledger's `provider_requests`.
+
+Predeclared analysis: the primary metric is verified success rate per arm over all assigned runs;
+secondary metrics are gross tokens, wall time, and cost per verified success where priced. Report
+n, median, and spread per task. The pair is separated only if the quality arm's verified success
+rate exceeds balanced by at least 10 points with non-overlapping Wilson 95% intervals; otherwise
+it is reported as not separated. This is the confirmatory comparison for the screened pair, not a
+policy promotion: the plan's M5/M6 gates still govern any default change.
+
+## Stage 2 confirmatory result (2026-10-27, live)
+
+40/40 runs entered, zero errored, zero skipped; all usage-complete, cost-complete, and
+action-complete. Tiers resolved stably on the zai route: balanced ran as `default` in all 20
+runs, quality as `max` in all 20. Provider-attempt capture is complete for every run
+(`provider_requests` set, zero attempts without settlement, zero retries observed).
+
+| Arm | Verified | Success (95% Wilson) | Gross tokens | Median tokens/run | Median wall | Cost |
+| --- | --- | --- | --- | --- | --- | --- |
+| balanced | 2/20 | 10.0% [2.8%, 30.1%] | 6,020,033 | 272,067 | 168s | $0.0000 |
+| quality | 4/20 | 20.0% [8.1%, 41.6%] | 6,944,461 | 302,435 | 151s | $0.0000 |
+
+Per task (passes of 4 per arm):
+
+| Task | balanced | quality |
+| --- | --- | --- |
+| screen-slug-digit-boundaries | 1/4 | 0/4 |
+| screen-implement-to-roman | 1/4 | 1/4 |
+| screen-debounce-leading | 0/4 | 3/4 |
+| confirm-wrap-text | 0/4 | 0/4 |
+| confirm-parse-bytes | 0/4 | 0/4 |
+
+- **Not separated.** The quality arm's verified success rate is 10.0 points above balanced, but
+  its Wilson 95% interval ([8.1%, 41.6%]) overlaps balanced's ([2.8%, 30.1%]), so the
+  predeclared rule does not separate the pair. The direction favors quality on this corpus, but
+  almost entirely through `debounce` (3/4 vs 0/4); the other four tasks are even or favor
+  balanced.
+- **Two tasks never passed in either arm** (`wrap-text`, `parse-bytes`, 16 runs total). Before
+  any further confirmatory use, these need review for prompt/contract ambiguity or difficulty
+  outside the intended band; their runs still contribute tokens and failure-rate evidence.
+- **Cost is an authoritative zero on this route** (subscription plan): every run reports
+  provider-attributed $0 with `cost_complete` 40/40, so cost per verified success is $0 and cost
+  does not discriminate arms here. The priced Stage 1 openrouter route remains the cost reference.
+- **No timeouts, and quality's median wall is slightly lower** (151s vs 168s) while using ~11%
+  more median tokens per run; this stage did not reproduce Stage 1's quality-arm slowdown.
+- Operational note: an earlier attempt of this stage was interrupted by a host restart after
+  29/40 runs. Its exports carry no terminal verdicts and are archived outside the comparison; this
+  section reports only the clean rerun.
 
 ## Tests
 

@@ -124,23 +124,41 @@ async function runLive(
   )
   if (runOutput.timedOut) {
     const root = sessionIdFrom(runOutput.stdout)
-    if (root) {
-      const exportJson = await exportSession(root)
-      return { root: Session.ID.make(root), exportJson, wall_ms: Date.now() - started, correctness: "timeout" }
-    }
-    throw new Error(`run timed out after ${Math.round(runTimeout / 60_000)} min before any session settled`)
+    if (!root) throw new Error(`run timed out after ${Math.round(runTimeout / 60_000)} min before any session settled`)
+    const exportJson = await exportSession(root)
+    return settle({
+      root,
+      exportJson,
+      wall: started,
+      correctness: "timeout",
+      resolved: resolvedVariant(exportJson),
+      provider_requests: EffortBenchmark.providerRequests(runOutput.stdout, exportJson),
+    })
   }
   const sessionID = sessionIdFrom(runOutput.stdout)
   if (!sessionID) throw new Error(`run produced no session id; stderr: ${runOutput.stderr.slice(0, 400)}`)
   if (runOutput.code !== 0) {
     // A failed run still leaves spend behind; export it. The verifier never ran, so blocked, not fail.
     const exportJson = await exportSession(sessionID)
-    return settle({ root: sessionID, exportJson, wall: started, correctness: "blocked", resolved: null })
+    return settle({
+      root: sessionID,
+      exportJson,
+      wall: started,
+      correctness: "blocked",
+      resolved: resolvedVariant(exportJson),
+      provider_requests: EffortBenchmark.providerRequests(runOutput.stdout, exportJson),
+    })
   }
 
   const exportJson = await exportSession(sessionID)
   if (!task.verify) {
-    return { root: Session.ID.make(sessionID), exportJson, wall_ms: Date.now() - started, resolved: resolvedVariant(exportJson) }
+    return settle({
+      root: sessionID,
+      exportJson,
+      wall: started,
+      resolved: resolvedVariant(exportJson),
+      provider_requests: EffortBenchmark.providerRequests(runOutput.stdout, exportJson),
+    })
   }
   const [verifyProgram, ...verifyArgs] = task.verify.split(/\s+/)
   const verdict = await capture([verifyProgram!, ...verifyArgs], { cwd: snapshot, timeoutMs: ctx.timeoutMs })
@@ -150,10 +168,18 @@ async function runLive(
     wall: started,
     correctness: verdict.code === 0 && !verdict.timedOut ? "pass" : "fail",
     resolved: resolvedVariant(exportJson),
+    provider_requests: EffortBenchmark.providerRequests(runOutput.stdout, exportJson),
   })
 
   async function settle(
-    partial: { root: string; exportJson: string; wall: number; correctness: "pass" | "fail" | "blocked"; resolved: string | null },
+    partial: {
+      root: string
+      exportJson: string
+      wall: number
+      correctness?: "pass" | "fail" | "blocked" | "timeout"
+      resolved: string | null
+      provider_requests?: number
+    },
   ): Promise<EffortBenchmarkRunner.Outcome> {
     await writeFile(path.join(ctx.outDir, `export-${spec.task_id}-${spec.policy}-${spec.repetition}.json`), partial.exportJson)
     return {
@@ -161,6 +187,7 @@ async function runLive(
       exportJson: partial.exportJson,
       wall_ms: Date.now() - partial.wall,
       resolved: partial.resolved,
+      provider_requests: partial.provider_requests,
       correctness: partial.correctness,
     }
   }

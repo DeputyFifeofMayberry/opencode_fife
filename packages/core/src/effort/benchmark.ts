@@ -5,6 +5,7 @@ import { Schema } from "effect"
 import { PositiveInt, optional } from "@opencode/schema/schema"
 import { Model } from "@opencode/schema/model"
 import type { Session } from "@opencode/schema/session"
+import type { SessionMessage } from "@opencode/schema/session-message"
 import { EffortAdapter } from "./adapter.js"
 import { resolveLevelEffort } from "./policy/levels.js"
 import type { EffortLevel } from "./policy/types.js"
@@ -117,6 +118,36 @@ export function runEntry(input: RunInput): SessionUsageReport.Run {
     attribution_share: input.attribution_share,
     auxiliary_scope: input.auxiliary_scope,
   })
+}
+
+/**
+ * Counts provider attempts the harness observed for one run: one per streamed step attempt (a retry
+ * re-publishes the step event) plus every attempted compaction in the export. Title and warming
+ * calls never enter the root session stream, so they stay out of the count. Returns undefined when
+ * the stream carried no parseable events, leaving attempt completeness unknown instead of claiming
+ * that no failed attempt happened.
+ */
+export function providerRequests(stream: string, exportJson: string): number | undefined {
+  let attempts = 0
+  let observed = false
+  for (const line of stream.split("\n")) {
+    if (!line.trim()) continue
+    try {
+      const event = JSON.parse(line) as { type?: unknown }
+      observed = true
+      if (event.type === "step_start") attempts++
+    } catch {
+      // Non-JSON trailing output is expected from some providers' banners.
+    }
+  }
+  if (!observed) return undefined
+  return (
+    attempts +
+    SessionUsageReport.parseExports(exportJson).reduce(
+      (sum, exported) => sum + exported.messages.filter((message: SessionMessage.Info) => message.type === "compaction").length,
+      0,
+    )
+  )
 }
 
 /** Expands one stage into its run specs, ordered by a shuffle seeded from the suite seed. */
