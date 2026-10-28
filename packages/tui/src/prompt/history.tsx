@@ -1,12 +1,13 @@
 import path from "path"
 import { measureEditText, type WidthMethod } from "@opentui/core"
 import { onMount } from "solid-js"
-import { createStore, produce, unwrap } from "solid-js/store"
+import { createStore, unwrap } from "solid-js/store"
 import type { PromptInput } from "@opencode/schema"
 import type { Types } from "effect"
 import { createSimpleContext } from "../context/helper"
 import { useTuiPaths } from "../context/runtime"
 import { appendText, readText, writeText } from "../util/persistence"
+import { createPromptHistory, movePromptHistory, pushPromptHistory, type PromptHistoryPolicy } from "./history-machine"
 
 export type PastedText = {
   text: string
@@ -86,57 +87,74 @@ export function parsePromptInfo(value: unknown): PromptInfo | undefined {
   return input as PromptInfo
 }
 
+const historyPolicy: PromptHistoryPolicy<PromptInfo> = {
+  significant: (prompt) =>
+    prompt.text.trim().length > 0 ||
+    (prompt.files?.length ?? 0) > 0 ||
+    (prompt.agents?.length ?? 0) > 0 ||
+    (prompt.skills?.length ?? 0) > 0 ||
+    prompt.pasted.length > 0,
+  same: isDuplicateEntry,
+}
+
+// Persistence writes are fire-and-forget but must land in call order, or a
+// trim rewrite can race a straggling append and corrupt the file tail.
+let writeQueue: Promise<void> = Promise.resolve()
+function persist(write: () => Promise<unknown>) {
+  writeQueue = writeQueue
+    .then(write)
+    .catch(() => {})
+    .then(() => {})
+  return writeQueue
+}
+
 export const { use: usePromptHistory, provider: PromptHistoryProvider } = createSimpleContext({
   name: "PromptHistory",
   init: () => {
     const paths = useTuiPaths()
     const historyPath = path.join(paths.state, "prompt-history.jsonl")
+    const [store, setStore] = createStore({ history: createPromptHistory<PromptInfo>(undefined, historyPolicy) })
+
     onMount(async () => {
       const lines = parsePromptHistory(await readText(historyPath).catch(() => ""))
-      setStore("history", lines)
+      setStore("history", createPromptHistory(lines, historyPolicy))
 
       // Rewrite valid retained entries to self-heal corruption and enforce the limit.
       if (lines.length > 0)
-        writeText(historyPath, lines.map((line) => JSON.stringify(line)).join("\n") + "\n").catch(() => {})
+        persist(() =>
+          writeText(historyPath, lines.map((line) => JSON.stringify(line)).join("\n") + "\n"),
+        ).catch(() => {})
     })
 
-    const [store, setStore] = createStore({ index: 0, history: [] as PromptInfo[] })
-
     return {
-      move(direction: 1 | -1, input: string) {
-        if (!store.history.length) return undefined
-        const current = store.history.at(store.index)
-        if (!current) return undefined
-        if (current.text !== input && input.length) return
-        const next = store.index + direction
-        if (Math.abs(next) > store.history.length || next > 0) return
-        setStore("index", next)
-        if (next === 0) return emptyPrompt()
-        return store.history.at(next)
+      // Recalls the neighboring history entry, or restores the stashed draft
+      // when moving forward past the newest item. `current` is the live prompt:
+      // the first backward move stashes it, and the caller decides when a move
+      // may engage history (the cursor on the first or last visual row).
+      move(direction: 1 | -1, current: PromptInfo, widthMethod: WidthMethod) {
+        const next = movePromptHistory(unwrap(store.history), direction, unwrap(current), widthMethod)
+        const prompt = next.apply ? next.prompt : undefined
+        if (!prompt || next.cursor === undefined) return undefined
+        setStore("history", next.state)
+        // Clone so later edits to the live prompt (extmark sync mutates part
+        // objects in place) can never reach the stored history entries.
+        return { prompt: structuredClone(prompt), cursor: next.cursor }
       },
       append(item: PromptInfo) {
         const entry = structuredClone(unwrap(item))
-        if (isDuplicateEntry(store.history.at(-1), entry)) {
-          setStore("index", 0)
-          return
-        }
-        let trimmed = false
-        setStore(
-          produce((draft) => {
-            draft.history.push(entry)
-            if (draft.history.length > MAX_HISTORY_ENTRIES) {
-              draft.history = draft.history.slice(-MAX_HISTORY_ENTRIES)
-              trimmed = true
-            }
-            draft.index = 0
-          }),
-        )
+        const previous = store.history.items.at(-1)
+        setStore("history", pushPromptHistory(store.history, entry, historyPolicy))
+        if (previous && isDuplicateEntry(previous, entry)) return
 
-        if (trimmed) {
-          writeText(historyPath, store.history.map((line) => JSON.stringify(line)).join("\n") + "\n").catch(() => {})
+        if (store.history.items.length > MAX_HISTORY_ENTRIES) {
+          const retained = store.history.items.slice(-MAX_HISTORY_ENTRIES)
+          setStore("history", "items", retained)
+          persist(() =>
+            writeText(historyPath, retained.map((line) => JSON.stringify(line)).join("\n") + "\n"),
+          ).catch(() => {})
           return
         }
-        appendText(historyPath, JSON.stringify(entry) + "\n").catch(() => {})
+        persist(() => appendText(historyPath, JSON.stringify(entry) + "\n")).catch(() => {})
       },
     }
   },

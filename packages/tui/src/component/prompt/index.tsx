@@ -1018,6 +1018,26 @@ export function Prompt(props: PromptProps) {
     }
   })
 
+  // The live prompt as the history machine should see it: the textarea may be
+  // ahead of the store when IME composition has not flushed yet (same reason
+  // submitInner re-syncs before reading).
+  function currentPrompt(): PromptInfo {
+    if (input && !input.isDestroyed && input.plainText !== store.prompt.text) {
+      setStore("prompt", "text", input.plainText)
+      syncExtmarksWithPromptParts()
+    }
+    return store.prompt
+  }
+
+  function applyRecall(next: { prompt: PromptInfo; cursor: number }) {
+    if (!input || input.isDestroyed) return
+    input.setText(next.prompt.text)
+    setStore("prompt", next.prompt)
+    setStore("mode", next.prompt.mode ?? "normal")
+    restoreExtmarksFromPrompt(next.prompt)
+    input.cursorOffset = next.cursor
+  }
+
   Keymap.createLayer(() => {
     return {
       priority: 1,
@@ -1032,22 +1052,20 @@ export function Prompt(props: PromptProps) {
           title: "Previous prompt history",
           group: "Prompt",
           run() {
-            if (input.cursorOffset !== 0) {
-              if (input.scrollY + input.visualCursor.visualRow === 0) {
-                input.cursorOffset = 0
-                return
-              }
+            if (!input || input.isDestroyed) return false
+            // Up engages history on the first visual row; elsewhere it moves the cursor.
+            if (input.scrollY + input.visualCursor.visualRow > 0) {
               input.moveCursorUp()
               return
             }
 
-            const item = history.move(-1, input.plainText)
-            if (!item) return false
-            input.setText(item.text)
-            setStore("prompt", item)
-            setStore("mode", item.mode ?? "normal")
-            restoreExtmarksFromPrompt(item)
-            input.cursorOffset = 0
+            const next = history.move(-1, currentPrompt(), renderer.widthMethod)
+            if (!next) {
+              if (input.cursorOffset === 0) return false
+              input.cursorOffset = 0
+              return
+            }
+            applyRecall(next)
           },
         },
       ],
@@ -1068,26 +1086,22 @@ export function Prompt(props: PromptProps) {
           title: "Next prompt history",
           group: "Prompt",
           run() {
-            const end = measure(input.plainText)
-            if (input.cursorOffset !== end) {
-              if (
-                input.scrollY + input.visualCursor.visualRow ===
-                Math.max(0, input.editorView.getTotalVirtualLineCount() - 1)
-              ) {
-                input.cursorOffset = end
-                return
-              }
+            if (!input || input.isDestroyed) return false
+            // Down engages history on the last visual row; elsewhere it moves the cursor.
+            const last = Math.max(0, input.editorView.getTotalVirtualLineCount() - 1)
+            if (input.scrollY + input.visualCursor.visualRow < last) {
               input.moveCursorDown()
               return
             }
 
-            const item = history.move(1, input.plainText)
-            if (!item) return false
-            input.setText(item.text)
-            setStore("prompt", item)
-            setStore("mode", item.mode ?? "normal")
-            restoreExtmarksFromPrompt(item)
-            input.cursorOffset = measure(item.text)
+            const next = history.move(1, currentPrompt(), renderer.widthMethod)
+            if (!next) {
+              const end = measure(input.plainText)
+              if (input.cursorOffset === end) return false
+              input.cursorOffset = end
+              return
+            }
+            applyRecall(next)
           },
         },
       ],

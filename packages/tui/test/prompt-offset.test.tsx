@@ -36,7 +36,7 @@ test("an agent mention after a tab replaces only the mention", async () => {
   ])
 })
 
-test("history navigation moves the cursor to the end of wide text", async () => {
+test("history recall places the cursor at the end of the recalled text", async () => {
   await using state = await tmpdir()
   const file = path.join(state.path, "prompt-history.jsonl")
   const entry = (text: string) => JSON.stringify({ text, files: [], agents: [], skills: [], pasted: [] }) + "\n"
@@ -49,10 +49,35 @@ test("history navigation moves the cursor to the end of wide text", async () => 
   const text = () => setup.renderer.currentFocusedEditor?.plainText
   setup.mockInput.pressArrow("up")
   expect(text()).toBe("末")
-  setup.mockInput.pressArrow("up")
-  expect(text()).toBe("中\t👨‍👩‍👧நி")
-  setup.mockInput.pressKey("END")
-  setup.mockInput.pressArrow("down")
   await setup.mockInput.typeText("x")
   expect(text()).toBe("末x")
+  setup.mockInput.pressArrow("up")
+  expect(text()).toBe("中\t👨‍👩‍👧நி")
+  // Edits made while browsing are transient (readline semantics): the newest
+  // item is shown as stored, and the pre-browse draft returns past it.
+  setup.mockInput.pressArrow("down")
+  expect(text()).toBe("末")
+  setup.mockInput.pressArrow("down")
+  expect(text()).toBe("")
+  await setup.mockInput.typeText("y")
+  expect(text()).toBe("y")
+})
+
+test("a typed draft survives a history round trip", async () => {
+  await using state = await tmpdir()
+  const file = path.join(state.path, "prompt-history.jsonl")
+  await Bun.write(file, JSON.stringify({ text: "old", files: [], agents: [], skills: [], pasted: [] }) + "\n")
+  await using setup = await createAppFixture({ state: state.path })
+  await setup.ready
+  await setup.waitForFrame((frame) => frame.includes("commands"))
+  const text = () => setup.renderer.currentFocusedEditor?.plainText
+  await setup.mockInput.typeText("draft")
+  setup.mockInput.pressArrow("up")
+  expect(text()).toBe("old")
+  await setup.mockInput.typeText("!")
+  expect(text()).toBe("old!")
+  setup.mockInput.pressArrow("down")
+  expect(text()).toBe("draft")
+  await setup.mockInput.typeText("?")
+  expect(text()).toBe("draft?")
 })
