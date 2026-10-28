@@ -31,7 +31,7 @@
   },
   "theme": {
     "primary": { "dark": "oldGold", "light": "goldDeep" },
-    "secondary": { "dark": "mardiGreen", "light": "mardiGreenDeep" },
+    "secondary": { "dark": "oldGold", "light": "goldDeep" },
     "accent": { "dark": "fleurGold", "light": "goldBronze" },
     "error": { "dark": "#e05b5b", "light": "#b23a3a" },
     "warning": { "dark": "#e2c25c", "light": "#8a6900" },
