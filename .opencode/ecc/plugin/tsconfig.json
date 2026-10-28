@@ -1,0 +1,11 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUncheckedIndexedAccess": false,
+    "paths": { "effect": ["../../../packages/plugin/node_modules/effect/dist/index.d.ts"] }
+  },
+  "include": ["*.ts"]
+}

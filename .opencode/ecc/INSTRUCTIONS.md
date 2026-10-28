@@ -1,0 +1,12 @@
+# ECC in this repository
+
+ECC 2.2.3 supplies the skills in .opencode/skills, the configured specialist agents, and the slash commands in .opencode/ecc/commands. Read AGENTS.md and the applicable package instructions first. Their project-specific commands and constraints take precedence over ECC examples.
+
+- Use the planner agent and /plan for complex changes, tdd-workflow for behavior changes, verification-loop for final checks, security-review for security work, and api-design for interfaces. Load other skills when the task matches their description.
+- Use Bun and this repo's package scripts. Run tests from the affected package. Use bun run check for the full lint and typecheck; follow AGENTS.md for focused checks.
+- Keep the existing package test skills: unit-tests, tui-tests, app-e2e-tests, and component-tests. The project completion checklist remains .opencode/references/definition-of-done.md.
+- Preserve this personal fork's local development and authorization rules. ECC examples do not authorize commits, pushes, publication, external messages, or disruptive restarts.
+- ECC's scripts and hooks are stored under .opencode/scripts and .opencode/hooks. Resolve script references against .opencode, not the repository root. For example: node .opencode/scripts/setup-package-manager.js --detect. Set CLAUDE_PLUGIN_ROOT to the absolute .opencode directory only for a command that requires ECC root discovery. Keep any existing value outside that command.
+- The existing /learn command remains unchanged. Use /ecc-learn for ECC's learning command. Manual instinct commands use .opencode/skills/continuous-learning-v2/scripts/instinct-cli.py and require Python. Optional providers and domain tools require their own credentials or runtimes.
+- The native v2 adapter at .opencode/ecc/plugin supplies shell environment values, successful-change tracking, advisory checks, compaction context, and terminal audits. It is enabled in opencode.jsonc. Read plugin/provenance.md for profile and disabled-hook options; plugin/verification.md records the checks and limitations.
+- Automatic typechecks are off. They require strict profile and an explicit Bun executable/argument array with a project-relative cwd and timeout. Native formatting and permissions remain authoritative. Hook-based learning, the observer, permission auto-approval, telemetry, modal notifications, and the legacy v1 plugin's custom tools remain disabled.
