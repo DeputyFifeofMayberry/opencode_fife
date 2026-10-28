@@ -15,3 +15,27 @@ The adapter incorporates runtime work from ECC PR #3676 at commit `9f61fc050f10a
 To disable the adapter, set its `options.enabled` to false or remove that plugin entry. OpenCode releases the owned registrations, stream, and checks when it unloads the adapter. The next location activation reads the configuration; this setup does not restart an existing service.
 
 The 25 Osmani skills were removed. Shared project checklists remain in .opencode/references, including the actively edited completion checklist. Existing custom skills remain in place. Source version, commit, and installed names are recorded in installation.json. Review upstream changes before replacing this snapshot.
+
+## Skill catalog pruning (permission.skill deny rules)
+
+`ecc-skill-prune` added a `permission.skill` ruleset to `.opencode/opencode.jsonc` that removes 100 skills from the advertised catalog. These skills target ecosystems and domains this repo never touches (Perl, Django, Laravel, Swift, Cisco IOS, homelab networking, healthcare, logistics, crypto payments, social media, and similar). Measured cold-prompt input (GLM probes, three consistent runs each side): 52,039 → 42,079 tokens per session (−19.1%); 250 skills remain advertised.
+
+### How it works
+
+- Deny rules filter both the advertised catalog (`packages/core/src/skill/instructions.ts` via `Skill.available`) and the model's skill tool (`packages/core/src/tool/plugin/skill.ts` returns `permission.rejected`).
+- Explicit user attachment of a denied skill still works (`packages/core/src/session/prompt.ts` has no permission check): mention the skill by name or activate via `POST /api/experimental/session/:sessionID/skill`.
+- Rules resolve with `findLast` (`packages/core/src/permission.ts`): deny groups are listed first, `allow` overrides after win for the 44 skills referenced by ECC agent prompts and commands (for example `django-tdd` from the tdd-guide agent prompt).
+
+### Recovery
+
+1. Mention a denied skill explicitly in a prompt (attachment bypasses deny).
+2. Delete or narrow the rule in `.opencode/opencode.jsonc` — config edits apply live, no restart.
+3. `git revert` of the config commit restores the original catalog.
+
+### After ECC updates
+
+ECC updates may reinstall skills or add new ones in denied domains. Before trusting the ruleset again:
+
+1. Re-run the catalog enumeration and wildcard dry-run against the new skill list (semantics per `packages/core/src/util/wildcard.ts`: `*` matches any run of characters, `?` matches one, anchored, case-insensitive on Windows).
+2. Review the matched set against the protected list: skill IDs referenced anywhere under `.opencode` outside `skills/`, excluding `ecc/installation.json` and `manifests/` (those manifests list every skill name and false-match everything).
+3. Confirm allow overrides still cover every referenced ID; add deny rules for new dead domains deliberately, one group at a time.
