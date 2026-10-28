@@ -68,16 +68,19 @@ const messages = {
 
 const id = Astro.params.id || ""
 const res = await fetch(`${apiUrl}/share_data?id=${id}`)
-const data = (await res.json()) as {
-  info?: SessionV1.SessionInfo
-  messages: Record<string, { role?: string; modelID?: string }>
+if (!res.ok) {
+  return new Response(null, { status: 404, statusText: tx("share.not_found") })
 }
+// An error body may not be JSON; a failed decode shares the not-found path below.
+const data = (await res.json().catch(() => undefined)) as
+  | {
+      info?: SessionV1.SessionInfo
+      messages: Record<string, { role?: string; modelID?: string }>
+    }
+  | undefined
 
-if (!data.info) {
-  return new Response(null, {
-    status: 404,
-    statusText: tx("share.not_found"),
-  })
+if (!data?.info) {
+  return new Response(null, { status: 404, statusText: tx("share.not_found") })
 }
 
 const models: Set<string> = new Set()

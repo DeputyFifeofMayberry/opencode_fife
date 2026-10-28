@@ -60,6 +60,21 @@ test("drops javascript and data URLs from links", async () => {
   expect(html).toContain('<a target="_blank" rel="noopener noreferrer">bad</a>')
 })
 
+test("parses nested markdown in link labels", async () => {
+  const html = await renderMarkdown("[**bold** and `code`](https://example.com)")
+
+  expect(html).toContain("<strong>bold</strong>")
+  expect(html).toContain("<code>code</code>")
+  expect(html).toContain('href="https://example.com"')
+})
+
+test("sends html inside link labels through the sanitizer", async () => {
+  const html = await renderMarkdown('[<img src="https://example.com/x.png" onerror="alert(1)">](https://example.com)')
+
+  expect(html).not.toContain("onerror")
+  expect(html).toContain('href="https://example.com"')
+})
+
 test("keeps shiki-highlighted code blocks intact", async () => {
   const html = await renderMarkdown("```ts\nconst x = 1\n```")
 

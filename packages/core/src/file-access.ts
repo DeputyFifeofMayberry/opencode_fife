@@ -110,6 +110,8 @@ const layer = Layer.effect(
       const absolute = AbsolutePath.make(resolvePath(location.directory, input.path))
       // The boundary compares canonical targets on both sides: a workspace symlink must be classified by its
       // real destination, and a symlinked workspace must stay internal rather than start prompting as external.
+      // Roots are canonicalized per request too: their realpath can change after this layer builds (a
+      // workspace junction may be materialized later), so caching them here would misclassify those targets.
       const canonicalTarget = canonical(absolute)
       const canonicalLocation = canonical(location.directory)
       const canonicalWorktree = canonical(location.project.directory)

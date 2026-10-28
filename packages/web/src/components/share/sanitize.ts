@@ -21,9 +21,13 @@ const config = {
 const markedWithShiki = marked.use(
   {
     renderer: {
-      link({ href, title, text }) {
-        const titleAttr = title ? ` title="${escapeHtml(title)}"` : ""
-        return `<a href="${escapeHtml(href)}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`
+      // Regular function so the override resolves `this.parser`.
+      link(token) {
+        // Labels go through the inline parser: raw `token.text` would print nested markdown
+        // literally and bypass inline handling for HTML inside the label.
+        const text = this.parser.parseInline(token.tokens)
+        const titleAttr = token.title ? ` title="${escapeHtml(token.title)}"` : ""
+        return `<a href="${escapeHtml(token.href)}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`
       },
     },
   },
@@ -42,7 +46,11 @@ const markedWithShiki = marked.use(
 
 export async function renderMarkdown(markdown: string) {
   const active = currentPurifier()
-  if (!active) return ""
+  if (!active) {
+    // Fail closed, but say why: silent content loss is hard to diagnose in production.
+    if (import.meta.env?.DEV) console.warn("renderMarkdown skipped: DOMPurify unavailable")
+    return ""
+  }
 
   return active.sanitize(await markedWithShiki.parse(markdown), config)
 }
