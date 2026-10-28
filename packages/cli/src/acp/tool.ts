@@ -2,6 +2,7 @@ import { isAbsolute, resolve } from "node:path"
 import type { ToolCall, ToolCallContent, ToolCallLocation, ToolCallUpdate, ToolKind } from "@agentclientprotocol/sdk"
 import type { Tool } from "@opencode/schema/tool"
 import { readDisplayText } from "@opencode/tui/mini/tool"
+import { stringValue } from "@opencode/util/boundary"
 import { Patch } from "@opencode/util/patch"
 import { Result } from "effect"
 
@@ -203,8 +204,4 @@ export function patchHunks(input: ToolInput) {
 
 export function absolutePath(path: string, cwd: string) {
   return isAbsolute(path) ? path : resolve(cwd, path)
-}
-
-export function stringValue(value: unknown) {
-  return typeof value === "string" ? value : undefined
 }

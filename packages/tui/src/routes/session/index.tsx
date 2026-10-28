@@ -51,7 +51,6 @@ import {
   canonicalToolName,
   executeCalls,
   executeCallSummary,
-  finiteNumber,
   primitiveInputSummary,
   toolDisplayContent,
   toolDisplayMetadata,
@@ -121,7 +120,7 @@ import { useSessionTabs, type ScrollAnchor } from "../../context/session-tabs"
 import { createSingleFlight } from "../../util/single-flight"
 import { createDelayedPresence } from "../../util/delayed-presence"
 import { SessionLocationMissing } from "./location-missing"
-import { isRecord } from "@opencode/util/record"
+import { finiteNumber, recordValue, stringValue } from "@opencode/util/boundary"
 import { parseTodos } from "../../util/todo"
 import { createHistoryPrepend } from "./history"
 import { context, use, type PendingAction } from "./render-context"
@@ -3720,14 +3719,6 @@ function Diagnostics(props: { diagnostics: unknown; filePath: string }) {
       </box>
     </Show>
   )
-}
-
-function stringValue(value: unknown) {
-  return typeof value === "string" ? value : undefined
-}
-
-function recordValue(value: unknown): Record<string, unknown> | undefined {
-  return isRecord(value) ? value : undefined
 }
 
 function formatSessionTranscript(

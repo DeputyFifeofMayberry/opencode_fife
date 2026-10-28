@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
+import { finiteNumber } from "@opencode/util/boundary"
 import {
   canonicalToolName,
-  finiteNumber,
   primitiveInputSummary,
   toolDisplayMetadata,
   webSearchProviderLabel,
