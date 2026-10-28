@@ -382,186 +382,186 @@
   "commands": {
     "build-fix": {
       "description": "Fix build and TypeScript errors with minimal changes",
-      "template": "{file:ecc/commands/build-fix.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/build-fix.md}",
       "agent": "build-error-resolver",
       "subagent": true
     },
     "checkpoint": {
       "description": "Save verification state and progress",
-      "template": "{file:ecc/commands/checkpoint.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/checkpoint.md}",
       "agent": "build"
     },
     "code-review": {
       "description": "Review code for quality, security, and maintainability",
-      "template": "{file:ecc/commands/code-review.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/code-review.md}",
       "agent": "code-reviewer",
       "subagent": true
     },
     "e2e": {
       "description": "Generate and run E2E tests with Playwright",
-      "template": "{file:ecc/commands/e2e.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/e2e.md}",
       "agent": "e2e-runner",
       "subagent": true
     },
     "eval": {
       "description": "Run evaluation against criteria",
-      "template": "{file:ecc/commands/eval.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/eval.md}",
       "agent": "build"
     },
     "evolve": {
       "description": "Cluster instincts into skills",
-      "template": "{file:ecc/commands/evolve.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/evolve.md}",
       "agent": "build"
     },
     "go-build": {
       "description": "Fix Go build errors",
-      "template": "{file:ecc/commands/go-build.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/go-build.md}",
       "agent": "go-build-resolver",
       "subagent": true
     },
     "go-review": {
       "description": "Go code review",
-      "template": "{file:ecc/commands/go-review.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/go-review.md}",
       "agent": "go-reviewer",
       "subagent": true
     },
     "go-test": {
       "description": "Go TDD workflow",
-      "template": "{file:ecc/commands/go-test.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/go-test.md}",
       "agent": "tdd-guide",
       "subagent": true
     },
     "harness-audit": {
       "description": "Run a deterministic repository harness audit and return a prioritized scorecard.",
-      "template": "{file:ecc/commands/harness-audit.md}\n\n$ARGUMENTS"
+      "template": "{file:ecc/commands/harness-audit.md}"
     },
     "instinct-export": {
       "description": "Export instincts",
-      "template": "{file:ecc/commands/instinct-export.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/instinct-export.md}",
       "agent": "build"
     },
     "instinct-import": {
       "description": "Import instincts",
-      "template": "{file:ecc/commands/instinct-import.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/instinct-import.md}",
       "agent": "build"
     },
     "instinct-status": {
       "description": "View learned instincts",
-      "template": "{file:ecc/commands/instinct-status.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/instinct-status.md}",
       "agent": "build"
     },
     "ecc-learn": {
       "description": "Extract patterns and learnings from session",
-      "template": "{file:ecc/commands/learn.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/learn.md}",
       "agent": "build"
     },
     "loop-start": {
-      "template": "{file:ecc/commands/loop-start.md}\n\n$ARGUMENTS"
+      "template": "{file:ecc/commands/loop-start.md}"
     },
     "loop-status": {
-      "template": "{file:ecc/commands/loop-status.md}\n\n$ARGUMENTS"
+      "template": "{file:ecc/commands/loop-status.md}"
     },
     "model-route": {
-      "template": "{file:ecc/commands/model-route.md}\n\n$ARGUMENTS"
+      "template": "{file:ecc/commands/model-route.md}"
     },
     "orchestrate": {
       "description": "Orchestrate multiple agents for complex tasks",
-      "template": "{file:ecc/commands/orchestrate.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/orchestrate.md}",
       "agent": "planner",
       "subagent": true
     },
     "plan": {
       "description": "Create a detailed implementation plan for complex features",
-      "template": "{file:ecc/commands/plan.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/plan.md}",
       "agent": "planner",
       "subagent": true
     },
     "projects": {
       "description": "List known projects and instinct stats",
-      "template": "{file:ecc/commands/projects.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/projects.md}",
       "agent": "build"
     },
     "promote": {
       "description": "Promote project instincts to global scope",
-      "template": "{file:ecc/commands/promote.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/promote.md}",
       "agent": "build"
     },
     "quality-gate": {
-      "template": "{file:ecc/commands/quality-gate.md}\n\n$ARGUMENTS"
+      "template": "{file:ecc/commands/quality-gate.md}"
     },
     "refactor-clean": {
       "description": "Remove dead code and consolidate duplicates",
-      "template": "{file:ecc/commands/refactor-clean.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/refactor-clean.md}",
       "agent": "refactor-cleaner",
       "subagent": true
     },
     "rust-build": {
       "description": "Fix Rust build errors and borrow checker issues",
-      "template": "{file:ecc/commands/rust-build.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/rust-build.md}",
       "agent": "rust-build-resolver",
       "subagent": true
     },
     "rust-review": {
       "description": "Rust code review for ownership, safety, and idiomatic patterns",
-      "template": "{file:ecc/commands/rust-review.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/rust-review.md}",
       "agent": "rust-reviewer",
       "subagent": true
     },
     "rust-test": {
       "description": "Rust TDD workflow with unit and property tests",
-      "template": "{file:ecc/commands/rust-test.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/rust-test.md}",
       "agent": "tdd-guide",
       "subagent": true
     },
     "security-scan": {
       "description": "Run AgentShield against agent, hook, MCP, permission, and secret surfaces.",
-      "template": "{file:ecc/commands/security-scan.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/security-scan.md}",
       "agent": "security-reviewer",
       "subagent": true
     },
     "security": {
       "description": "Run comprehensive security review",
-      "template": "{file:ecc/commands/security.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/security.md}",
       "agent": "security-reviewer",
       "subagent": true
     },
     "setup-pm": {
       "description": "Configure package manager",
-      "template": "{file:ecc/commands/setup-pm.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/setup-pm.md}",
       "agent": "build"
     },
     "skill-create": {
       "description": "Generate skills from git history",
-      "template": "{file:ecc/commands/skill-create.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/skill-create.md}",
       "agent": "build"
     },
     "tdd": {
       "description": "Enforce TDD workflow with 80%+ test coverage",
-      "template": "{file:ecc/commands/tdd.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/tdd.md}",
       "agent": "tdd-guide",
       "subagent": true
     },
     "test-coverage": {
       "description": "Analyze test coverage",
-      "template": "{file:ecc/commands/test-coverage.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/test-coverage.md}",
       "agent": "tdd-guide",
       "subagent": true
     },
     "update-codemaps": {
       "description": "Update codemaps",
-      "template": "{file:ecc/commands/update-codemaps.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/update-codemaps.md}",
       "agent": "doc-updater",
       "subagent": true
     },
     "update-docs": {
       "description": "Update documentation",
-      "template": "{file:ecc/commands/update-docs.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/update-docs.md}",
       "agent": "doc-updater",
       "subagent": true
     },
     "verify": {
       "description": "Run verification loop",
-      "template": "{file:ecc/commands/verify.md}\n\n$ARGUMENTS",
+      "template": "{file:ecc/commands/verify.md}",
       "agent": "build"
     }
   },
