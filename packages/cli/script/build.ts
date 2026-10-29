@@ -72,8 +72,22 @@ const targets =
 if (!targets.length) throw new Error(`Unknown build target: ${requestedTarget}`)
 
 // Bun 1.4.4 skips native packages for the other libc by default, but the musl targets need them.
+// Every watcher platform binding is resolved per target at build time, so all of them must exist.
+const watcherPlatforms = [
+  "darwin-arm64",
+  "darwin-x64",
+  "linux-arm64-glibc",
+  "linux-x64-glibc",
+  "linux-arm64-musl",
+  "linux-x64-musl",
+  "win32-arm64",
+  "win32-x64",
+]
+const watcherPackages = watcherPlatforms.map(
+  (platform) => `@parcel/watcher-${platform}@${pkg.dependencies["@parcel/watcher"]}`,
+)
 if (!skipInstall)
-  await $`bun install --os="*" --cpu="*" --libc="*" @opentui/core@${pkg.dependencies["@opentui/core"]} @opencode-ai/pty@${pkg.dependencies["@opencode-ai/pty"]}`
+  await $`bun install --os="*" --cpu="*" --libc="*" @opentui/core@${pkg.dependencies["@opentui/core"]} @opencode-ai/pty@${pkg.dependencies["@opencode-ai/pty"]} ${watcherPackages}`
 const appArchive = path.join(dir, ".cache", "bun-app-archive.bin")
 await Bun.write(appArchive, await buildAppArchive(Script.channel, { skipBuild: skipWebUi }))
 const appAssetsPlugin: BunPlugin = {
@@ -147,7 +161,14 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
     },
   }
   const parcelWatcherPackage = `@parcel/watcher-${item.os}-${item.arch}${item.os === "linux" ? `-${item.abi ?? "glibc"}` : ""}`
-  const parcelWatcherNode = fileURLToPath(import.meta.resolve(`${parcelWatcherPackage}/watcher.node`))
+  let parcelWatcherNode: string
+  try {
+    parcelWatcherNode = fileURLToPath(import.meta.resolve(`${parcelWatcherPackage}/watcher.node`))
+  } catch {
+    throw new Error(
+      `Missing ${parcelWatcherPackage}; build without --skip-install so cross-platform native packages are installed`,
+    )
+  }
   const parcelWatcherPlugin: BunPlugin = {
     name: "parcel-watcher-binding",
     setup(build) {
