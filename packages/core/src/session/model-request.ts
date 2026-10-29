@@ -53,6 +53,9 @@ const OUTPUT_TOKEN_MAX = 256_000
 const ESTIMATE_ERROR = 0.15
 // Never ask for less; only reachable with automatic compaction off, since it keeps the window from filling this far.
 const OUTPUT_TOKEN_MIN = 1_024
+// Ghost-text suggestions are one short line; the cap keeps the per-turn background
+// call cheap even when the model would rather reason at length.
+const SUGGESTION_TOKEN_LIMIT = 160
 
 /** Tool errors, plus the user declining a permission, dismissing a question, or a config hook halting the turn. */
 export type ExecuteError = Tool.Error | Permission.DeclinedError | QuestionTool.CancelledError | ConfigHooks.HaltError
@@ -266,6 +269,7 @@ export interface Interface {
   readonly primary: (input: Input) => Effect.Effect<Prepared<SessionContext>>
   readonly compaction: (input: Input) => Effect.Effect<Prepared<SessionCompaction>>
   readonly generate: (input: Input) => Effect.Effect<Prepared<SessionGenerate>>
+  readonly suggestion: (input: Input) => Effect.Effect<Prepared<SessionGenerate>>
   readonly title: (input: Input) => Effect.Effect<Prepared<SessionTitle>>
 }
 
@@ -307,7 +311,9 @@ export const layer = Layer.effect(
           options:
             kind === "primary" || kind === "compaction"
               ? { maxTokens: outputLimit(model.limit, input.inputTokens) }
-              : {},
+              : kind === "suggestion"
+                ? { maxTokens: model.limit.output > 0 ? Math.min(SUGGESTION_TOKEN_LIMIT, model.limit.output) : SUGGESTION_TOKEN_LIMIT }
+                : {},
         },
         Object.fromEntries(Array.from(given, ([d, t]) => [t.name, d])),
       )
@@ -471,6 +477,9 @@ export const layer = Layer.effect(
       primary: (input) => prepare("primary", input, agentHook("context", input.agent)),
       compaction: (input) => prepare("compaction", input, agentHook("compaction", input.agent)),
       generate: (input) => prepare("generate", input, agentHook("generate", input.agent)),
+      // Suggestions shape like generate requests (same agent hook) but are tagged
+      // with their own kind so hooks and providers can tell the background call apart.
+      suggestion: (input) => prepare("suggestion", input, agentHook("generate", input.agent)),
       title: (input) => prepare("title", input, (draft) => hooks.trigger("session", "title", draft)),
     })
   }),

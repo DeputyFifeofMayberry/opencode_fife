@@ -33,7 +33,7 @@ if ($sourceState.dirty) {
     throw "Source tree has $($sourceState.status.Count) uncommitted change(s). Commit the work on dev first; the installer only packages committed source."
 }
 $env:OPENCODE_CHANNEL = "dev"
-$env:OPENCODE_VERSION = "0.0.0-dev-$(Get-Date -Format 'yyyyMMddHHmmssfff')"
+$env:OPENCODE_VERSION = "0.0.0-dev-$(Get-Date -Format 'yyyyMMdd.HHmmss')"
 
 bun run --cwd packages/cli build --single --skip-install
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

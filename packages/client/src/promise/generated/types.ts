@@ -136,6 +136,8 @@ export type InstructionEntryKey = string
 
 export type SessionGenerateResponse = { data: { text: string } }
 
+export type SessionSuggestionResponse = { data: { text?: string | undefined } }
+
 export type EventID = string
 
 export type EventSeq = number
@@ -1569,7 +1571,7 @@ export type SessionUsageRecorded = {
   location?: LocationRef
   data: {
     sessionID: SessionID
-    source: "title" | "compaction"
+    source: "title" | "suggestion" | "compaction"
     cost: MoneyUSD
     costProvenance?: CostProvenanceInfo
     tokens: TokenUsageInfo
@@ -3477,6 +3479,10 @@ export type SessionInstructionsEntryRemoveOutput = void
 export type SessionGenerateInput = { readonly sessionID: string; readonly prompt: string }
 
 export type SessionGenerateOutput = SessionGenerateResponse["data"]
+
+export type SessionSuggestionInput = { readonly sessionID: string }
+
+export type SessionSuggestionOutput = SessionSuggestionResponse["data"]
 
 export type SessionLogInput = {
   readonly sessionID: string

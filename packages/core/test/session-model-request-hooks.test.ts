@@ -19,7 +19,7 @@ import { PluginTestLayer } from "./plugin/fixture"
 
 const it = testEffect(PluginTestLayer)
 
-const KINDS: ReadonlyArray<SessionRequestKind> = ["primary", "compaction", "title", "generate"]
+const KINDS: ReadonlyArray<SessionRequestKind> = ["primary", "compaction", "title", "generate", "suggestion"]
 
 const session = Session.Info.make({
   id: Session.ID.make("ses_hook_kind"),

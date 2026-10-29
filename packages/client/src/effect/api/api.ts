@@ -435,6 +435,12 @@ export type SessionGenerateOperation<E = never> = (
   input: SessionGenerateInput,
 ) => Effect.Effect<SessionGenerateOutput, E>
 
+export type SessionSuggestionInput = { readonly sessionID: Session.ID }
+export type SessionSuggestionOutput = { readonly text?: string | undefined }
+export type SessionSuggestionOperation<E = never> = (
+  input: SessionSuggestionInput,
+) => Effect.Effect<SessionSuggestionOutput, E>
+
 export type SessionLogInput = {
   readonly sessionID: Session.ID
   readonly after?: Event.Seq | undefined
@@ -1249,7 +1255,7 @@ export type SessionLogOutput =
             | undefined
           readonly data: {
             readonly sessionID: Session.ID
-            readonly source: "title" | "compaction"
+            readonly source: "title" | "suggestion" | "compaction"
             readonly cost: Money.USD
             readonly costProvenance?:
               | {
@@ -1399,6 +1405,7 @@ export interface SessionApi<E = never> {
     }
   }
   readonly generate: SessionGenerateOperation<E>
+  readonly suggestion: SessionSuggestionOperation<E>
   readonly log: SessionLogOperation<E>
   readonly interrupt: SessionInterruptOperation<E>
   readonly background: SessionBackgroundOperation<E>

@@ -4,6 +4,7 @@ import { $ } from "bun"
 import { createHash } from "node:crypto"
 import { mkdir, rm } from "fs/promises"
 import path from "path"
+import { fileURLToPath } from "node:url"
 import { Script } from "@opencode/script"
 import { embed } from "@opencode/script/highlights"
 import { createSolidTransformPlugin } from "@opentui/solid/bun-plugin"
@@ -71,8 +72,15 @@ const targets =
 if (!targets.length) throw new Error(`Unknown build target: ${requestedTarget}`)
 
 // Bun 1.4.4 skips native packages for the other libc by default, but the musl targets need them.
+// Every watcher platform binding is resolved per target at build time, so all of them must exist.
+const watcherPlatforms = [
+  ...new Set(
+    allTargets.map((item) => `@parcel/watcher-${item.os}-${item.arch}${item.os === "linux" ? `-${item.abi ?? "glibc"}` : ""}`),
+  ),
+]
+const watcherPackages = watcherPlatforms.map((platform) => `${platform}@${pkg.dependencies["@parcel/watcher"]}`)
 if (!skipInstall)
-  await $`bun install --os="*" --cpu="*" --libc="*" @opentui/core@${pkg.dependencies["@opentui/core"]} @opencode-ai/pty@${pkg.dependencies["@opencode-ai/pty"]}`
+  await $`bun install --os="*" --cpu="*" --libc="*" @opentui/core@${pkg.dependencies["@opentui/core"]} @opencode-ai/pty@${pkg.dependencies["@opencode-ai/pty"]} ${watcherPackages}`
 const appArchive = path.join(dir, ".cache", "bun-app-archive.bin")
 await Bun.write(appArchive, await buildAppArchive(Script.channel, { skipBuild: skipWebUi }))
 const appAssetsPlugin: BunPlugin = {
@@ -146,11 +154,34 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
     },
   }
   const parcelWatcherPackage = `@parcel/watcher-${item.os}-${item.arch}${item.os === "linux" ? `-${item.abi ?? "glibc"}` : ""}`
+  let parcelWatcherNode: string
+  try {
+    parcelWatcherNode = fileURLToPath(import.meta.resolve(`${parcelWatcherPackage}/watcher.node`))
+  } catch (cause) {
+    throw new Error(
+      `Missing ${parcelWatcherPackage}; build without --skip-install so cross-platform native packages are installed`,
+      { cause },
+    )
+  }
   const parcelWatcherPlugin: BunPlugin = {
     name: "parcel-watcher-binding",
     setup(build) {
       build.onLoad({ filter: /filesystem[/\\]watcher-binding\.ts$/ }, () => ({
-        contents: `export default () => require(${JSON.stringify(parcelWatcherPackage)})`,
+        // Compiled exes cannot LoadLibrary Bun's embedded-file path directly, so
+        // materialize the binding to a real file and dlopen that.
+        contents: `
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import watcherNode from ${JSON.stringify(parcelWatcherNode)} with { type: "file" }
+export default () => {
+  const directory = mkdtempSync(join(tmpdir(), "opencode-watcher-"))
+  const file = join(directory, "watcher.node")
+  writeFileSync(file, readFileSync(watcherNode))
+  const mod = { exports: {} }
+  process.dlopen(mod, file)
+  return mod.exports
+}`,
         loader: "js",
       }))
     },

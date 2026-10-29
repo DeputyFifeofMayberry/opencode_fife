@@ -13,10 +13,13 @@ import loadBinding from "./watcher-binding.js"
 
 const SUBSCRIBE_TIMEOUT_MS = 10_000
 
+let loadCause: unknown
 const watcher = lazy((): typeof ParcelWatcher | undefined => {
   try {
     return createWrapper(loadBinding()) as typeof ParcelWatcher
-  } catch {
+  } catch (cause) {
+    // Once, at first use; surfaced by the "watcher backend not supported" log.
+    loadCause = cause
     return
   }
 })
@@ -246,9 +249,11 @@ function subscribeDirectory(
   publish: (update: Update) => void,
 ): Effect.Effect<Subscription | undefined> {
   if (!native || !backend) {
-    return Effect.logError("watcher backend not supported", { directory, platform: process.platform }).pipe(
-      Effect.as(undefined),
-    )
+    return Effect.logError("watcher backend not supported", {
+      directory,
+      platform: process.platform,
+      cause: loadCause,
+    }).pipe(Effect.as(undefined))
   }
   const callback: ParcelWatcher.SubscribeCallback = (error, updates) => {
     if (error) Effect.runFork(Effect.logError("watcher callback failed", { error }))

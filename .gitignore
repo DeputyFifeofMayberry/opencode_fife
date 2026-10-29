@@ -41,3 +41,4 @@ tsconfig.tsbuildinfo
 
 # Code audit outputs
 .audit/
+.bun-cache
