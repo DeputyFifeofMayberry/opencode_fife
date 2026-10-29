@@ -296,6 +296,12 @@ export function createComposerModel(adapter: ComposerAdapter, options?: { queue?
 
   const variants = createMemo(() => ["default", ...adapter.controls().model.selection.variant.list()])
 
+  // The unset pick is Auto everywhere: the effort policy decides each step until an exact variant is chosen.
+  const variantOption = (value: string) => ({
+    id: value,
+    label: value === "default" ? language.t("common.auto") : value,
+  })
+
   const submission = createComposerSubmit({
     adapter,
     mode,
@@ -510,7 +516,7 @@ export function createComposerModel(adapter: ComposerAdapter, options?: { queue?
         options: () => {
           const preview = adapter.controls().model.preview
 
-          return (preview ? ["default", ...preview.variants] : variants()).map((value) => ({ id: value, label: value }))
+          return (preview ? ["default", ...preview.variants] : variants()).map(variantOption)
         },
         current: () =>
           adapter.controls().model.preview?.variant ??

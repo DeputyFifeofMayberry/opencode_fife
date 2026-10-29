@@ -2086,7 +2086,7 @@ function SessionSwitchMessageV2(props: { message: SessionMessageInfo }) {
       return `Switched agent to ${agent}`
     }
     if (props.message.type === "model-switched")
-      return switchLabel(props.message.model, ctx.models(), props.message.previous)
+      return switchLabel(props.message.model, ctx.models(), props.message.previous, props.message.metadata)
     return ""
   }
   return (

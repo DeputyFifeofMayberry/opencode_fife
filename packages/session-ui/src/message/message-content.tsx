@@ -90,11 +90,20 @@ const RELATIVE_TIME_KEYS = {
   day: "ui.message.time.daysAgo",
 } as const
 
-// The variant follows the model name without a separator and renders dimmer, so the model leads.
-function modelItems(data: ReturnType<typeof useData>, model: SessionMessageAssistant["model"]): MetaItem[] {
+// The variant follows the model name without a separator and renders dimmer, so the model leads. A model that
+// advertises variants always names its state: an applied variant, or Auto when the effort policy decides.
+function modelItems(
+  data: ReturnType<typeof useData>,
+  model: SessionMessageAssistant["model"],
+  auto: string,
+): MetaItem[] {
   const name = data.store.provider?.all?.get(model.providerID)?.models?.[model.id]?.name ?? model.id
 
-  if (!model.variant || model.variant === "default") return [{ label: name }]
+  if (!model.variant || model.variant === "default") {
+    const variants = data.store.provider?.all?.get(model.providerID)?.models?.[model.id]?.variants
+
+    return variants && Object.keys(variants).length > 0 ? [{ label: name }, { label: auto, variant: true }] : [{ label: name }]
+  }
 
   return [{ label: name }, { label: model.variant[0]?.toUpperCase() + model.variant.slice(1), variant: true }]
 }
@@ -342,7 +351,7 @@ export function CurrentUserMessageDisplay(props: {
   const labels = createMemo<MetaItem[]>(() => {
     const agent = agentLabel(props.agent, data.agents)
 
-    return [...(agent ? [{ label: agent }] : []), ...modelItems(data, props.model)]
+    return [...(agent ? [{ label: agent }] : []), ...modelItems(data, props.model, i18n.t("common.auto"))]
   })
 
   const metaLabels = createMemo(() => (mobile() ? [] : labels()))
@@ -1017,7 +1026,7 @@ export function AssistantTextContent(props: {
   const labels = createMemo<MetaItem[]>(() => {
     const agent = agentLabel(props.message.agent, data.agents)
 
-    return [...(agent ? [{ label: agent }] : []), ...modelItems(data, props.message.model)]
+    return [...(agent ? [{ label: agent }] : []), ...modelItems(data, props.message.model, i18n.t("common.auto"))]
   })
 
   const duration = createMemo(() => {

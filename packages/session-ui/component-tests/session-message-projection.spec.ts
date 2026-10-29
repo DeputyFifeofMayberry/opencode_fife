@@ -271,6 +271,21 @@ story("renders aliased and long custom model notices", async ({ mount, page }) =
   await expect(long.locator('[data-slot="session-timeline-notice-variant"]')).toHaveCount(0)
   await expect(long.locator("[title]")).toHaveAttribute("title", `Switched to ${longName}`)
   await expect.poll(() => long.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
+
+  // Policy-driven writes say why the effort moved; the label carries the variant, so no separate pill renders.
+  const escalated = timeline
+    .locator('[data-slot="session-timeline-notice"]')
+    .filter({ hasText: "Escalated to max · verification failed" })
+  await expect(escalated).toBeVisible()
+  await expect(escalated.locator('[data-slot="session-timeline-notice-variant"]')).toHaveCount(0)
+  await expect(timeline.getByText("Plan mode · max effort", { exact: true })).toBeVisible()
+  await expect(timeline.getByText("Effort policy set Auto", { exact: true })).toBeVisible()
+
+  // A model that advertises variants names its state per reply: Auto when none applied.
+  await page.setViewportSize({ width: 1000, height: 700 })
+  const autoMeta = timeline.locator('[data-slot="user-message-meta"]').filter({ hasText: "GPT-5.4 nano" })
+  await expect(autoMeta.locator('[data-slot="user-message-meta-item"]')).toHaveText(["Build", "GPT-5.4 nano", "Auto"])
+  await expect(autoMeta.locator('[data-slot="user-message-meta-item"][data-variant]')).toHaveText("Auto")
 })
 
 // Moved from packages/app/e2e/regression/session-timeline-projection.spec.ts
