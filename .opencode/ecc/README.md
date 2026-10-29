@@ -19,6 +19,12 @@ To disable the adapter, set its `options.enabled` to false or remove that plugin
 
 The 25 Osmani skills were removed from the project layer; they remain discoverable through global compatibility sources. Shared project checklists remain in .opencode/references, including the actively edited completion checklist. Existing custom skills remain in place. Source snapshot, stable tag, package version, and installed names are recorded in installation.json. Review upstream changes before replacing this snapshot.
 
+## MCP servers (shipped disabled)
+
+Two MCP server definitions ship in `.opencode/opencode.jsonc` with `disabled: true`: `context7` (remote, docs lookup for bleeding-edge deps — activates the docs-lookup agent and documentation-lookup skill) and `chrome-devtools` (local via `bunx chrome-devtools-mcp@1.10.1`, live browser debugging — activates the browser-testing-with-devtools skill). Neither connects or adds startup cost while disabled.
+
+To opt in, flip `disabled` to `false`; config edits apply live, no restart. Project config replaces a whole entry per server name, so enabling from a global config file will not win while the project entry stays disabled — the flip has to happen here. Keep it as an uncommitted local change if you do not want it shared.
+
 ## Local patches (reapply after a selective refresh)
 
 These deltas are deliberately local; a snapshot refresh must reapply them:
