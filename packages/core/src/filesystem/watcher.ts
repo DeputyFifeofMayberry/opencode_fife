@@ -249,9 +249,11 @@ function subscribeDirectory(
   publish: (update: Update) => void,
 ): Effect.Effect<Subscription | undefined> {
   if (!native || !backend) {
-    return Effect.logError("watcher backend not supported", { directory, platform: process.platform, cause: loadCause }).pipe(
-      Effect.as(undefined),
-    )
+    return Effect.logError("watcher backend not supported", {
+      directory,
+      platform: process.platform,
+      cause: loadCause,
+    }).pipe(Effect.as(undefined))
   }
   const callback: ParcelWatcher.SubscribeCallback = (error, updates) => {
     if (error) Effect.runFork(Effect.logError("watcher callback failed", { error }))

@@ -74,18 +74,11 @@ if (!targets.length) throw new Error(`Unknown build target: ${requestedTarget}`)
 // Bun 1.4.4 skips native packages for the other libc by default, but the musl targets need them.
 // Every watcher platform binding is resolved per target at build time, so all of them must exist.
 const watcherPlatforms = [
-  "darwin-arm64",
-  "darwin-x64",
-  "linux-arm64-glibc",
-  "linux-x64-glibc",
-  "linux-arm64-musl",
-  "linux-x64-musl",
-  "win32-arm64",
-  "win32-x64",
+  ...new Set(
+    allTargets.map((item) => `@parcel/watcher-${item.os}-${item.arch}${item.os === "linux" ? `-${item.abi ?? "glibc"}` : ""}`),
+  ),
 ]
-const watcherPackages = watcherPlatforms.map(
-  (platform) => `@parcel/watcher-${platform}@${pkg.dependencies["@parcel/watcher"]}`,
-)
+const watcherPackages = watcherPlatforms.map((platform) => `${platform}@${pkg.dependencies["@parcel/watcher"]}`)
 if (!skipInstall)
   await $`bun install --os="*" --cpu="*" --libc="*" @opentui/core@${pkg.dependencies["@opentui/core"]} @opencode-ai/pty@${pkg.dependencies["@opencode-ai/pty"]} ${watcherPackages}`
 const appArchive = path.join(dir, ".cache", "bun-app-archive.bin")
@@ -164,9 +157,10 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
   let parcelWatcherNode: string
   try {
     parcelWatcherNode = fileURLToPath(import.meta.resolve(`${parcelWatcherPackage}/watcher.node`))
-  } catch {
+  } catch (cause) {
     throw new Error(
       `Missing ${parcelWatcherPackage}; build without --skip-install so cross-platform native packages are installed`,
+      { cause },
     )
   }
   const parcelWatcherPlugin: BunPlugin = {
@@ -176,12 +170,13 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
         // Compiled exes cannot LoadLibrary Bun's embedded-file path directly, so
         // materialize the binding to a real file and dlopen that.
         contents: `
-import { readFileSync, writeFileSync } from "node:fs"
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import watcherNode from ${JSON.stringify(parcelWatcherNode)} with { type: "file" }
 export default () => {
-  const file = join(tmpdir(), "opencode-watcher-" + process.pid + ".node")
+  const directory = mkdtempSync(join(tmpdir(), "opencode-watcher-"))
+  const file = join(directory, "watcher.node")
   writeFileSync(file, readFileSync(watcherNode))
   const mod = { exports: {} }
   process.dlopen(mod, file)
