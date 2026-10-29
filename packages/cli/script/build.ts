@@ -4,6 +4,7 @@ import { $ } from "bun"
 import { createHash } from "node:crypto"
 import { mkdir, rm } from "fs/promises"
 import path from "path"
+import { fileURLToPath } from "node:url"
 import { Script } from "@opencode/script"
 import { embed } from "@opencode/script/highlights"
 import { createSolidTransformPlugin } from "@opentui/solid/bun-plugin"
@@ -146,11 +147,25 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
     },
   }
   const parcelWatcherPackage = `@parcel/watcher-${item.os}-${item.arch}${item.os === "linux" ? `-${item.abi ?? "glibc"}` : ""}`
+  const parcelWatcherNode = fileURLToPath(import.meta.resolve(`${parcelWatcherPackage}/watcher.node`))
   const parcelWatcherPlugin: BunPlugin = {
     name: "parcel-watcher-binding",
     setup(build) {
       build.onLoad({ filter: /filesystem[/\\]watcher-binding\.ts$/ }, () => ({
-        contents: `export default () => require(${JSON.stringify(parcelWatcherPackage)})`,
+        // Compiled exes cannot LoadLibrary Bun's embedded-file path directly, so
+        // materialize the binding to a real file and dlopen that.
+        contents: `
+import { readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import watcherNode from ${JSON.stringify(parcelWatcherNode)} with { type: "file" }
+export default () => {
+  const file = join(tmpdir(), "opencode-watcher-" + process.pid + ".node")
+  writeFileSync(file, readFileSync(watcherNode))
+  const mod = { exports: {} }
+  process.dlopen(mod, file)
+  return mod.exports
+}`,
         loader: "js",
       }))
     },
