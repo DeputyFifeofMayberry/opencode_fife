@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { rm } from "node:fs/promises"
 import path from "node:path"
 import { windowsOpenTui } from "../script/windows-opentui"
 import { tmpdir } from "./fixture/tmpdir"
@@ -85,21 +86,9 @@ console.log(file)`,
     await Bun.write(path.join(localHome, ".local/bin/opencode.exe"), Bun.file(executable))
     expect(Bun.spawnSync(["git", "init", local]).exitCode).toBe(0)
     await Bun.write(path.join(local, ".gitignore"), "dist/\n")
-    expect(
-      Bun.spawnSync([
-        "git",
-        "-C",
-        local,
-        "-c",
-        "user.name=fixture",
-        "-c",
-        "user.email=fixture@example.invalid",
-        "commit",
-        "--allow-empty",
-        "-m",
-        "fixture",
-      ]).exitCode,
-    ).toBe(0)
+    const gitFixture = ["git", "-C", local, "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid"]
+    expect(Bun.spawnSync([...gitFixture, "add", ".gitignore"]).exitCode).toBe(0)
+    expect(Bun.spawnSync([...gitFixture, "commit", "-m", "fixture"]).exitCode).toBe(0)
     const installer = path.resolve(import.meta.dir, "../../../script/install-local.ps1")
     const commands = path.join(root.path, "install-commands.txt")
     const invocation = `function bun {
@@ -109,6 +98,15 @@ console.log(file)`,
       }
       $global:LASTEXITCODE = if ($env:FAIL_SMOKE -eq '1' -and $args -contains 'script/service-smoke.ts') { 77 } else { 0 }
     }; & '${installer.replaceAll("'", "''")}'`
+    await Bun.write(path.join(local, "scratch.txt"), "uncommitted\n")
+    const dirtyInstall = Bun.spawnSync(
+      ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", invocation],
+      { cwd: local, env: { ...env, USERPROFILE: localHome, INSTALL_COMMANDS: commands } },
+    )
+    expect(dirtyInstall.stderr.toString()).toContain("uncommitted change")
+    expect(dirtyInstall.exitCode).not.toBe(0)
+    expect(await Bun.file(commands).exists()).toBe(false)
+    await rm(path.join(local, "scratch.txt"))
     const failedInstall = Bun.spawnSync(
       ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", invocation],
       { cwd: local, env: { ...env, USERPROFILE: localHome, INSTALL_COMMANDS: commands, FAIL_SMOKE: "1" } },
@@ -120,6 +118,14 @@ console.log(file)`,
     expect(await Bun.file(path.join(localHome, ".local/bin/opencode.exe")).bytes()).toEqual(
       await Bun.file(executable).bytes(),
     )
+    const archiveRoot = path.join(localHome, ".local/share/opencode-fife-builds")
+    for (let index = 0; index < 6; index++) {
+      await Bun.write(
+        path.join(archiveRoot, `1700000000000${String(index).padStart(4, "0")}`, "opencode.exe"),
+        Bun.file(executable),
+      )
+    }
+    await Bun.write(path.join(localHome, ".local/bin", "opencode.exe.old-16999999999999999"), Bun.file(executable))
     const localInstall = Bun.spawnSync(
       ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", invocation],
       { cwd: local, env: { ...env, USERPROFILE: localHome, INSTALL_COMMANDS: commands, FAIL_SMOKE: undefined } },
@@ -133,8 +139,12 @@ console.log(file)`,
     expect(manifest.channel).toBe("dev")
     expect(manifest.version).toMatch(/^0\.0\.0-dev-\d{17}$/)
     expect(manifest.source.commit).toMatch(/^[a-f0-9]{40}$/)
-    expect(manifest.source.dirty).toBe(true)
+    expect(manifest.source.dirty).toBe(false)
     expect(await Bun.file(path.join(manifest.previousBuild, "opencode.exe")).exists()).toBe(true)
+    const archives = (await Array.fromAsync(new Bun.Glob("*").scan({ cwd: archiveRoot, onlyFiles: false }))).sort()
+    expect(archives).toHaveLength(5)
+    expect(archives).not.toContain("17000000000000000")
+    expect(await Array.fromAsync(new Bun.Glob("opencode.exe.old-*").scan({ cwd: path.join(localHome, ".local/bin") }))).toHaveLength(0)
     expect(await Bun.file(commands).text()).toContain("script/service-smoke.ts")
     const record = await Bun.file(path.join(localHome, ".local/bin/opencode-build.json")).text()
     const changedSource = Bun.spawnSync(

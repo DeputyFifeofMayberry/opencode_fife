@@ -30,7 +30,14 @@
 - **Protect:** handle meaningful failures, edge cases, permissions, security risks. Never conceal errors.
 - **Verify:** run relevant checks; fix failures and rerun; inspect final diff; update affected docs.
 - **Local development:** GitHub stores source history and backup. Ordinary changes need no PR, GitHub CI run, release notes, tag, registry publication, installer package, or deployment. Keep applicable local lint, typechecks, regression tests, generation, and runtime checks; broaden verification when shared code or dependencies change. See `docs/local-development.md`.
-- **Daily app:** use the installed `dev` CLI while editing source. `bun run install:local` creates a unique `dev` version, builds this Windows machine's CLI, smoke-tests it before replacement, archives the previous installed build, and records source provenance. It does not restart services. Adopt it only when active sessions and terminal work are idle; opening a normal new TUI can replace a version-mismatched server.
+- **Daily app:** use the installed `dev` CLI while editing source. Adopt a new install only when active sessions and terminal work are idle; opening a normal new TUI can replace a version-mismatched server.
+
+## Local Updates
+
+- "Update opencode", "create local update package", and "install local build" all mean one procedure: `bun run update:local` (alias of `install:local`) from the repo root on a committed `dev` tree. Full process: `docs/local-development.md`; confirmed decisions: `docs/intent/local-update.md`.
+- Never install unasked. If `bun run local:status` shows `dev` ahead of the installed build, say so and wait for the user to request the update.
+- The installer refuses a dirty tree; commit first. Its compiled smoke test is the only hard gate; other checks are advisory per the checklist in `docs/local-development.md`.
+- Companion commands: `local:list`, `local:status`, `local:rollback`, `local:prune`. Installs archive the previous build and prune the archive to the newest 5.
 
 ## Live TUI Testing
 

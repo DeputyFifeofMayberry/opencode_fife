@@ -1,8 +1,10 @@
 # Rebuilds the CLI for this machine and installs it as the daily-driver `opencode`.
 # Run from the repository root after pulling or making changes on dev:
-#   bun run install:local
+#   bun run update:local   (alias of install:local)
+# The tree must be committed; the installer refuses uncommitted source.
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "local-builds.ps1")
 
 $root = (Get-Location).Path
 function Get-FileDigest([string]$path) {
@@ -27,6 +29,9 @@ function Get-SourceState {
 }
 
 $sourceState = Get-SourceState
+if ($sourceState.dirty) {
+    throw "Source tree has $($sourceState.status.Count) uncommitted change(s). Commit the work on dev first; the installer only packages committed source."
+}
 $env:OPENCODE_CHANNEL = "dev"
 $env:OPENCODE_VERSION = "0.0.0-dev-$(Get-Date -Format 'yyyyMMddHHmmssfff')"
 
@@ -93,7 +98,16 @@ Get-ChildItem "$target.old-*" -ErrorAction SilentlyContinue | Remove-Item -Force
     previousBuild = $previousBuild
 } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $installedBin "opencode-build.json") -Encoding UTF8
 
+$pruned = Invoke-LocalPrune
+$leftover = Remove-LocalStaleRenames -BinDir $installedBin
+
 Write-Host "Installed $target"
 & $target --version
 Write-Host "Previous build: $previousBuild"
+if ($pruned.Count -gt 0) { Write-Host "Pruned $($pruned.Count) old archive(s): $($pruned.Name -join ', ')" }
+if ($leftover.Count -gt 0) {
+    Write-Host "WARNING: $($leftover.Count) previous executable(s) remain in $installedBin, held by running sessions:"
+    foreach ($file in $leftover) { Write-Host "  $($file.Name)" }
+    Write-Host "A later install or 'bun run local:prune' removes them once no session uses them."
+}
 Write-Host "Running sessions were not restarted. Open the new build when existing work is idle."

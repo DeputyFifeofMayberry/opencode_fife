@@ -484,15 +484,6 @@
         "@typescript/native": "catalog:",
       },
     },
-    "packages/local-app": {
-      "name": "@opencode/local-app",
-      "devDependencies": {
-        "@tsconfig/bun": "catalog:",
-        "@types/bun": "catalog:",
-        "@typescript/native": "catalog:",
-        "typescript": "catalog:",
-      },
-    },
     "packages/merman": {
       "name": "@opencode/merman",
       "version": "2.2.0",
@@ -2058,8 +2049,6 @@
     "@opencode/httpapi-codegen": ["@opencode/httpapi-codegen@workspace:packages/httpapi-codegen"],
 
     "@opencode/latex": ["@opencode/latex@workspace:packages/latex"],
-
-    "@opencode/local-app": ["@opencode/local-app@workspace:packages/local-app"],
 
     "@opencode/merman": ["@opencode/merman@workspace:packages/merman"],
 
