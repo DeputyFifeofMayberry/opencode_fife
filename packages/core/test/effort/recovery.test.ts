@@ -111,6 +111,29 @@ describe("EffortTransition restart recovery", () => {
     })
   })
 
+  it.effect("marks its ModelSelected write with policy metadata", () => {
+    return Effect.gen(function* () {
+      const d = yield* deps()
+      const id = SessionID.make("ses_recovery_metadata")
+      yield* seedSession(id, undefined)
+      yield* d.efforts.set({ sessionID: id, baseLevel: "low", revision: 0 })
+      const selected = yield* Queue.unbounded<SessionEvent.ModelSelected>()
+      yield* d.bus.subscribe(SessionEvent.ModelSelected).pipe(
+        Stream.runForEach((event) => Queue.offer(selected, event)),
+        Effect.forkScoped({ startImmediately: true }),
+      )
+
+      const switched = yield* EffortTransition.apply(d, {
+        sessionID: id,
+        agent: "build",
+        resolved: resolved(),
+      })
+      expect(switched).toBe(true)
+      const event = yield* Queue.take(selected)
+      expect(event.metadata).toMatchObject({ source: "effort-policy", rule: "base", level: "low" })
+    })
+  })
+
   it.effect("a pick made while stopped wins after recovery", () => {
     return Effect.gen(function* () {
       const d = yield* deps()

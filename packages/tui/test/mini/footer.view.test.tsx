@@ -158,6 +158,7 @@ async function renderFooter(
     currentAgent?: string
     currentModel?: RunInput["model"]
     currentVariant?: string
+    variants?: string[]
     subagents?: FooterSubagentState
     width?: number
     height?: number
@@ -197,7 +198,7 @@ async function renderFooter(
           currentAgent={() => input.currentAgent ?? "Build"}
           currentAgentID={() => input.currentAgent?.toLowerCase() ?? "build"}
           currentModel={() => input.currentModel}
-          variants={() => []}
+          variants={() => input.variants ?? []}
           currentVariant={() => input.currentVariant}
           state={state}
           view={view}
@@ -574,6 +575,21 @@ test("direct footer describes commands and context and shows the model provider"
     await app.renderOnce()
     expect(app.captureCharFrame()).toContain("┃ Ask anything, / for commands, @ for context…")
     expect(app.captureCharFrame()).toContain("Build · GPT-5 · opencode · ctrl+p menu")
+  } finally {
+    app.cleanup()
+  }
+})
+
+test("direct footer names Auto when the model has variants and none is picked", async () => {
+  const app = await renderFooter({
+    providers: [provider()],
+    currentModel: { providerID: "opencode", modelID: "gpt-5" },
+    variants: ["high", "minimal"],
+    state: { first: true },
+  })
+  try {
+    await app.renderOnce()
+    expect(app.captureCharFrame()).toContain("Build · GPT-5 [auto] · opencode · ctrl+p menu")
   } finally {
     app.cleanup()
   }

@@ -26,13 +26,13 @@ export function CurrentSessionProviders(props: {
           { name: "test", color: "green" },
         ],
         provider: {
-          all: new Map<string, { models: Record<string, { name: string }> }>([
+          all: new Map<string, { models: Record<string, { name: string; variants?: Record<string, unknown> }> }>([
             ["anthropic", { models: { "claude-sonnet-4": { name: "Claude Sonnet 4" } } }],
             [
               "company-gateway",
               {
                 models: {
-                  "fast-nano": { name: "GPT-5.4 nano" },
+                  "fast-nano": { name: "GPT-5.4 nano", variants: { xhigh: {}, high: {} } },
                   "long-context": { name: "Company Gateway Extra Long Context Model for Narrow Timeline Layouts" },
                 },
               },
