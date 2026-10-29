@@ -6,6 +6,7 @@ import { mermanLayoutsStory } from "./merman-layouts"
 import { sessionTabsStory } from "./session-tabs"
 import { sessionLocationMissingStory } from "./session-location-missing"
 import { oneCellSpinnerStory } from "./one-cell-spinner"
+import { saintsTheaterStory } from "./saints-theater"
 import { linkClicksStory } from "./link-clicks"
 import { sidebarUsageStory } from "./sidebar-usage"
 import { highlightsStory } from "./highlights"
@@ -26,6 +27,7 @@ const stories: Story[] = [
   sessionTabsStory,
   sessionLocationMissingStory,
   oneCellSpinnerStory,
+  saintsTheaterStory,
   linkClicksStory,
   sidebarUsageStory,
   highlightsStory,
