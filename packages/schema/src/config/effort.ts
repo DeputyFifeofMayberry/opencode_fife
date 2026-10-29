@@ -28,6 +28,10 @@ export class Info extends Schema.Class<Info>("Config.Effort")({
     description:
       "Adaptive mode: consecutive qualifying clean verification passes before the session level steps down one level (default: 2)",
   }),
+  verification_timeout: PositiveInt.pipe(optional).annotate({
+    description:
+      "Adaptive mode: milliseconds before a harness-initiated verification run is abandoned as infrastructure with no state change (default: 120000)",
+  }),
   mutating_tools: Schema.String.pipe(Schema.Array).pipe(optional).annotate({
     description:
       "Tool names whose successful settlement advances the workspace revision used to discard stale verification passes (default: write, edit, patch)",

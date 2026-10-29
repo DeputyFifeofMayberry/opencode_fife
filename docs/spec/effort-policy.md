@@ -103,6 +103,32 @@ controller; `static` (default) keeps the behavior above.
   session's first adaptive decision so later evidence has durable state.
   Protocol version is 2; the host refuses other versions.
 
+## Harness verification
+
+Adaptive mode does not wait for the model to run a verifier. When a turn
+completes (`DrainResult.Complete`) and the session's state is dirty — a mutation
+since the last recorded verdict, an open failure, a level above the seed, or a
+changed workspace digest — the runner executes one configured verifier itself in
+the session's directory and feeds the settlement through the same evidence path
+(`EffortEvidence.observe`, tool `harness-verifier`).
+
+- **Selection.** The verifier with the open failure if one exists, else the
+  first configured command. One command per idle boundary.
+- **Currency.** A harness run records the revision and a workspace digest
+  (`git status --porcelain` hash when the session directory is a repository;
+  revision fallback otherwise) in `session_effort` (`verdict_revision`,
+  `verdict_digest`), and bypasses the stale-pass guard that model-initiated
+  settlements need — a harness run at idle is current by construction.
+- **Cancellation.** A new busy period for the same session cancels the pending
+  run (`session.effort` fibers join by session in a `FiberMap`). Cancelled,
+  timed-out (`verification_timeout`, default 120s), and spawn-failed runs are
+  infrastructure: no state change.
+- **Consent.** Configuring `verification_commands` is the consent surface; the
+  commands run permission-free, mirroring the benchmark runner's contract.
+- **Config reach.** The policy resolves from global config too, so sessions in
+  directories without a project config are governed by user-scope
+  `effort_policy`.
+
 - The policy is inert while `verification_commands` is empty.
 - Spawn failures, cancels, timeouts, and unconfigured commands change nothing.
 - The v1 verifier identity is the configured command per session; it ignores

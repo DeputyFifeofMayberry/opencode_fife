@@ -60,12 +60,20 @@ describe("EffortStore", () => {
       expect(stepped?.level).toBe("low")
       expect(stepped?.cleanPasses).toBe(0)
 
+      yield* store.setVerdict(id, { revision: 7, digest: "abc123" })
+      const verdict = yield* store.get(id)
+      expect(verdict?.verdictRevision).toBe(7)
+      expect(verdict?.verdictDigest).toBe("abc123")
+
       yield* store.set({ sessionID: id, baseLevel: "standard", revision: 7 })
       const cleared = yield* store.get(id)
       expect(cleared?.openFailure).toBeUndefined()
       expect(cleared?.lastAppliedVariant).toBeUndefined()
       expect(cleared?.level).toBeUndefined()
       expect(cleared?.cleanPasses).toBe(0)
+      // The verdict columns survive a baseline rewrite; only a new verdict replaces them.
+      expect(cleared?.verdictRevision).toBe(7)
+      expect(cleared?.verdictDigest).toBe("abc123")
     })
   })
 

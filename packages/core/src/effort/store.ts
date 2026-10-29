@@ -27,6 +27,10 @@ export interface Info {
   readonly level?: EffortLevel
   /** Consecutive qualifying clean passes toward the next step-down. */
   readonly cleanPasses?: number
+  /** Revision at the last harness-initiated verdict; absent until one records. */
+  readonly verdictRevision?: number
+  /** Workspace digest at the last harness-initiated verdict; absent outside repositories. */
+  readonly verdictDigest?: string
 }
 
 export interface Interface {
@@ -36,6 +40,8 @@ export interface Interface {
   readonly setOpenFailure: (sessionID: SessionSchema.ID, openFailure: OpenFailure | undefined) => Effect.Effect<void>
   /** Replaces only the adaptive level and clean-pass counter; the revision column is untouched. */
   readonly setLevel: (sessionID: SessionSchema.ID, level: EffortLevel, cleanPasses: number) => Effect.Effect<void>
+  /** Records the workspace state a harness-initiated verdict observed; the revision column is untouched. */
+  readonly setVerdict: (sessionID: SessionSchema.ID, verdict: { revision: number; digest?: string }) => Effect.Effect<void>
   /** Advances the workspace revision by one; atomic, so concurrent bumps all land. */
   readonly bumpRevision: (sessionID: SessionSchema.ID) => Effect.Effect<void>
 }
@@ -55,6 +61,8 @@ export const layer = Layer.effect(
       lastAppliedVariant: row.last_applied_variant ?? undefined,
       level: row.level ?? undefined,
       cleanPasses: row.clean_passes,
+      verdictRevision: row.verdict_revision ?? undefined,
+      verdictDigest: row.verdict_digest ?? undefined,
     })
 
     return Service.of({
@@ -105,6 +113,14 @@ export const layer = Layer.effect(
         yield* db
           .update(SessionEffortTable)
           .set({ level, clean_passes: cleanPasses })
+          .where(eq(SessionEffortTable.session_id, sessionID))
+          .run()
+          .pipe(Effect.orDie)
+      }),
+      setVerdict: Effect.fnUntraced(function* (sessionID, verdict) {
+        yield* db
+          .update(SessionEffortTable)
+          .set({ verdict_revision: verdict.revision, verdict_digest: verdict.digest ?? null })
           .where(eq(SessionEffortTable.session_id, sessionID))
           .run()
           .pipe(Effect.orDie)

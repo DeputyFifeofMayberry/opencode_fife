@@ -160,6 +160,7 @@ describe("Config.Effort", () => {
         mode: "adaptive",
         base_level: "low",
         clean_passes: 3,
+        verification_timeout: 90_000,
         mutating_tools: ["write", "edit"],
         agent_operations: { reviewer: "review", scripts: "mechanical" },
       },
@@ -168,6 +169,7 @@ describe("Config.Effort", () => {
     expect(decoded.effort_policy?.base_level).toBe("low")
     expect(decoded.effort_policy?.mode).toBe("adaptive")
     expect(decoded.effort_policy?.clean_passes).toBe(3)
+    expect(decoded.effort_policy?.verification_timeout).toBe(90_000)
     expect(Schema.encodeSync(Config.Info)(decoded)).toEqual(input)
   })
 

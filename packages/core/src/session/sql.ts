@@ -142,6 +142,10 @@ export const SessionEffortTable = sqliteTable("session_effort", {
   /** Adaptive mode: the durable controller level; null until adaptive evidence or a seed writes it. */
   level: text().$type<EffortLevel>(),
   clean_passes: integer().notNull().default(0),
+  /** Revision at the last harness-initiated verdict; null until one records. */
+  verdict_revision: integer(),
+  /** Workspace digest at the last harness-initiated verdict; null when the session is not a repository. */
+  verdict_digest: text(),
 })
 
 export const SessionInboxTable = sqliteTable(

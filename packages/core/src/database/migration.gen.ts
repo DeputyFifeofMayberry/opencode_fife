@@ -56,6 +56,7 @@ import m53 from "./migration/20261025154125_drop_session_pending.js"
 import m54 from "./migration/20261026185821_session_message_text.js"
 import m55 from "./migration/20261026224700_add_session_effort.js"
 import m56 from "./migration/20261029205453_add_session_effort_adaptive.js"
+import m57 from "./migration/20261029214951_add_session_effort_verdict.js"
 
 export const migrations = [
   m00,
@@ -115,4 +116,5 @@ export const migrations = [
   m54,
   m55,
   m56,
+  m57,
 ] satisfies DatabaseMigration.Migration[]

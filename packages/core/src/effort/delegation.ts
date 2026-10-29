@@ -27,9 +27,9 @@ export function operationFor(
 
 /**
  * The level an interactive session seeds at in adaptive mode. Explore reads as
- * read-only work here, one step cheaper than the delegation minimum a child
- * with the same operation receives; the operation minimum governs subagent
- * starting effort, this ladder governs the session's own controller level.
+ * ordinary work here pending benchmark validation of a cheaper tier (Stage 1
+ * screening measured 0/6 verified successes at `low` on implementation tasks);
+ * the delegation minimum a child with the same operation receives is unchanged.
  */
 export function sessionSeed(operation: ConfigEffort.Operation): EffortLevel {
   switch (operation) {
@@ -37,9 +37,9 @@ export function sessionSeed(operation: ConfigEffort.Operation): EffortLevel {
     case "review":
       return "deep"
     case "mechanical":
-    case "explore":
       return "low"
     case "general":
+    case "explore":
     case "implement":
       return "standard"
   }

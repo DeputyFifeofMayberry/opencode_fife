@@ -170,7 +170,13 @@ describe("EffortTransition adaptive", () => {
           Config.testLayer([
             new Document({
               type: "document",
-              info: new Info({ effort_policy: new ConfigEffort.Info({ mode: "adaptive", clean_passes: 2 }) }),
+              info: new Info({
+                effort_policy: new ConfigEffort.Info({
+                  mode: "adaptive",
+                  clean_passes: 2,
+                  agent_operations: { mechanical: "mechanical" },
+                }),
+              }),
             }),
           ]),
         ),
@@ -181,7 +187,7 @@ describe("EffortTransition adaptive", () => {
   adaptiveIt.effect("seeds the session level from the agent's operation ladder", () => {
     return Effect.gen(function* () {
       const d = yield* deps()
-      const id = SessionID.make("ses_adaptive_explore")
+      const id = SessionID.make("ses_adaptive_mechanical")
       yield* seedSession(id, undefined)
       const selected = yield* Queue.unbounded<SessionEvent.ModelSelected>()
       yield* d.bus.subscribe(SessionEvent.ModelSelected).pipe(
@@ -191,7 +197,7 @@ describe("EffortTransition adaptive", () => {
 
       const switched = yield* EffortTransition.apply(d, {
         sessionID: id,
-        agent: "explore",
+        agent: "mechanical",
         resolved: resolved(),
       })
       expect(switched).toBe(true)
@@ -200,6 +206,24 @@ describe("EffortTransition adaptive", () => {
       expect(row?.level).toBe("low")
       const event = yield* Queue.take(selected)
       expect(event.metadata).toMatchObject({ source: "effort-policy", rule: "base", level: "low" })
+    })
+  })
+
+  adaptiveIt.effect("seeds explore sessions at standard without transitioning", () => {
+    return Effect.gen(function* () {
+      const d = yield* deps()
+      const id = SessionID.make("ses_adaptive_explore")
+      yield* seedSession(id, undefined)
+
+      const switched = yield* EffortTransition.apply(d, {
+        sessionID: id,
+        agent: "explore",
+        resolved: resolved(),
+      })
+      expect(switched).toBe(false)
+      const row = yield* d.efforts.get(id)
+      expect(row?.baseLevel).toBe("standard")
+      expect(row?.level).toBe("standard")
     })
   })
 

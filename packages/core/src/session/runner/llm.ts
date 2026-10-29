@@ -2,9 +2,10 @@ export * as SessionRunnerLLM from "./llm.js"
 
 import { Message } from "@opencode/ai/effect"
 import { and, desc, eq, inArray, sql } from "drizzle-orm"
-import { Cause, Clock, DateTime, Effect, Exit, FiberMap, Layer } from "effect"
+import { Cause, Clock, DateTime, Effect, Exit, FiberMap, Layer, Stream } from "effect"
 import { Database } from "../../database/database.js"
 import { Bus } from "../../bus.js"
+import { Location } from "../../location.js"
 import { LocationLifecycle } from "../../location-lifecycle.js"
 import { InstructionState } from "../instruction-state.js"
 import { SessionCompaction } from "../compaction.js"
@@ -21,12 +22,14 @@ import { SessionMessageTable } from "../sql.js"
 import { SessionTitle } from "../title.js"
 import { EffortStore } from "../../effort/store.js"
 import { EffortTransition } from "../../effort/transition.js"
+import { EffortVerification } from "../../effort/verify.js"
 import { Config } from "../../config.js"
 import { Model as ModelService } from "../../model.js"
 import { toSessionError } from "../to-session-error.js"
 import { DrainResult, Service, type Interface } from "./index.js"
 import { Snapshot } from "../../snapshot.js"
 import { makeLocationNode } from "@opencode/util/effect/app-node"
+import { AppProcess } from "@opencode/util/process"
 import { llmClient } from "../../effect/app-node-platform.js"
 import { StepFailedError } from "../error.js"
 import { SessionRunnerRetry } from "./retry.js"
@@ -57,6 +60,11 @@ const layer = Layer.effect(
     const efforts = yield* EffortStore.Service
     const config = yield* Config.Service
     const models = yield* ModelService.Service
+    const processes = yield* AppProcess.Service
+    const location = yield* Location.Service
+    // Verification fibers outlive the drain fiber that schedules them; the map joins concurrent
+    // runs for the same session and drops them when the location closes.
+    const verifications = yield* FiberMap.make<SessionSchema.ID, void, never>()
     // Title generation starts once input is visible and must not delay model execution.
     const titles = yield* FiberMap.make<SessionSchema.ID, void, never>()
 
@@ -494,7 +502,32 @@ const layer = Layer.effect(
       }
     })
 
-    return Service.of({ drain })
+    // The idle boundary: when a turn completes, verify dirty work in the background so the
+    // adaptive loop's evidence does not depend on the model choosing to run a verifier. A new
+    // busy period for the same session cancels the run.
+    const drainWithVerification = Effect.fn("SessionRunner.drainWithVerification")(function* (
+      input: Parameters<Interface["drain"]>[0],
+    ) {
+      const result = yield* drain(input)
+      if (result._tag !== "Complete") return result
+      const wake = bus.subscribe(SessionEvent.Execution.Started).pipe(
+        Stream.filter((event) => event.data.sessionID === input.sessionID),
+        Stream.take(1),
+        Stream.runDrain,
+      )
+      yield* FiberMap.run(
+        verifications,
+        input.sessionID,
+        EffortVerification.runIfDirty(
+          { db, efforts, config, runProcess: (command, options) => processes.run(command, options) },
+          { sessionID: input.sessionID, directory: location.directory },
+        ).pipe(Effect.raceFirst(wake), Effect.asVoid),
+        { onlyIfMissing: true },
+      )
+      return result
+    })
+
+    return Service.of({ drain: drainWithVerification })
   }),
 )
 
@@ -517,5 +550,7 @@ export const node = makeLocationNode({
     EffortStore.node,
     Config.node,
     ModelService.node,
+    AppProcess.node,
+    Location.node,
   ],
 })
