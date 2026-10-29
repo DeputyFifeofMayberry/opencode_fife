@@ -16,8 +16,10 @@ import { EffortStore } from "./store.js"
  * cancels, timeouts, unconfigured commands — changes nothing. File-mutating
  * tools advance the workspace revision their settlement observed, which is what
  * makes a later pass stale when it predates the failing state. Command matching
- * is exact per segment, so compound commands (`a && typecheck`) match on any
- * segment; the verifier identity is the matched configured command. The v1
+ * tolerates decorated invocations: compound commands (`a && typecheck`,
+ * `typecheck | filter`) classify on any segment after redirections are
+ * stripped, and appended flags count at the token boundary; the verifier
+ * identity is the matched configured command. The v1
  * identity omits the working directory: escalation state is per session, and
  * the configured command is the stable part of the core's opaque identity.
  */
@@ -64,12 +66,30 @@ export const observe = Effect.fn("EffortEvidence.observe")(function* (
 /** The configured command a settled call matches, or undefined for unconfigured calls. */
 export function matchVerifier(command: string, verifiers: readonly string[]): string | undefined {
   const configured = verifiers.map((verifier) => verifier.trim())
-  for (const segment of command.split(/&&|;/).map((part) => part.trim())) {
-    if (segment.length === 0) continue
-    const match = configured.find((verifier) => verifier === segment)
+  for (const segment of segments(command)) {
+    const match = configured.find((verifier) => matchesVerifier(segment, verifier))
     if (match !== undefined) return match
   }
   return undefined
+}
+
+// Agents rarely run a verifier verbatim: they pipe it into an output filter
+// (`pnpm typecheck 2>&1 | Select-String …`), redirect its streams, or append
+// flags. Classify any shell segment — compound on `&&`, `||`, `|`, `;` — after
+// stripping redirection tokens, matching exactly or at a token boundary so
+// appended flags count while a longer word (`pnpm typecheck-strict`) does not.
+function segments(command: string): readonly string[] {
+  return command
+    .split(/&&|\|\||\||;/)
+    .flatMap((segment) => segment.split(redirection))
+    .map((part) => part.trim())
+    .filter((segment) => segment.length > 0)
+}
+
+const redirection = /(?:^|\s)\d*(?:>>?|<&?)\s?\S*/g
+
+function matchesVerifier(segment: string, verifier: string): boolean {
+  return segment === verifier || segment.startsWith(`${verifier} `)
 }
 
 function commandOf(input: unknown): string | undefined {

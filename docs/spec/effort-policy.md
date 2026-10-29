@@ -67,11 +67,15 @@ shown. What the provider actually applies on the wire is a benchmark concern
 ## Escalation loop
 
 Configured commands (`effort_policy.verification_commands`) classify at tool
-settlement. Command matching is exact per segment, so compound commands
-(`build && pnpm typecheck`) match on any segment; a non-zero exit opens an
-escalation and a zero exit clears one. Clearing requires the pass to be no older
-than the failure (sequence) and not from a pre-mutation workspace (revision):
-file-mutating tools — `write`, `edit`, `patch` by default, extensible via
+settlement. Agents rarely run a verifier verbatim — they pipe it into an output
+filter or append flags — so matching tolerates decorated invocations: compound
+commands (`build && pnpm typecheck`, `typecheck 2>&1 | Select-String …`)
+classify on any segment after redirection tokens are stripped, and appended
+flags count at the token boundary (`pnpm typecheck --pretty=false` matches,
+`pnpm typecheck-strict` does not); a non-zero exit opens an escalation and a
+zero exit clears one. Clearing requires the pass to be no older than the failure
+(sequence) and not from a pre-mutation workspace (revision): file-mutating
+tools — `write`, `edit`, `patch` by default, extensible via
 `effort_policy.mutating_tools` — advance the revision on successful settlement.
 
 - The policy is inert while `verification_commands` is empty.

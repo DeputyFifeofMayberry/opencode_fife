@@ -105,6 +105,28 @@ describe("EffortEvidence", () => {
     })
   })
 
+  it.effect("classifies decorated verifier invocations", () => {
+    return Effect.gen(function* () {
+      const efforts = yield* EffortStore.Service
+      const id = SessionID.make("ses_evidence_decorated")
+      yield* seed(id)
+      // Agents pipe verifiers into output filters; the pipe segment still classifies.
+      yield* settle(id, "shell", "pnpm typecheck 2>&1 | Select-String -Pattern 'TS[0-9]+|No errors'", 1)
+      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
+      yield* efforts.setOpenFailure(id, undefined)
+      // Stream redirections are stripped before matching.
+      yield* settle(id, "shell", "pnpm typecheck > out.log 2>&1", 1)
+      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
+      yield* efforts.setOpenFailure(id, undefined)
+      // Appended flags classify at the token boundary; a longer word does not.
+      yield* settle(id, "shell", "pnpm typecheck --pretty=false", 1)
+      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
+      yield* efforts.setOpenFailure(id, undefined)
+      yield* settle(id, "shell", "pnpm typecheck-strict", 1)
+      expect((yield* efforts.get(id))?.openFailure).toBeUndefined()
+    })
+  })
+
   it.effect("advances the revision for mutating tools and guards the pass", () => {
     return Effect.gen(function* () {
       const efforts = yield* EffortStore.Service
