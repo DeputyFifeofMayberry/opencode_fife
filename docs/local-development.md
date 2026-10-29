@@ -2,6 +2,8 @@
 
 Use the installed `dev` build to work on this repository. Edit source on `dev`, verify the change, and install a new local build when ready. GitHub holds source history and backup. Preserve `main` for future release work.
 
+This repository's update terms are synonyms: "update opencode", "create local update package", and "install local build" all mean the procedure below, run with `bun run update:local`. Agents never install unasked; they may report status with `bun run local:status` and wait for the user to ask. The confirmed decisions behind this process are recorded in `docs/intent/local-update.md`.
+
 1. Start the working app:
 
    ```powershell
@@ -21,13 +23,13 @@ Use the installed `dev` build to work on this repository. Edit source on `dev`, 
 
 3. Review the diff and commit a coherent checkpoint. A single task can work directly on `dev`. Use separate branches and worktrees for independent concurrent tasks, with one writer per checkout. Integrate locally after checks. Push to `origin` when you want source backup and remote-operation authorization permits it. No PR or GitHub build is required.
 
-4. Finish source edits, then build and install:
+4. Finish source edits, commit them, then build and install:
 
    ```powershell
-   bun run install:local
+   bun run update:local
    ```
 
-   The installer assigns a timestamped `dev` version, builds Windows x64 with its embedded web UI, and runs the compiled service smoke test using temporary data and an operating-system-assigned port. Failed builds, failed smoke tests, or a changed source fingerprint stop installation. Relevant lint/typechecks/regression tests remain your responsibility before this command. Run one build/installer at a time per checkout.
+   The installer refuses a dirty tree, so commit first. It assigns a timestamped `dev` version, builds Windows x64 with its embedded web UI, runs the compiled service smoke test using temporary data and an operating-system-assigned port, then swaps the executable in atomically. Failed builds, failed smoke tests, a changed source fingerprint, or uncommitted source stop installation. The compiled smoke test is the only hard gate; lint, typechecks, and regression tests from step 2 stay your responsibility. Run one build/installer at a time per checkout. Each install archives the previous build and prunes the archive to the newest 5 (about 270 MB per build).
 
 5. When sessions and terminal work are idle, close old clients and launch `opencode .` again. The new client can replace an older shared `dev` server. The installer itself does not stop or restart it. Verify the changed behavior in the installed app.
 
@@ -63,11 +65,16 @@ Close that window afterward. Configure test credentials separately. This isolate
 
 The installed build record is `%USERPROFILE%\.local\bin\opencode-build.json`. It records the build version, source commit, dirty-tree status, source fingerprint, executable hash, installation time, and previous-build archive. A dirty build includes local changes beyond its recorded commit. The before/after fingerprint detects changes remaining at the end of packaging; it cannot prove that a file was never briefly changed and reverted during the build.
 
-Previous builds are retained under `%USERPROFILE%\.local\share\opencode-fife-builds`. To roll back:
+Previous builds are retained under `%USERPROFILE%\.local\share\opencode-fife-builds`, trimmed to the newest 5 on each install. Companion commands manage the installed build and archive:
 
-1. Save work and close clients, then run `opencode service stop`.
-2. Copy the selected archive's `opencode.exe`, `opentui-*.dll`, and `opencode-build.json` (when present) into `%USERPROFILE%\.local\bin`.
-3. Reopen `opencode .` and verify it. The first archive may lack a build record because the earlier installer did not create one.
+```powershell
+bun run local:list        # installed build plus every archive, newest first
+bun run local:status      # installed build versus dev HEAD and tree state
+bun run local:rollback    # newest archived build; -Build <timestamp> picks one
+bun run local:prune       # trim the archive now, remove stale .old renames
+```
+
+Rollback: save work and close clients (`opencode service stop`), run `bun run local:rollback`, then reopen `opencode .` and verify it. The rollback keeps the pre-rollback executable as an `opencode.exe.old-*` rename for one more undo, syncs the build record from the archive, and removes the record when the archive predates build manifests. A rename still held by a running session is reported rather than deleted; the next install or prune removes it once the session exits.
 
 Test database migrations with disposable data first. Stop the server before backing up its database; an old executable may not understand a migrated database. GitHub does not back up ignored binaries, sessions, databases, or credentials.
 

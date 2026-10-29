@@ -1,6 +1,6 @@
 # Contributing to OpenCode
 
-This personal fork uses local development and local Windows CLI builds. Follow [the local workflow](docs/local-development.md): work on `dev`, run applicable checks locally, and install with `bun run install:local`. GitHub provides source history and backup; `main` is preserved for future release work. PRs and public release steps are optional unless explicitly requested. The upstream contribution rules below apply when preparing an upstream submission.
+This personal fork uses local development and local Windows CLI builds. Follow [the local workflow](docs/local-development.md): work on `dev`, run applicable checks locally, and update the installed build with `bun run update:local` on a committed tree. GitHub provides source history and backup; `main` is preserved for future release work. PRs and public release steps are optional unless explicitly requested. The upstream contribution rules below apply when preparing an upstream submission.
 
 The changes most likely to be accepted are:
 
