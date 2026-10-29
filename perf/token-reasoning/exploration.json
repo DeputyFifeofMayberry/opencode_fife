@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "provider": "zai-coding-plan",
+  "model": "glm-5.3-flash",
+  "seed": "explore-ladder-validation",
+  "repetitions": 2,
+  "arms": [
+    { "policy": "efficiency" },
+    { "policy": "balanced" }
+  ],
+  "cache_conditions": ["cold"],
+  "stages": [
+    { "stage": "smoke", "ceiling_usd": 2, "run_ceiling_usd": 0.25, "approved": true }
+  ],
+  "tasks": [
+    {
+      "id": "explore-durable-state",
+      "class": "discovery",
+      "prompt": "Explore this repository's source code (read-only exploration, no code changes), then create a file named exploration-answer.md in the repository root with exactly three lines, one per line, in the format 'table: <answer>', 'file: <answer>', 'column: <answer>'. Line 1 answers: the name of the SQLite table that stores per-session effort-policy state. Line 2 answers: the repository-relative path of the TypeScript source file that declares that table's columns with drizzle (the hand-written declaration, not a generated file). Line 3 answers: the name of the column that stores the adaptive controller level. Finish as soon as the file is written.",
+      "verify": "bun perf/token-reasoning/fixtures/run/check-exploration.ts durable-state"
+    },
+    {
+      "id": "explore-command-trace",
+      "class": "discovery",
+      "prompt": "Explore this repository's TUI source code (read-only exploration, no code changes), then create a file named exploration-answer.md in the repository root with exactly three lines, one per line, in the format 'id: <answer>', 'slash: <answer>', 'operation: <answer>'. Line 1 answers: the internal command id of the TUI command that opens the model variant dialog (formatted like word.word). Line 2 answers: the slash-command name, without the leading slash, that triggers that command. Line 3 answers: the delegation operation name that the effort delegation defaults map the agent id 'build' to. Finish as soon as the file is written.",
+      "verify": "bun perf/token-reasoning/fixtures/run/check-exploration.ts command-trace"
+    }
+  ]
+}

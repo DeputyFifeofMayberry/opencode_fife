@@ -209,21 +209,28 @@ describe("EffortTransition adaptive", () => {
     })
   })
 
-  adaptiveIt.effect("seeds explore sessions at standard without transitioning", () => {
+  adaptiveIt.effect("seeds explore sessions at low from the ladder", () => {
     return Effect.gen(function* () {
       const d = yield* deps()
       const id = SessionID.make("ses_adaptive_explore")
       yield* seedSession(id, undefined)
+      const selected = yield* Queue.unbounded<SessionEvent.ModelSelected>()
+      yield* d.bus.subscribe(SessionEvent.ModelSelected).pipe(
+        Stream.runForEach((event) => Queue.offer(selected, event)),
+        Effect.forkScoped({ startImmediately: true }),
+      )
 
       const switched = yield* EffortTransition.apply(d, {
         sessionID: id,
         agent: "explore",
         resolved: resolved(),
       })
-      expect(switched).toBe(false)
+      expect(switched).toBe(true)
       const row = yield* d.efforts.get(id)
-      expect(row?.baseLevel).toBe("standard")
-      expect(row?.level).toBe("standard")
+      expect(row?.baseLevel).toBe("low")
+      expect(row?.level).toBe("low")
+      const event = yield* Queue.take(selected)
+      expect(event.metadata).toMatchObject({ source: "effort-policy", rule: "base", level: "low" })
     })
   })
 

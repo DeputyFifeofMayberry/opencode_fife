@@ -1,6 +1,7 @@
 # Plan: Guaranteed effort loop (harness-initiated verification)
 
-Status: Draft for approval (2026-10-29)
+Status: Slices A, B, D complete; C complete (re-seeded `explore → low`); E deferred
+(2026-10-29)
 Related: `docs/plans/effort-adaptive-mode.md` (shipped adaptive mode), `docs/spec/effort-policy.md`,
 `docs/intent/effort-policy.md`, `perf/token-reasoning/README.md`
 
@@ -102,6 +103,24 @@ working" answer.
 Slice B investigation step: locate the exact idle seam (runner idle path /
 `SessionRunCoordinator` boundary), confirm cancellation semantics with prompt admission,
 and verify config resolution for sessions outside the project root before wiring.
+
+Outcome notes (2026-10-29):
+
+- A: `effort_policy` moved to user-scope config; project copy emptied. Config-reach test
+  deferred to the next config-discovery test touchpoint — global resolution itself is
+  covered by `Config.entries` composition.
+- B: shipped in `feat(effort): guarantee adaptive verification from the harness`. The
+  idle seam is the runner's `DrainResult.Complete` boundary (not the coordinator):
+  location-scoped so config and directory resolve naturally; verification fibers join by
+  session in a `FiberMap` and a new busy period cancels the run.
+- C: shipped — see `perf/token-reasoning/README.md`, exploration ladder stage. `low`
+  passed 4/4 on discovery tasks with ~27% fewer tokens than default; `explore → low`
+  re-seeded per the predeclared rule. Harness finding: multi-line prompts truncate through
+  the Windows `cmd` argv wrap; suite prompts stay single-line until prompts travel by
+  another channel.
+- D: shipped — `script/effort-report.ts` renders durable state, attributed transitions,
+  and governed-vs-ungoverned counts from a session database.
+- E: deferred until the loop has live usage data.
 
 ## Verification
 

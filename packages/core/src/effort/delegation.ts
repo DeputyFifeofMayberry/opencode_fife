@@ -26,10 +26,12 @@ export function operationFor(
 }
 
 /**
- * The level an interactive session seeds at in adaptive mode. Explore reads as
- * ordinary work here pending benchmark validation of a cheaper tier (Stage 1
- * screening measured 0/6 verified successes at `low` on implementation tasks);
- * the delegation minimum a child with the same operation receives is unchanged.
+ * The level an interactive session seeds at in adaptive mode. Explore seeds low,
+ * validated on exploration-class discovery tasks (perf/token-reasoning README,
+ * exploration ladder stage: 4/4 verified at `low` with ~27% fewer gross tokens
+ * than the default tier, screening grade, 2026-10-29). The delegation minimum a
+ * child with the same operation receives is unchanged (`operationStart` explore
+ * → standard).
  */
 export function sessionSeed(operation: ConfigEffort.Operation): EffortLevel {
   switch (operation) {
@@ -37,9 +39,9 @@ export function sessionSeed(operation: ConfigEffort.Operation): EffortLevel {
     case "review":
       return "deep"
     case "mechanical":
+    case "explore":
       return "low"
     case "general":
-    case "explore":
     case "implement":
       return "standard"
   }

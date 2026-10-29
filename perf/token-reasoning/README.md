@@ -198,6 +198,33 @@ Cost evidence is unavailable for this provider: no catalog rates, so runs report
 (`cost_complete: false`) and only token evidence is usable until pricing exists or external
 reconciliation is performed.
 
+## Exploration ladder validation (2026-10-29, live)
+
+Slice C of `docs/plans/effort-verification-loop-plan.md`: does the `low` tier hold up on
+exploration-class work, where Stage 1's `low` arm failed every implementation task? Suite:
+`exploration.json` — two `discovery` tasks (find the effort state table / trace the variant
+command) × two arms (`low` vs model default) × two repetitions on
+`zai-coding-plan/glm-5.3-flash` (authoritative-zero cost), 8 runs, all entered, zero
+errored. Correctness is mechanical: a seeded checker validates labeled answer lines
+(`fixtures/seed/check-exploration.ts`).
+
+| Arm | Wire tier | Pass | Gross tokens/run (avg) | Wall (avg) |
+| --- | --- | --- | --- | --- |
+| efficiency | `low` | 4/4 | 207,273 | 37s |
+| balanced | default | 4/4 | 283,924 | 42s |
+
+- **Predeclared rule**: re-seed explore sessions to `low` if `low`'s pass rate is not
+  materially worse than default's and its gross tokens are under 80% of default's. Both
+  held (4/4 vs 4/4; 73%), so `sessionSeed` maps `explore → low` again.
+- **Screening grade, not confirmation**: n=4 per arm, one model, two discovery tasks, and
+  the tasks are easier than Stage 1's implementation tasks by construction. This validates
+  the ladder for exploration sessions only; the Stage 1 rejection of `low` for
+  implementation tasks stands.
+- **Harness finding**: multi-line prompts truncate at the first newline when the runner
+  wraps argv through `cmd` on Windows — the first stage attempt lost every format spec and
+  produced four structured no-op failures. Prompts in suite manifests must stay single-line
+  until the runner passes prompts by another channel.
+
 ## Stage 1 screening corpus
 
 `screening.json` defines the screening stage: three seeded implementation tasks (digit-boundary
