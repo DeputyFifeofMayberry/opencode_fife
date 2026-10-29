@@ -151,6 +151,7 @@
     "@opencode/http-recorder": "workspace:*",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
+    "@types/node": "catalog:",
     "@typescript/native": "catalog:",
     "typescript": "catalog:"
   },

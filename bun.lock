@@ -54,6 +54,7 @@
         "@opencode/http-recorder": "workspace:*",
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
+        "@types/node": "catalog:",
         "@typescript/native": "catalog:",
         "typescript": "catalog:",
       },
@@ -569,6 +570,7 @@
       "devDependencies": {
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
+        "@types/node": "catalog:",
         "@typescript/native": "catalog:",
         "typescript": "catalog:",
       },
@@ -582,6 +584,7 @@
       "devDependencies": {
         "@tsconfig/bun": "1.0.9",
         "@types/bun": "1.4.3",
+        "@types/node": "catalog:",
         "@typescript/native": "npm:typescript@7.1.0-beta",
       },
       "peerDependencies": {
@@ -862,6 +865,7 @@
       "devDependencies": {
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
+        "@types/node": "catalog:",
         "@typescript/native": "catalog:",
       },
     },
