@@ -11,6 +11,8 @@ import { EffortStore } from "@opencode/core/effort/store"
 import { EffortTransition } from "@opencode/core/effort/transition"
 import { Model } from "@opencode/core/model"
 import { Provider } from "@opencode/schema/provider"
+import { ConfigEffort } from "@opencode/schema/config/effort"
+import { Document, Info } from "@opencode/schema/config"
 import { ProjectTable } from "@opencode/core/project/sql"
 import { SessionRunnerModel } from "@opencode/core/session/runner/model"
 import { SessionStore } from "@opencode/core/session/store"
@@ -150,6 +152,73 @@ describe("EffortTransition restart recovery", () => {
       // The user's pick is the baseline now: the stale policy marker is dropped.
       expect((yield* d.efforts.get(id))?.lastAppliedVariant).toBeUndefined()
       expect((yield* d.efforts.get(id))?.revision).toBe(1)
+    })
+  })
+})
+
+describe("EffortTransition adaptive", () => {
+  const adaptiveIt = testEffect(
+    Layer.merge(
+      AppNodeBuilder.build(
+        LayerNode.group([Database.node, Bus.node, SessionStore.node, EffortStore.node]),
+        [Bus.node.replace(Bus.configured({ persist: true }))],
+      ),
+      Layer.merge(
+        TestLLM.testLayer(),
+        Layer.merge(
+          TestModels(),
+          Config.testLayer([
+            new Document({
+              type: "document",
+              info: new Info({ effort_policy: new ConfigEffort.Info({ mode: "adaptive", clean_passes: 2 }) }),
+            }),
+          ]),
+        ),
+      ),
+    ),
+  )
+
+  adaptiveIt.effect("seeds the session level from the agent's operation ladder", () => {
+    return Effect.gen(function* () {
+      const d = yield* deps()
+      const id = SessionID.make("ses_adaptive_explore")
+      yield* seedSession(id, undefined)
+      const selected = yield* Queue.unbounded<SessionEvent.ModelSelected>()
+      yield* d.bus.subscribe(SessionEvent.ModelSelected).pipe(
+        Stream.runForEach((event) => Queue.offer(selected, event)),
+        Effect.forkScoped({ startImmediately: true }),
+      )
+
+      const switched = yield* EffortTransition.apply(d, {
+        sessionID: id,
+        agent: "explore",
+        resolved: resolved(),
+      })
+      expect(switched).toBe(true)
+      const row = yield* d.efforts.get(id)
+      expect(row?.baseLevel).toBe("low")
+      expect(row?.level).toBe("low")
+      const event = yield* Queue.take(selected)
+      expect(event.metadata).toMatchObject({ source: "effort-policy", rule: "base", level: "low" })
+    })
+  })
+
+  adaptiveIt.effect("materializes the seed row for an at-rest session without transitioning", () => {
+    return Effect.gen(function* () {
+      const d = yield* deps()
+      const id = SessionID.make("ses_adaptive_rest")
+      yield* seedSession(id, undefined)
+
+      const switched = yield* EffortTransition.apply(d, {
+        sessionID: id,
+        agent: "build",
+        resolved: resolved(),
+      })
+      expect(switched).toBe(false)
+      const row = yield* d.efforts.get(id)
+      expect(row?.baseLevel).toBe("standard")
+      expect(row?.level).toBe("standard")
+      expect(row?.cleanPasses).toBe(0)
     })
   })
 })

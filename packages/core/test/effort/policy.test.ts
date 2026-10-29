@@ -120,3 +120,70 @@ describe("effective base", () => {
     expect(effectiveBase({ base: "deep", pin: "low" })).toBe("deep")
   })
 })
+
+describe("adaptive level", () => {
+  const ADAPTIVE: EffortState = { base: "low", level: "low", cleanPasses: 0, cleanPassesNeeded: 2 }
+
+  it("decides from the durable level, not a derived escalation", () => {
+    const failed = applyEvidence(ADAPTIVE, observation("verification-failure", { sequence: 4 }))
+    expect(failed.level).toBe("standard")
+    expect(failed.cleanPasses).toBe(0)
+    expect(decide(CAPABILITY, failed)).toEqual({ rule: "escalated", level: "standard" })
+
+    const cleared = applyEvidence(failed, observation("verification-pass", { sequence: 9 }))
+    expect(cleared.openFailure).toBeUndefined()
+    // The raise survives the clearing pass; the clearing pass counts toward the step-down.
+    expect(decide(CAPABILITY, cleared)).toEqual({ rule: "step-down", level: "standard" })
+    expect(cleared.cleanPasses).toBe(1)
+  })
+
+  it("steps down after enough clean passes and floors at the base", () => {
+    const failed = applyEvidence(ADAPTIVE, observation("verification-failure", { sequence: 4 }))
+    const once = applyEvidence(failed, observation("verification-pass", { sequence: 9 }))
+    const twice = applyEvidence(once, observation("verification-pass", { sequence: 10 }))
+    expect(twice.level).toBe("low")
+    expect(twice.cleanPasses).toBe(0)
+    expect(decide(CAPABILITY, twice)).toEqual({ rule: "base", level: "low", effort: "low" })
+  })
+
+  it("counts passes at the base without stepping below it", () => {
+    const pass = applyEvidence(ADAPTIVE, observation("verification-pass", { sequence: 4 }))
+    expect(pass.level).toBe("low")
+    expect(pass.cleanPasses).toBe(1)
+  })
+
+  it("resets the counter on a later failure", () => {
+    const counting: EffortState = { ...ADAPTIVE, cleanPasses: 1 }
+    const failed = applyEvidence(counting, observation("verification-failure", { sequence: 4 }))
+    expect(failed.cleanPasses).toBe(0)
+    expect(failed.level).toBe("standard")
+  })
+
+  it("steps down one level at a time from deep", () => {
+    const raised: EffortState = { base: "standard", level: "deep", cleanPasses: 0, cleanPassesNeeded: 1 }
+    const stepped = applyEvidence(raised, observation("verification-pass", { sequence: 4 }))
+    expect(stepped.level).toBe("standard")
+    expect(stepped.cleanPasses).toBe(0)
+  })
+
+  it("does not count stale passes", () => {
+    const failed = applyEvidence(ADAPTIVE, observation("verification-failure", { sequence: 4, revision: 8 }))
+    const stale = applyEvidence(failed, observation("verification-pass", { sequence: 9, revision: 7 }))
+    expect(stale.openFailure).toBeDefined()
+    expect(stale.cleanPasses).toBe(0)
+  })
+
+  it("caps the raise at deep", () => {
+    const capped: EffortState = { base: "standard", level: "deep", cleanPasses: 0, cleanPassesNeeded: 2 }
+    const failed = applyEvidence(capped, observation("verification-failure", { sequence: 4 }))
+    expect(failed.level).toBe("deep")
+  })
+
+  it("raises the working level by the pin without confusing step-down", () => {
+    expect(decide(CAPABILITY, { ...ADAPTIVE, pin: "deep" })).toEqual({
+      rule: "mode-pin",
+      level: "deep",
+      effort: "max",
+    })
+  })
+})

@@ -36,19 +36,36 @@ describe("EffortStore", () => {
       expect(yield* store.get(id)).toBeUndefined()
 
       const openFailure = { verifier: "pwsh\0pnpm typecheck\0/work", sequence: 4, revision: 7 }
-      yield* store.set({ sessionID: id, baseLevel: "low", openFailure, revision: 7, lastAppliedVariant: "high" })
+      yield* store.set({
+        sessionID: id,
+        baseLevel: "low",
+        openFailure,
+        revision: 7,
+        lastAppliedVariant: "high",
+        level: "standard",
+        cleanPasses: 1,
+      })
       expect(yield* store.get(id)).toEqual({
         sessionID: id,
         baseLevel: "low",
         openFailure,
         revision: 7,
         lastAppliedVariant: "high",
+        level: "standard",
+        cleanPasses: 1,
       })
+
+      yield* store.setLevel(id, "low", 0)
+      const stepped = yield* store.get(id)
+      expect(stepped?.level).toBe("low")
+      expect(stepped?.cleanPasses).toBe(0)
 
       yield* store.set({ sessionID: id, baseLevel: "standard", revision: 7 })
       const cleared = yield* store.get(id)
       expect(cleared?.openFailure).toBeUndefined()
       expect(cleared?.lastAppliedVariant).toBeUndefined()
+      expect(cleared?.level).toBeUndefined()
+      expect(cleared?.cleanPasses).toBe(0)
     })
   })
 

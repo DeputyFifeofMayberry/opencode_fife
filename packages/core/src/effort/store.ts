@@ -23,6 +23,10 @@ export interface Info {
   readonly revision: number
   /** The variant the policy last wrote through `Session.switchModel`, when it did. */
   readonly lastAppliedVariant?: string
+  /** Adaptive mode: the durable controller level; absent in static sessions. */
+  readonly level?: EffortLevel
+  /** Consecutive qualifying clean passes toward the next step-down. */
+  readonly cleanPasses?: number
 }
 
 export interface Interface {
@@ -30,6 +34,8 @@ export interface Interface {
   readonly set: (info: Info) => Effect.Effect<void>
   /** Replaces only the open failure; the revision column is untouched, so concurrent bumps never race this write. */
   readonly setOpenFailure: (sessionID: SessionSchema.ID, openFailure: OpenFailure | undefined) => Effect.Effect<void>
+  /** Replaces only the adaptive level and clean-pass counter; the revision column is untouched. */
+  readonly setLevel: (sessionID: SessionSchema.ID, level: EffortLevel, cleanPasses: number) => Effect.Effect<void>
   /** Advances the workspace revision by one; atomic, so concurrent bumps all land. */
   readonly bumpRevision: (sessionID: SessionSchema.ID) => Effect.Effect<void>
 }
@@ -47,6 +53,8 @@ export const layer = Layer.effect(
       openFailure: row.open_failure ?? undefined,
       revision: row.revision,
       lastAppliedVariant: row.last_applied_variant ?? undefined,
+      level: row.level ?? undefined,
+      cleanPasses: row.clean_passes,
     })
 
     return Service.of({
@@ -68,6 +76,8 @@ export const layer = Layer.effect(
             open_failure: info.openFailure ?? null,
             revision: info.revision,
             last_applied_variant: info.lastAppliedVariant ?? null,
+            level: info.level ?? null,
+            clean_passes: info.cleanPasses ?? 0,
           })
           .onConflictDoUpdate({
             target: SessionEffortTable.session_id,
@@ -76,6 +86,8 @@ export const layer = Layer.effect(
               open_failure: info.openFailure ?? null,
               revision: info.revision,
               last_applied_variant: info.lastAppliedVariant ?? null,
+              level: info.level ?? null,
+              clean_passes: info.cleanPasses ?? 0,
             },
           })
           .run()
@@ -85,6 +97,14 @@ export const layer = Layer.effect(
         yield* db
           .update(SessionEffortTable)
           .set({ open_failure: openFailure ?? null })
+          .where(eq(SessionEffortTable.session_id, sessionID))
+          .run()
+          .pipe(Effect.orDie)
+      }),
+      setLevel: Effect.fnUntraced(function* (sessionID, level, cleanPasses) {
+        yield* db
+          .update(SessionEffortTable)
+          .set({ level, clean_passes: cleanPasses })
           .where(eq(SessionEffortTable.session_id, sessionID))
           .run()
           .pipe(Effect.orDie)

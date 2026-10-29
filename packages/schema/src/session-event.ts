@@ -87,7 +87,7 @@ export const EffortTransitioned = Event.durable({
     ...Base,
     /** The decision that produced the transition; an absent effort at standard means the model default. */
     decision: Schema.Struct({
-      rule: Schema.Literals(["base", "mode-pin", "escalated"]),
+      rule: Schema.Literals(["base", "step-down", "mode-pin", "escalated"]),
       level: Schema.Literals(["low", "standard", "deep"]),
       effort: Schema.String.pipe(optional),
     }),

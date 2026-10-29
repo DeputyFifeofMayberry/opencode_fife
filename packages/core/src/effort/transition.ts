@@ -11,6 +11,7 @@ import { Config } from "../config.js"
 import { Model as ModelService } from "../model.js"
 import { EffortAdapter } from "./adapter.js"
 import { EffortStore } from "./store.js"
+import { operationFor, sessionSeed } from "./delegation.js"
 
 /**
  * Applies the effort policy at a prepared step and writes transitions through
@@ -54,13 +55,23 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
 
   const info = yield* deps.models.get(input.resolved.ref.providerID, input.resolved.ref.id)
   if (!info) return false
-  // The row's base is the durable source; config only seeds sessions without a row.
-  const baseLevel = row?.baseLevel ?? policy?.base_level ?? "standard"
+  // Adaptive sessions seed their level from the agent's operation ladder; static
+  // sessions seed from config. The row's base is the durable source; config only
+  // seeds sessions without a row.
+  const adaptive = policy?.mode === "adaptive"
+  const baseLevel = row?.baseLevel ?? (adaptive ? sessionSeed(operationFor(input.agent, policy?.agent_operations)) : (policy?.base_level ?? "standard"))
   const decision = EffortAdapter.decideFor(info, {
     variant: exact,
     baseLevel,
     agent: input.agent,
     openFailure: row?.openFailure,
+    ...(adaptive
+      ? {
+          level: row?.level ?? baseLevel,
+          cleanPasses: row?.cleanPasses ?? 0,
+          cleanPassesNeeded: policy?.clean_passes ?? 2,
+        }
+      : {}),
   })
 
   if (decision.rule === "untouched" || decision.rule === "exact-base") {
@@ -72,12 +83,20 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
         baseLevel: row.baseLevel,
         openFailure: row.openFailure,
         revision: row.revision,
+        level: row.level,
+        cleanPasses: row.cleanPasses ?? 0,
       })
     return false
   }
 
   const target = decision.effort
-  if (target === variant) return false
+  if (target === variant) {
+    // Nothing to transition. An adaptive session's first decision still
+    // materializes the seed row so later evidence can raise the level.
+    if (adaptive && row === undefined)
+      yield* deps.efforts.set({ sessionID: input.sessionID, baseLevel, revision: 0, level: baseLevel, cleanPasses: 0 })
+    return false
+  }
 
   const model = Model.Ref.make({
     providerID: input.resolved.ref.providerID,
@@ -100,6 +119,8 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
     openFailure: row?.openFailure,
     revision: row?.revision ?? 0,
     lastAppliedVariant: target,
+    level: adaptive ? (decision.level ?? baseLevel) : undefined,
+    cleanPasses: row?.cleanPasses ?? 0,
   })
   yield* deps.bus.publish(SessionEvent.EffortTransitioned, {
     sessionID: input.sessionID,

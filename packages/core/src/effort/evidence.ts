@@ -35,6 +35,7 @@ export const observe = Effect.fn("EffortEvidence.observe")(function* (
   const settings = Config.latest(yield* deps.config.entries(), "effort_policy")
   const verifiers = settings?.verification_commands ?? []
   const mutating = settings?.mutating_tools ?? ["write", "edit", "patch"]
+  const adaptive = settings?.mode === "adaptive"
 
   if (mutating.includes(settlement.tool)) yield* deps.efforts.bumpRevision(sessionID)
 
@@ -47,12 +48,20 @@ export const observe = Effect.fn("EffortEvidence.observe")(function* (
   const sequence = (yield* Bus.latestSequence(deps.db, sessionID)) + 1
   yield* Bus.reserveSequence(deps.db, sessionID, sequence)
   const row = yield* deps.efforts.get(sessionID)
+  const state = {
+    base: row?.baseLevel ?? ("standard" as const),
+    ...(row?.openFailure === undefined ? {} : { openFailure: row.openFailure }),
+    ...(row?.lastAppliedVariant === undefined ? {} : { lastAppliedVariant: row.lastAppliedVariant }),
+    ...(adaptive && row !== undefined
+      ? {
+          level: row.level ?? row.baseLevel,
+          cleanPasses: row.cleanPasses ?? 0,
+          cleanPassesNeeded: settings?.clean_passes ?? 2,
+        }
+      : {}),
+  }
   const next = applyEvidence(
-    {
-      base: row?.baseLevel ?? "standard",
-      ...(row?.openFailure === undefined ? {} : { openFailure: row.openFailure }),
-      ...(row?.lastAppliedVariant === undefined ? {} : { lastAppliedVariant: row.lastAppliedVariant }),
-    },
+    state,
     {
       kind: exit === 0 ? "verification-pass" : "verification-failure",
       verifier,
@@ -61,6 +70,9 @@ export const observe = Effect.fn("EffortEvidence.observe")(function* (
     },
   )
   yield* deps.efforts.setOpenFailure(sessionID, next.openFailure)
+  // The evidence loop owns the adaptive level: a failure raises it, clean passes decay it.
+  if (next.level !== state.level || (next.cleanPasses ?? 0) !== (state.cleanPasses ?? 0))
+    yield* deps.efforts.setLevel(sessionID, next.level ?? state.base, next.cleanPasses ?? 0)
 })
 
 /** The configured command a settled call matches, or undefined for unconfigured calls. */

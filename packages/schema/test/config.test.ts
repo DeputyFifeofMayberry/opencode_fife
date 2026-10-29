@@ -157,13 +157,17 @@ describe("Config.Effort", () => {
     const input = {
       effort_policy: {
         verification_commands: ["pnpm typecheck", "pnpm test"],
+        mode: "adaptive",
         base_level: "low",
+        clean_passes: 3,
         mutating_tools: ["write", "edit"],
         agent_operations: { reviewer: "review", scripts: "mechanical" },
       },
     } as const
     const decoded = decode(input)
     expect(decoded.effort_policy?.base_level).toBe("low")
+    expect(decoded.effort_policy?.mode).toBe("adaptive")
+    expect(decoded.effort_policy?.clean_passes).toBe(3)
     expect(Schema.encodeSync(Config.Info)(decoded)).toEqual(input)
   })
 
@@ -192,6 +196,8 @@ describe("Config.Effort", () => {
 
   test("rejects unknown levels and operations", () => {
     expect(() => decode({ effort_policy: { base_level: "maximum" } })).toThrow()
+    expect(() => decode({ effort_policy: { mode: "aggressive" } })).toThrow()
+    expect(() => decode({ effort_policy: { clean_passes: 0 } })).toThrow()
     expect(() => decode({ effort_policy: { agent_operations: { reviewer: "audit" } } })).toThrow()
     expect(() => decode({ effort_policy: { verification_commands: "pnpm typecheck" } })).toThrow()
   })

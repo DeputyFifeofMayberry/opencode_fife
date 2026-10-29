@@ -4,7 +4,7 @@
  * @module @mayberry/effort-policy-core/policy
  */
 
-import { higherLevel, higherOf, resolveLevelEffort } from './levels.js'
+import { higherLevel, higherOf, lowerLevel, resolveLevelEffort } from './levels.js'
 import type {
   Decision,
   DecisionRule,
@@ -57,10 +57,17 @@ export function operationMinimum(operation: DelegationOperation): EffortLevel {
 /**
  * Apply one observation to the durable state.
  *
- * A failure opens an escalation. An infrastructure observation changes nothing.
+ * A failure opens an escalation; in an adaptive session it also raises the
+ * durable level one step and resets the clean-pass counter. An infrastructure
+ * observation changes nothing.
+ *
  * A pass clears the open failure only when it is the same verifier, observed
  * later, and taken at a revision that is not older than the failing one; every
- * other pass is stale.
+ * other pass is stale and changes nothing. Qualifying clean passes count
+ * toward a step-down in adaptive sessions: once `cleanPassesNeeded` consecutive
+ * qualifying passes are seen, the durable level decays one step toward the
+ * base, and the counter restarts. Static sessions carry no level and are
+ * unchanged by passes.
  *
  * @param state - current state.
  * @param observation - the observed outcome.
@@ -69,7 +76,7 @@ export function operationMinimum(operation: DelegationOperation): EffortLevel {
 export function applyEvidence(state: EffortState, observation: EvidenceObservation): EffortState {
   if (observation.kind === 'infrastructure') return state
   if (observation.kind === 'verification-failure') {
-    return {
+    const opened: EffortState = {
       ...state,
       openFailure: {
         verifier: observation.verifier,
@@ -77,23 +84,44 @@ export function applyEvidence(state: EffortState, observation: EvidenceObservati
         revision: observation.revision,
       },
     }
+    if (state.level === undefined) return opened
+    return { ...opened, level: higherLevel(state.level), cleanPasses: 0 }
   }
   const open = state.openFailure
-  if (open === undefined) return state
-  if (open.verifier !== observation.verifier) return state
-  if (observation.sequence <= open.sequence) return state
-  if (observation.revision < open.revision) return state
-  const { openFailure: _cleared, ...rest } = state
-  return rest
+  if (open !== undefined) {
+    if (open.verifier !== observation.verifier) return state
+    if (observation.sequence <= open.sequence) return state
+    if (observation.revision < open.revision) return state
+    const { openFailure: _cleared, ...rest } = state
+    return countCleanPass(rest, 1)
+  }
+  return countCleanPass(state, (state.cleanPasses ?? 0) + 1)
+}
+
+/**
+ * Record one qualifying clean pass in an adaptive session and step the durable
+ * level down when enough have accumulated. The base is the decay floor.
+ */
+function countCleanPass(state: EffortState, passes: number): EffortState {
+  if (state.level === undefined) return state
+  const needed = state.cleanPassesNeeded
+  if (needed === undefined || passes < needed) return { ...state, cleanPasses: passes }
+  if (state.level === state.base) return { ...state, cleanPasses: 0 }
+  return { ...state, level: lowerLevel(state.level, state.base), cleanPasses: 0 }
 }
 
 /**
  * Decide the effort for one request.
  *
- * An exact base wins verbatim. Otherwise the level is the effective base, raised
- * one step while a failure is unresolved. Nothing is written when the level is
- * already the adapter's default or the route advertises no reasoning, because a
- * written default is a different durable fact from an adapter default.
+ * An exact base wins verbatim. Static sessions derive the level from the
+ * effective base, raised one step while a failure is unresolved. Adaptive
+ * sessions decide from their durable level, raised by the session pin; the
+ * open failure holds the raise the evidence loop already applied, and a level
+ * still above the base after the failure cleared is a step-down in progress.
+ *
+ * Nothing is written when the level is already the adapter's default or the
+ * route advertises no reasoning, because a written default is a different
+ * durable fact from an adapter default.
  *
  * @param capability - the exact route's advertised efforts.
  * @param state - observed state.
@@ -105,14 +133,21 @@ export function decide(capability: EffortCapability, state: EffortState): Decisi
       ? { rule: 'exact-base', effort: state.exact }
       : { rule: 'untouched' }
   }
-  const base = effectiveBase(state)
+  const adaptive = state.level !== undefined
+  const held = adaptive
+    ? state.pin !== undefined
+      ? higherOf(state.level, state.pin)
+      : state.level
+    : effectiveBase(state)
   const escalated = state.openFailure !== undefined
-  const level = escalated ? higherLevel(base) : base
+  const level = escalated && !adaptive ? higherLevel(held) : held
   const rule: DecisionRule = escalated
     ? 'escalated'
     : state.pin !== undefined && higherOf(state.base, state.pin) !== state.base
       ? 'mode-pin'
-      : 'base'
+      : adaptive && held !== state.base
+        ? 'step-down'
+        : 'base'
   const effort = resolveLevelEffort(capability, level)
   if (effort === undefined) return { rule: 'untouched' }
   if (effort === capability.defaultEffort) return { rule, level }

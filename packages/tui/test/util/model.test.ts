@@ -61,6 +61,9 @@ describe("util.model", () => {
     expect(
       switchLabel({ ...previous, variant: "low" }, undefined, { ...previous, variant: "max" }, policy("base")),
     ).toBe("Effort policy set low")
+    expect(
+      switchLabel({ ...previous, variant: "high" }, undefined, { ...previous, variant: "max" }, policy("step-down")),
+    ).toBe("Stepped down to high · verification stable")
     // Manual metadata and unknown rules stay plain switches.
     expect(switchLabel({ ...previous, variant: "max" }, undefined, previous, { source: "user" })).toBe(
       "Switched variant to max",

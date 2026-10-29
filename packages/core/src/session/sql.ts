@@ -139,6 +139,9 @@ export const SessionEffortTable = sqliteTable("session_effort", {
   }>(),
   revision: integer().notNull().default(0),
   last_applied_variant: text(),
+  /** Adaptive mode: the durable controller level; null until adaptive evidence or a seed writes it. */
+  level: text().$type<EffortLevel>(),
+  clean_passes: integer().notNull().default(0),
 })
 
 export const SessionInboxTable = sqliteTable(

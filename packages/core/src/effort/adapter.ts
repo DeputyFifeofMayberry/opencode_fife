@@ -6,7 +6,7 @@ import { EFFORT_POLICY_PROTOCOL_VERSION, decide } from "./policy/index.js"
 import type { Decision, EffortCapability, EffortLevel, EffortState } from "./policy/types.js"
 
 /** The protocol version this host was built against; a different core is refused. */
-export const SUPPORTED_PROTOCOL_VERSION = 1
+export const SUPPORTED_PROTOCOL_VERSION = 2
 
 /**
  * The route's effort vocabulary, least expensive first.
@@ -44,6 +44,12 @@ export interface Inputs {
   readonly agent?: string
   /** The unresolved verifier failure, when one is open. */
   readonly openFailure?: EffortState["openFailure"]
+  /** Adaptive mode: the durable controller level, seeded from the base on first decision. */
+  readonly level?: EffortLevel
+  /** Adaptive mode: clean passes counted toward the next step-down. */
+  readonly cleanPasses?: number
+  /** Adaptive mode: qualifying clean passes required before one step-down. */
+  readonly cleanPassesNeeded?: number
 }
 
 /** Assembles the decision core's state from host observations. */
@@ -53,6 +59,9 @@ export function stateFor(input: Inputs): EffortState {
     ...(input.variant !== undefined ? { exact: input.variant } : {}),
     ...(input.agent === "plan" ? { pin: "deep" as const } : {}),
     ...(input.openFailure !== undefined ? { openFailure: input.openFailure } : {}),
+    ...(input.level !== undefined ? { level: input.level } : {}),
+    ...(input.cleanPasses !== undefined ? { cleanPasses: input.cleanPasses } : {}),
+    ...(input.cleanPassesNeeded !== undefined ? { cleanPassesNeeded: input.cleanPassesNeeded } : {}),
   }
 }
 

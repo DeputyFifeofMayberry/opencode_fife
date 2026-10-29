@@ -1317,6 +1317,8 @@ function effortNoticeKey(metadata: { source?: unknown; rule?: unknown } | undefi
 
   if (rule === "mode-pin") return "ui.sessionTimeline.notice.effortPlanPin"
 
+  if (rule === "step-down") return "ui.sessionTimeline.notice.effortStepDown"
+
   if (rule === "base") return "ui.sessionTimeline.notice.effortBase"
 
   return undefined

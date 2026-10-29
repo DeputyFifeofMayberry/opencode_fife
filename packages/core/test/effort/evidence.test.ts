@@ -74,6 +74,9 @@ describe("EffortEvidence", () => {
       const row = yield* efforts.get(id)
       expect(row?.openFailure?.verifier).toBe("pnpm typecheck")
       expect(row?.revision).toBe(0)
+      // Static observations never grow adaptive state.
+      expect(row?.level).toBeUndefined()
+      expect(row?.cleanPasses).toBe(0)
     })
   })
 
@@ -142,6 +145,56 @@ describe("EffortEvidence", () => {
       // A pass at the current revision clears; the core's stale-pass rules are covered upstream.
       yield* settle(id, "shell", "pnpm typecheck", 0)
       expect((yield* efforts.get(id))?.openFailure).toBeUndefined()
+    })
+  })
+})
+
+describe("EffortEvidence adaptive", () => {
+  const adaptiveIt = testEffect(
+    Layer.mergeAll(
+      DatabaseLayer,
+      EffortStore.layer.pipe(Layer.provide(DatabaseLayer)),
+      Config.testLayer([
+        new Document({
+          type: "document",
+          info: new Info({
+            effort_policy: new ConfigEffort.Info({
+              verification_commands: ["pnpm typecheck"],
+              mutating_tools: ["write"],
+              mode: "adaptive",
+              clean_passes: 2,
+            }),
+          }),
+        }),
+      ]),
+    ),
+  )
+
+  adaptiveIt.effect("raises the durable level on failure and decays it after clean passes", () => {
+    return Effect.gen(function* () {
+      const efforts = yield* EffortStore.Service
+      const id = SessionID.make("ses_evidence_adaptive")
+      yield* seed(id)
+      yield* efforts.setLevel(id, "standard", 0)
+
+      yield* settle(id, "shell", "pnpm typecheck", 1)
+      let row = yield* efforts.get(id)
+      expect(row?.level).toBe("deep")
+      expect(row?.openFailure).toBeDefined()
+      expect(row?.cleanPasses).toBe(0)
+
+      // The clearing pass counts as the first clean pass; the raise survives it.
+      yield* settle(id, "shell", "pnpm typecheck", 0)
+      row = yield* efforts.get(id)
+      expect(row?.openFailure).toBeUndefined()
+      expect(row?.level).toBe("deep")
+      expect(row?.cleanPasses).toBe(1)
+
+      // The second clean pass reaches the configured threshold and steps down.
+      yield* settle(id, "shell", "pnpm typecheck", 0)
+      row = yield* efforts.get(id)
+      expect(row?.level).toBe("standard")
+      expect(row?.cleanPasses).toBe(0)
     })
   })
 })

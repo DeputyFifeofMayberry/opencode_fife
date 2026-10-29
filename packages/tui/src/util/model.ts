@@ -23,6 +23,7 @@ export function switchLabel(
 
     if (rule === "escalated") return `Escalated to ${variant} · verification failed`
     if (rule === "mode-pin") return `Plan mode · ${variant} effort`
+    if (rule === "step-down") return `Stepped down to ${variant} · verification stable`
     if (rule === "base") return `Effort policy set ${variant}`
     return `Switched variant to ${variant}`
   }

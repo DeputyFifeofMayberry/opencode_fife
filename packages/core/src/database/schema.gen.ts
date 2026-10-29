@@ -173,6 +173,8 @@ const schema: Omit<DatabaseMigration.Migration, "id"> = {
           \`open_failure\` text,
           \`revision\` integer DEFAULT 0 NOT NULL,
           \`last_applied_variant\` text,
+          \`level\` text,
+          \`clean_passes\` integer DEFAULT 0 NOT NULL,
           CONSTRAINT \`fk_session_effort_session_id_session_v2_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session_v2\`(\`id\`) ON DELETE CASCADE
         );
       `)

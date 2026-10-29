@@ -78,6 +78,31 @@ zero exit clears one. Clearing requires the pass to be no older than the failure
 tools — `write`, `edit`, `patch` by default, extensible via
 `effort_policy.mutating_tools` — advance the revision on successful settlement.
 
+## Adaptive mode
+
+`effort_policy.mode: "adaptive"` replaces the derived escalation with a durable
+controller; `static` (default) keeps the behavior above.
+
+- **Seed.** A session without an exact pick seeds its level from its agent's
+  operation (`sessionSeed`): `plan`/`review` → `deep`, `mechanical`/`explore` →
+  `low`, `general`/`implement` → `standard`. `base_level` seeds static mode
+  only. Delegation minimums are unchanged: children still seed through
+  `operationStart`.
+- **Up fast.** A verification failure opens the failure and raises the durable
+  level one step, capped at `deep`. The raise survives the clearing pass.
+- **Down slow.** Consecutive qualifying clean passes — the clearing pass is the
+  first — step the level down one at a time once `effort_policy.clean_passes`
+  (default 2) accumulate, floored at the seed. Stale passes and infrastructure
+  observations neither count nor reset. A failure resets the counter.
+- **Decide.** The working level is the durable level, raised by the plan pin;
+  the open failure holds the raise instead of deriving it. A level above the
+  base with no open failure reports `step-down`, and the timeline renders it as
+  "Stepped down to {{variant}} · verification stable".
+- **State.** The level and clean-pass counter live in `session_effort`
+  (`level`, `clean_passes`); the transition materializes the seed row on a
+  session's first adaptive decision so later evidence has durable state.
+  Protocol version is 2; the host refuses other versions.
+
 - The policy is inert while `verification_commands` is empty.
 - Spawn failures, cancels, timeouts, and unconfigured commands change nothing.
 - The v1 verifier identity is the configured command per session; it ignores

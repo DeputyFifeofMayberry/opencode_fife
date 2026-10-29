@@ -34,6 +34,18 @@ export function higherLevel(level: EffortLevel): EffortLevel {
 }
 
 /**
+ * Lower one level by one step, floored at `floor`.
+ * @param level - starting level.
+ * @param floor - the lowest level the session may decay to.
+ * @returns the previous level, or the same level at the floor.
+ */
+export function lowerLevel(level: EffortLevel, floor: EffortLevel): EffortLevel {
+  const current = rank(level)
+  const minimum = rank(floor)
+  return current > minimum ? LEVEL_ORDER[current - 1]! : level
+}
+
+/**
  * Compare two levels by cost.
  * @param left - first level.
  * @param right - second level.

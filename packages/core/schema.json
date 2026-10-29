@@ -1,8 +1,8 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "76ec6c77-7735-4932-842f-2c7427afe36d",
-  "prevIds": ["b32b57e8-0cad-4880-b63a-de0b82029ae7"],
+  "id": "b0c7a9d3-b540-41e9-9463-2153b3db729b",
+  "prevIds": ["76ec6c77-7735-4932-842f-2c7427afe36d"],
   "ddl": [
     {
       "name": "account_state",
@@ -1039,6 +1039,26 @@
       "default": null,
       "generated": null,
       "name": "last_applied_variant",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "level",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "clean_passes",
       "entityType": "columns",
       "table": "session_effort"
     },

@@ -3,6 +3,7 @@ export * as EffortDelegation from "./delegation.js"
 import { Effect } from "effect"
 import type { ConfigEffort } from "@opencode/schema/config/effort"
 import type { SessionSchema } from "../session/schema.js"
+import type { EffortLevel } from "./policy/types.js"
 import { operationStart } from "./policy/index.js"
 import { EffortStore } from "./store.js"
 
@@ -22,6 +23,26 @@ export function operationFor(
   const override = overrides?.[agent]
   if (override !== undefined) return override
   return DEFAULT_OPERATIONS[agent] ?? "general"
+}
+
+/**
+ * The level an interactive session seeds at in adaptive mode. Explore reads as
+ * read-only work here, one step cheaper than the delegation minimum a child
+ * with the same operation receives; the operation minimum governs subagent
+ * starting effort, this ladder governs the session's own controller level.
+ */
+export function sessionSeed(operation: ConfigEffort.Operation): EffortLevel {
+  switch (operation) {
+    case "plan":
+    case "review":
+      return "deep"
+    case "mechanical":
+    case "explore":
+      return "low"
+    case "general":
+    case "implement":
+      return "standard"
+  }
 }
 
 /**

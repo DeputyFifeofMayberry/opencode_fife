@@ -1,7 +1,7 @@
 export * as ConfigEffort from "./effort.js"
 
 import { Schema } from "effect"
-import { optional } from "../schema.js"
+import { optional, PositiveInt } from "../schema.js"
 
 /** Automatic effort levels, least to most expensive; mirrors the decision core. */
 export const Level = Schema.Literals(["low", "standard", "deep"])
@@ -16,8 +16,17 @@ export class Info extends Schema.Class<Info>("Config.Effort")({
     description:
       "Shell commands treated as verifications: a non-zero exit raises session effort one level until the same command exits zero. The policy is inert while empty.",
   }),
+  mode: Schema.Literals(["static", "adaptive"]).pipe(optional).annotate({
+    description:
+      "static (default) seeds sessions from base_level and escalates on verification failures. adaptive seeds the session level from its agent's operation ladder, raises on failures, and steps down after consecutive clean passes.",
+  }),
   base_level: Level.pipe(optional).annotate({
-    description: "Automatic effort level for sessions without a selected effort (default: standard)",
+    description:
+      "Automatic effort level for sessions without a selected effort in static mode (default: standard); adaptive mode seeds from the agent operation ladder instead",
+  }),
+  clean_passes: PositiveInt.pipe(optional).annotate({
+    description:
+      "Adaptive mode: consecutive qualifying clean verification passes before the session level steps down one level (default: 2)",
   }),
   mutating_tools: Schema.String.pipe(Schema.Array).pipe(optional).annotate({
     description:

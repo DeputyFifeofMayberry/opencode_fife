@@ -9,7 +9,7 @@
  * a core whose version it does not know, and a change to level rules, operation
  * minimums, or decision fields increments it.
  */
-export const EFFORT_POLICY_PROTOCOL_VERSION = 1
+export const EFFORT_POLICY_PROTOCOL_VERSION = 2
 
 /** Automatic effort levels, ordered from least to most expensive. */
 export type EffortLevel = 'low' | 'standard' | 'deep'
@@ -30,6 +30,7 @@ export type DecisionRule =
   | 'exact-base'
   | 'mode-pin'
   | 'base'
+  | 'step-down'
   | 'escalated'
   | 'untouched'
 
@@ -53,6 +54,17 @@ export interface EffortState {
   readonly exact?: string
   /** A level raised by session mode, such as plan mode. */
   readonly pin?: EffortLevel
+  /**
+   * The durable adaptive level. Its presence switches the evidence loop to
+   * hysteresis: failures raise it one step, consecutive clean passes decay it
+   * toward the base. Absent means the static policy derives the level from the
+   * base and the open failure.
+   */
+  readonly level?: EffortLevel
+  /** Consecutive qualifying clean passes observed since the last raise or step-down. */
+  readonly cleanPasses?: number
+  /** Clean passes required before one step-down; absent means counting without stepping. */
+  readonly cleanPassesNeeded?: number
   /** The unresolved failure that keeps the level raised. */
   readonly openFailure?: {
     /** Verifier identity that failed. */

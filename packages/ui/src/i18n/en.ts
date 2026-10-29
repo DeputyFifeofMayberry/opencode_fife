@@ -311,6 +311,7 @@ const source = {
   "ui.sessionTimeline.notice.variantDefault": "Switched variant to Auto",
   "ui.sessionTimeline.notice.effortEscalated": "Escalated to {{variant}} · verification failed",
   "ui.sessionTimeline.notice.effortPlanPin": "Plan mode · {{variant}} effort",
+  "ui.sessionTimeline.notice.effortStepDown": "Stepped down to {{variant}} · verification stable",
   "ui.sessionTimeline.notice.effortBase": "Effort policy set {{variant}}",
   "ui.sessionTimeline.notice.agentChanged": "Agent changed",
   "ui.sessionTimeline.notice.movedTo": "Moved to",
