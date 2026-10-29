@@ -30,6 +30,12 @@ export const experiments: Experiment[] = [
     title: "TUI tools",
     description: "Let the agent open terminals in this TUI (requires server support)",
   },
+  {
+    id: "prompt-suggestions",
+    title: "Prompt suggestions",
+    description:
+      "After each response, suggest your likely next prompt as ghost text in an empty prompt box. Tab accepts it.",
+  },
 ]
 
 export function DialogExperiments() {

@@ -509,10 +509,11 @@ function applyHeaders(
 }
 
 // Mirrors the Copilot client's X-Interaction-Type vocabulary: the agent loop is the default,
-// nested sessions are subagents, and title/compaction are the two utility overrides.
+// nested sessions are subagents, and title/compaction/suggestion are the utility overrides.
 export function interactionType(kind: SessionRequestKind, child: boolean) {
   if (kind === "title") return "conversation-background"
   if (kind === "compaction") return "conversation-compaction"
+  if (kind === "suggestion") return "conversation-background"
   if (child) return "conversation-subagent"
   return "conversation-agent"
 }

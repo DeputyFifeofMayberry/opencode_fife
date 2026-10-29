@@ -656,6 +656,26 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S, FormI ext
         ),
     )
     .add(
+      HttpApiEndpoint.post("session.suggestion", "/api/session/:sessionID/suggestion", {
+        params: { sessionID: Session.ID },
+        success: Schema.Struct({
+          data: Schema.Struct({
+            text: Schema.optional(Schema.String),
+          }),
+        }).annotate({ identifier: "SessionSuggestionResponse" }),
+        error: [SessionNotFoundError, ServiceUnavailableError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "session.suggestion",
+            summary: "Suggest the next prompt",
+            description:
+              "Suggests the user's likely next prompt from settled session history without mutating the session. Returns no text when nothing qualifies.",
+          }),
+        ),
+    )
+    .add(
       HttpApiEndpoint.get("session.log", "/api/experimental/session/:sessionID/log", {
         params: { sessionID: Session.ID },
         query: {

@@ -2,6 +2,7 @@ import { Agent } from "@opencode/core/agent"
 import { Instance } from "@opencode/core/instance/service"
 import { Session } from "@opencode/core/session"
 import { SessionStats } from "@opencode/core/session/stats"
+import { SessionSuggestion } from "@opencode/core/session/suggestion"
 import { SessionTitle } from "@opencode/core/session/title"
 import { SessionTransfer } from "@opencode/core/session/transfer"
 import { InstructionEntry } from "@opencode/core/session/instruction-entry"
@@ -612,6 +613,20 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
               ),
             )
           return { data: { text } }
+        }),
+      )
+      .handle(
+        "session.suggestion",
+        Effect.fn(function* (ctx) {
+          yield* requireSession(ctx.params.sessionID)
+          const text = yield* SessionSuggestion.Service.use((suggestion) =>
+            suggestion.generate(ctx.params.sessionID),
+          ).pipe(
+            Effect.mapError(
+              (error) => new ServiceUnavailableError({ message: error.message, service: "suggestion" }),
+            ),
+          )
+          return { data: { text: text ?? undefined } }
         }),
       )
       .handle(

@@ -255,6 +255,54 @@ export function Prompt(props: PromptProps) {
   })
   const editorContextLabelState = createMemo(() => editor.labelState())
   const [auto, setAuto] = createSignal<AutocompleteRef>()
+
+  // Prompt suggestions: one background call per finished exchange, shown as ghost
+  // text in an empty prompt until the user types. Gated by the "prompt-suggestions"
+  // experiment; Enter never sends the suggestion, only Tab materializes it.
+  const suggestionsEnabled = createMemo(() => config.experimental?.["prompt-suggestions"] === true)
+  const [suggestion, setSuggestion] = createSignal<string>()
+  let suggestionSeq = 0
+  let suggestionAbort: AbortController | undefined
+  let suggestionTimer: ReturnType<typeof setTimeout> | undefined
+
+  function clearSuggestion() {
+    suggestionSeq++
+    suggestionAbort?.abort()
+    suggestionAbort = undefined
+    if (suggestionTimer) clearTimeout(suggestionTimer)
+    suggestionTimer = undefined
+    setSuggestion(undefined)
+  }
+
+  function requestSuggestion(sessionID: string) {
+    const seq = ++suggestionSeq
+    const abort = new AbortController()
+    suggestionAbort = abort
+    client.api.session
+      .suggestion({ sessionID }, { signal: abort.signal })
+      .then((result) => {
+        if (seq !== suggestionSeq || abort.signal.aborted) return
+        if (result.text) setSuggestion(result.text)
+      })
+      .catch(() => {
+        // A failed suggestion is invisible by design: no toast, no retry.
+      })
+  }
+
+  createEffect(() => {
+    const sessionID = props.sessionID
+    if (!sessionID || !suggestionsEnabled()) return
+    const unsubscribe = data.on("session.execution.succeeded", (event) => {
+      if (event.data.sessionID !== sessionID) return
+      clearSuggestion()
+      suggestionTimer = setTimeout(() => requestSuggestion(sessionID), 400)
+    })
+    onCleanup(() => {
+      unsubscribe()
+      clearSuggestion()
+    })
+  })
+
   const move = usePromptMove({
     projectID: () =>
       (props.sessionID ? data.session.get(props.sessionID)?.projectID : undefined) ?? data.location.info()?.project.id,
@@ -1044,6 +1092,39 @@ export function Prompt(props: PromptProps) {
       target: inputTarget,
       enabled: (() => {
         cursorVersion()
+        return (
+          inputTarget() !== undefined &&
+          !disabled() &&
+          store.mode === "normal" &&
+          store.prompt.text === "" &&
+          !auto()?.visible &&
+          suggestion() !== undefined
+        )
+      })(),
+      commands: [
+        {
+          id: "prompt.suggestion.accept",
+          bind: "tab",
+          title: "Accept prompt suggestion",
+          group: "Prompt",
+          run() {
+            const text = suggestion()
+            if (!text || !input || input.isDestroyed) return
+            input.setText(text)
+            setStore("prompt", "text", text)
+            clearSuggestion()
+          },
+        },
+      ],
+    }
+  })
+
+  Keymap.createLayer(() => {
+    return {
+      priority: 1,
+      target: inputTarget,
+      enabled: (() => {
+        cursorVersion()
         return inputTarget() !== undefined && !disabled() && !auto()?.visible && input !== undefined
       })(),
       commands: [
@@ -1127,6 +1208,8 @@ export function Prompt(props: PromptProps) {
   }
 
   async function submitInner(delivery: SessionInbox.Delivery) {
+    // A submission supersedes whatever suggestion was showing.
+    clearSuggestion()
     // IME: double-defer may fire before onContentChange flushes the last
     // composed character (e.g. Korean hangul) to the store, so read
     // plainText directly and sync before any downstream reads.
@@ -1632,6 +1715,9 @@ export function Prompt(props: PromptProps) {
         if (!shell().length) return undefined
         return `Run a command… "${shell()[store.placeholder % shell().length]}"`
       }
+      // The suggestion replaces the rotating hint entirely: it is the thing the
+      // user is most likely to want, and it disappears the moment they type.
+      if (suggestion() && !muted()) return suggestion()
       if (!list().length) return undefined
       return `Ask anything… "${list()[store.placeholder % list().length]}"`
     })()
@@ -1789,6 +1875,7 @@ export function Prompt(props: PromptProps) {
               cursorStyle={config.cursor}
               onContentChange={() => {
                 const value = input.plainText
+                if (value !== "" && suggestion()) clearSuggestion()
                 setStore("prompt", "text", value)
                 auto()?.onInput(value)
                 syncExtmarksWithPromptParts()
