@@ -5,6 +5,7 @@ import type {
   FormInfo,
   SessionFormReplyInput,
   IntegrationInfo,
+  LocationGetOutput,
   LocationRef,
   McpResource,
   McpServer,
@@ -543,7 +544,8 @@ export interface UI {
 
 export interface Context {
   readonly options: Readonly<Record<string, any>>
-  readonly location: LocationRef | undefined
+  /** The active location, including its project, or undefined until it resolves. */
+  readonly location: LocationGetOutput | undefined
   readonly app: App
   readonly renderer: CliRenderer
   readonly client: OpenCodeClient
