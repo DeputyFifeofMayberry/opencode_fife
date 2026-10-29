@@ -39,11 +39,34 @@ describe("util.model", () => {
     const previous = { providerID: "openai", id: "gpt-5.5", variant: "medium" }
 
     expect(switchLabel({ ...previous, variant: "high" }, undefined, previous)).toBe("Switched variant to high")
-    expect(switchLabel({ providerID: "openai", id: "gpt-5.5" }, undefined, previous)).toBe(
-      "Switched variant to default",
-    )
+    expect(switchLabel({ providerID: "openai", id: "gpt-5.5" }, undefined, previous)).toBe("Switched variant to Auto")
     expect(switchLabel({ providerID: "anthropic", id: "sonnet", variant: "high" }, undefined, previous)).toBe(
       "Switched model to anthropic/sonnet/high",
     )
+  })
+
+  test("says why the effort policy moved the variant", () => {
+    const previous = { providerID: "openai", id: "gpt-5.5" }
+    const policy = (rule: string) => ({ source: "effort-policy", rule })
+
+    expect(
+      switchLabel({ ...previous, variant: "max" }, undefined, previous, policy("escalated")),
+    ).toBe("Escalated to max · verification failed")
+    expect(
+      switchLabel({ ...previous, variant: "max" }, undefined, { ...previous, variant: "high" }, policy("mode-pin")),
+    ).toBe("Plan mode · max effort")
+    expect(switchLabel(previous, undefined, { ...previous, variant: "max" }, policy("base"))).toBe(
+      "Effort policy set Auto",
+    )
+    expect(
+      switchLabel({ ...previous, variant: "low" }, undefined, { ...previous, variant: "max" }, policy("base")),
+    ).toBe("Effort policy set low")
+    // Manual metadata and unknown rules stay plain switches.
+    expect(switchLabel({ ...previous, variant: "max" }, undefined, previous, { source: "user" })).toBe(
+      "Switched variant to max",
+    )
+    expect(
+      switchLabel({ ...previous, variant: "max" }, undefined, previous, { source: "effort-policy", rule: "future" }),
+    ).toBe("Switched variant to max")
   })
 })

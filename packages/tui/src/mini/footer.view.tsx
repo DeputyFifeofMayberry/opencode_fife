@@ -235,9 +235,11 @@ export function RunFooterView(props: RunFooterViewProps) {
     return colors[Math.max(0, index) % colors.length]!
   })
   const block = createMemo(() => runTheme().block)
+  // An exact pick names itself; otherwise the effort policy decides, so the status names Auto.
+  const variantStatus = createMemo(() => props.currentVariant() ?? (props.variants().length > 0 ? "auto" : undefined))
   const footerStatus = createMemo(() => {
     const current = model()?.model ?? props.state().model.trim()
-    const variant = props.currentVariant()
+    const variant = variantStatus()
     const details = [busy() ? "running" : "idle", `agent ${props.currentAgent()}`]
     if (current) details.push(variant ? `${current} ${variant}` : current)
     if (contextUsage()) details.push(contextUsage())
@@ -429,7 +431,7 @@ export function RunFooterView(props: RunFooterViewProps) {
     return {
       model: current,
       provider: model()?.provider,
-      variant: props.currentVariant(),
+      variant: variantStatus(),
     }
   })
   const statusColor = createMemo(() => {

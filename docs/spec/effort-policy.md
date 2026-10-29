@@ -28,7 +28,14 @@ delegation minimums below apply on top of whichever base is configured.
 One decision per prepared step (`EffortTransition.apply`), resolved by the
 vendored core (`effort/policy`) and written through the same durable
 `ModelSelected` event as a manual switch, so cache-preserving markers,
-projections, and TUI reconciliation behave identically.
+projections, and TUI reconciliation behave identically. Policy writes carry
+`metadata.source: "effort-policy"` plus the deciding `rule` (`base`, `mode-pin`,
+`escalated`), and the session and terminal timelines use that marker to say why
+the variant moved — "Escalated to max · verification failed", "Plan mode · max
+effort", "Effort policy set Auto" — while a manual switch keeps its plain
+"Switched variant" notice. The unset state reads as Auto everywhere it is shown:
+the composer's variant control, the per-reply model meta on models that advertise
+variants, and the terminal status line.
 
 Precedence, highest first:
 

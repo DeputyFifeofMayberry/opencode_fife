@@ -11,7 +11,7 @@ import { PreloadMultiFileDiffResult } from "@pierre/diffs/ssr"
 export type SessionSummary = Pick<SessionInfo, "id" | "parentID" | "title" | "time">
 
 type ProviderCatalog = {
-  all: Map<string, { models: Record<string, { name: string }> }>
+  all: Map<string, { models: Record<string, { name: string; variants?: Record<string, unknown> }> }>
   default: {
     [key: string]: string
   }

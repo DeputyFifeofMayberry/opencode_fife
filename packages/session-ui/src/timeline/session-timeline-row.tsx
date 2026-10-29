@@ -627,17 +627,20 @@ export function createSessionTimelineRowRenderer(input: {
       const match = data.store.provider?.all?.get(value.model.providerID)
       const variantOnly = value.previous?.providerID === value.model.providerID && value.previous.id === value.model.id
       const variant = value.model.variant ?? "default"
+      const policyKey = effortNoticeKey(value.metadata)
 
       return {
         providerID: value.model.providerID,
         variant: variantOnly ? undefined : value.model.variant,
-        label: variantOnly
-          ? variant === "default"
-            ? i18n.t("ui.sessionTimeline.notice.variantDefault")
-            : i18n.t("ui.sessionTimeline.notice.variantSwitched", { variant })
-          : i18n.t("ui.sessionTimeline.notice.modelSwitched", {
-              model: match?.models?.[value.model.id]?.name ?? value.model.id,
-            }),
+        label: policyKey
+          ? i18n.t(policyKey, { variant: variant === "default" ? i18n.t("common.auto") : variant })
+          : variantOnly
+            ? variant === "default"
+              ? i18n.t("ui.sessionTimeline.notice.variantDefault")
+              : i18n.t("ui.sessionTimeline.notice.variantSwitched", { variant })
+            : i18n.t("ui.sessionTimeline.notice.modelSwitched", {
+                model: match?.models?.[value.model.id]?.name ?? value.model.id,
+              }),
       }
     })
 
@@ -1303,6 +1306,20 @@ function outcomeNoticeKey(state: string | undefined) {
   if (state === "cancelled") return "ui.sessionTimeline.notice.cancelled"
 
   return "ui.sessionTimeline.notice.finished"
+}
+
+/** Policy-driven variant writes (`EffortTransition`) say why the effort moved; any other metadata stays a plain switch. */
+function effortNoticeKey(metadata: { source?: unknown; rule?: unknown } | undefined) {
+  if (metadata?.source !== "effort-policy") return undefined
+  const rule = Predicate.isString(metadata.rule) ? metadata.rule : undefined
+
+  if (rule === "escalated") return "ui.sessionTimeline.notice.effortEscalated"
+
+  if (rule === "mode-pin") return "ui.sessionTimeline.notice.effortPlanPin"
+
+  if (rule === "base") return "ui.sessionTimeline.notice.effortBase"
+
+  return undefined
 }
 
 /** Grows a row from nothing to its natural height, clipping its content on the way. Rows below follow its edge. */

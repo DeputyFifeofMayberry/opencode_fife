@@ -84,11 +84,16 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
     id: input.resolved.ref.id,
     ...(target === undefined ? {} : { variant: Model.VariantID.make(target) }),
   })
-  yield* deps.bus.publish(SessionEvent.ModelSelected, {
-    sessionID: input.sessionID,
-    model,
-    previous: session.model,
-  })
+  // The metadata marks the write as policy-driven so timeline notices can say why the variant moved.
+  yield* deps.bus.publish(
+    SessionEvent.ModelSelected,
+    {
+      sessionID: input.sessionID,
+      model,
+      previous: session.model,
+    },
+    { metadata: { source: "effort-policy", rule: decision.rule, level: decision.level! } },
+  )
   yield* deps.efforts.set({
     sessionID: input.sessionID,
     baseLevel,
