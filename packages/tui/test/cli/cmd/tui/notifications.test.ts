@@ -3,15 +3,17 @@ import Notifications from "../../../../src/feature-plugins/system/notifications"
 import type { OpenCodeEvent, PermissionAsked } from "@opencode/client"
 import type { AttentionNotifyOptions, Context, Route, ToastOptions } from "@opencode/plugin/tui/context"
 
-type Session = { id: string; title: string; parentID?: string }
+type Session = { id: string; title: string; parentID?: string; projectID: string; location: { directory: string } }
 
 async function setup(route: Route = { type: "session", sessionID: "session" }) {
   const notifications: AttentionNotifyOptions[] = []
   const toasts: ToastOptions[] = []
   const handlers = new Map<OpenCodeEvent["type"], ((event: OpenCodeEvent) => void)[]>()
-  const session = (id: string, title: string, parentID?: string): Session => ({
+  const session = (id: string, title: string, parentID?: string, projectID = "project"): Session => ({
     id,
     title,
+    projectID,
+    location: { directory: projectID === "project" ? "/repo" : "/other" },
     ...(parentID && { parentID }),
   })
   const sessions: Record<string, Session> = {
@@ -19,9 +21,12 @@ async function setup(route: Route = { type: "session", sessionID: "session" }) {
     subagent: session("subagent", "Subagent session", "session"),
     abort: session("abort", "Abort session"),
     timeout: session("timeout", "Timeout session"),
+    foreign: session("foreign", "Other project session", undefined, "other"),
+    sibling: { ...session("sibling", "Sibling worktree session"), location: { directory: "/repo/worktree" } },
   }
 
   await Notifications.setup({
+    location: { directory: "/repo", project: { id: "project", directory: "/repo", canonical: "/repo" } },
     ui: {
       router: { current: () => route },
       toast: { show: (toast: ToastOptions) => toasts.push(toast) },
@@ -209,6 +214,48 @@ describe("internal notifications TUI plugin", () => {
     })
 
     expect(harness.notifications).toEqual([globalFormNotification])
+  })
+
+  test("ignores sessions from another project", async () => {
+    const harness = await setup()
+
+    harness.emit({ id: "event-1", created: 0, type: "form.created", data: { form: form("form-1", "foreign") } })
+    harness.emit({ id: "event-2", created: 0, type: "permission.asked", data: permission("permission-1", "foreign") })
+    harness.emit(executionStarted("event-3", "foreign"))
+    harness.emit(executionSucceeded("event-4", "foreign"))
+
+    expect(harness.notifications).toEqual([])
+  })
+
+  test("notifies for sessions elsewhere in the same project", async () => {
+    const harness = await setup()
+
+    harness.emit(executionStarted("event-1", "sibling"))
+    harness.emit(executionSucceeded("event-2", "sibling"))
+
+    expect(harness.notifications).toEqual([
+      {
+        title: "Sibling worktree session",
+        message: "Session done",
+        notification: { when: "blurred" },
+        sound: { name: "done", when: "always" },
+      },
+    ])
+  })
+
+  test("notifies for a session this client has not loaded yet", async () => {
+    const harness = await setup()
+
+    harness.emit(executionSucceeded("event-1", "unloaded"))
+
+    expect(harness.notifications).toEqual([
+      {
+        title: undefined,
+        message: "Session done",
+        notification: { when: "blurred" },
+        sound: { name: "done", when: "always" },
+      },
+    ])
   })
 
   test("dedupes pending forms and permissions until they are resolved", async () => {

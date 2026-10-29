@@ -1,6 +1,16 @@
 import { Plugin } from "@opencode/plugin/tui"
 import type { AttentionSoundName } from "@opencode/plugin/tui/context"
 
+// Attention belongs to the project this TUI is showing. A session another client created in a
+// different project, such as a background benchmark run, stays silent here. Sessions this client
+// has not loaded yet keep notifying rather than risk hiding the user's own completion.
+function inProject(context: Plugin.Context, sessionID: string | undefined) {
+  const projectID = context.location?.project.id
+  if (!projectID || !sessionID || sessionID === "global") return true
+  const session = context.data.session.get(sessionID)
+  return !session || session.projectID === projectID
+}
+
 function notify(
   context: Plugin.Context,
   sessionID: string | undefined,
@@ -8,6 +18,7 @@ function notify(
   sound: AttentionSoundName,
   title?: string,
 ) {
+  if (!inProject(context, sessionID)) return
   const session = sessionID ? context.data.session.get(sessionID) : undefined
   const isSubagent = session?.parentID !== undefined
   void context.attention.notify({
