@@ -218,16 +218,14 @@ Approach:
 
 ### WS-H — Repo self (harness config; atomic with WS-D.4)
 
-1. Move `.opencode/` → `.fifecode/` (skills, `ecc/` adapter + plugin, `references/`, `glossary/`,
-   `scripts/` — the local installer machinery `.opencode/scripts/lib/install/*` moves with it and
-   its internal names update in WS-C).
+1. Move `.opencode/` → `.fifecode/` (skills, `references/`, `glossary/`).
 2. Root `opencode.json` → `fifecode.json`.
-3. Update every in-repo reference: all `AGENTS.md` files, `.opencode/ecc/INSTRUCTIONS.md`,
+3. Update every in-repo reference: all `AGENTS.md` files,
    workflows, scripts, docs that point at `.opencode/...` paths.
 4. **Must land in the same changeset as WS-D.4** — the product only reads `.fifecode` after the
    discovery rename, and the repo only works with the new build after this move. Known transient:
    between landing and running the switchover install, the still-installed old build can't resolve
-   ECC skills in this repo; accept the window (§7 step ordering minimizes it).
+   project skills in this repo; accept the window (§7 step ordering minimizes it).
 
 ### WS-I — Tests, snapshots, final sweep
 
@@ -271,7 +269,6 @@ Approach:
 - `docs/local-development.md`, `docs/intent/local-update.md`: installed command name becomes
   `fifecode`; "update opencode" wording becomes "update fifecode"; self-update is disabled in the
   fork, so docs state updates come from `bun run update:local` only.
-- `.opencode/ecc/README.md` and `verification.md` paths after the `.fifecode` move.
 
 ## 6. Sequencing
 
@@ -303,7 +300,7 @@ subagent work with explicit file scopes.
    status` (new port family 0xF1FE…) and `fifecode` TUI smoke: session history visible, provider
    auth works, theme resolves.
 6. `bun run dev:live` against the new service (it now calls `fifecode service status`).
-7. Open a normal new TUI; confirm terminal title, about/version strings, and ECC skill resolution
+7. Open a normal new TUI; confirm terminal title, about/version strings, and project skill resolution
    from `.fifecode/`.
 8. Verify `opencode --version` still works via the shim and prints the deprecation notice.
 9. Rollback path if anything is wrong: `bun run local:rollback` (previous build) — legacy data dirs
