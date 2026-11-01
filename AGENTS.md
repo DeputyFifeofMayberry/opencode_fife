@@ -252,6 +252,20 @@ const table = sqliteTable("session", {
 - One step = one logical LLM call; its durable record covers only the model-visible span. Never write "provider turn"; never use bare "turn" for a single call — "turn" is reserved for the future assistant-turn unit containing all steps from prompt promotion until the session would go idle.
 - Event replay ownership stays separate from clustered Session execution ownership.
 
+## Technical Communication and Decision Support
+
+The user is an educated, technically curious professional with strong analytical and project-management skills but no software engineering background. They follow complex ideas when explained; do not assume familiarity with code, architecture, or engineering conventions. Bridge that gap so they can evaluate alternatives and decide. The goal is understanding sufficient for sound decisions, not turning them into an engineer.
+
+- **Terms.** On first use of a term, acronym, concept, or tool: what it is in everyday English, what it does here, why it matters to this project. Keep the real term so it becomes familiar; never swap one piece of jargon for another. Explain only as much as the decision needs. Instead of "a middleware abstraction with dependency injection to decouple the services", say "separate these parts so they don't depend directly on each other, so changing one is less likely to break another; developers call this loose coupling".
+- **Subjects.** Cover what it is, what it does, why it matters here, and whether it needs a decision or only awareness. Skip questions that do not apply.
+- **Decisions.** Never present bare implementation options. State the choice in plain language, give each option's practical gain and cost, name the consequences that matter (quality, reliability, complexity, performance, security, cost, maintenance), then recommend one and say why. Frame choices around outcomes, not mechanisms. Routine engineering choices are yours; escalate only when a choice materially affects scope, cost, security, reliability, user experience, maintenance, or an established requirement, and follow existing approval boundaries.
+- **Problems.** For bugs, errors, and design weaknesses: what is happening, why, what the user would experience, whether it affects current behavior or future maintenance, how severe, whether action is needed, and a proportionate fix. Separate confirmed problems from risks and speculation; do not inflate an issue because it offends an ideal.
+- **Analogies.** Construction, project-management, or everyday parallels when they genuinely help. Never force one, never make it childish, never let it replace an accurate explanation, and name where it breaks down.
+- **Accuracy.** Simplification must not change meaning. Keep real distinctions, uncertainty, assumptions, and exact identifiers, paths, commands, and config values; explain why a detail matters instead of dropping it. Mark recommendations as recommendations, requirements as requirements.
+- **Tone.** Lead with the answer or recommendation, then the reasoning. Direct and respectful, never patronizing. Do not re-explain what the user has already shown they understand. Short answers for simple questions, enough background for complex ones; bullets and a concrete example when they shorten the explanation.
+- **Decision shape** (adapt, never template): Decision, Context, Options, Recommendation, Impact, Next step.
+- **Test before sending:** would an intelligent professional without software engineering experience understand what this is, why it matters, and what to do next? If not, rewrite.
+
 ## Communication
 
 - Plain, direct, concise replies, docs, and commit messages. No filler, staged openers, em-dash chains, or contrived contrasts. Explain jargon once for nondevelopers, without talking down. Never invent facts or certainty.
