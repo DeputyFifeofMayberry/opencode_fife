@@ -1721,6 +1721,81 @@
         }
       }
     },
+    "/api/session/{sessionID}/effort": {
+      "get": {
+        "tags": ["session"],
+        "operationId": "session.effort",
+        "parameters": [
+          {
+            "name": "sessionID",
+            "in": "path",
+            "schema": {
+              "$ref": "#/components/schemas/Session.ID"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Session.EffortStatus"
+                    }
+                  },
+                  "required": ["data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SessionNotFoundError | LocationNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Read the selected variant and the policy decision for the next step.",
+        "summary": "Get session effort status"
+      }
+    },
     "/api/session/{sessionID}/fork": {
       "post": {
         "tags": ["session"],
@@ -22994,6 +23069,165 @@
           }
         },
         "required": ["_tag", "message"],
+        "additionalProperties": false
+      },
+      "Session.EffortStatus": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": ["static", "adaptive"]
+          },
+          "agent": {
+            "type": "string"
+          },
+          "support": {
+            "type": "string",
+            "enum": ["unknown", "unsupported", "supported"]
+          },
+          "control": {
+            "type": "string",
+            "enum": ["manual", "automatic"]
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "providerID": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["providerID", "id"],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "selectedVariant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "baseLevel": {
+            "type": "string",
+            "enum": ["low", "standard", "deep"]
+          },
+          "currentLevel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["low", "standard", "deep"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "initialized": {
+            "type": "boolean"
+          },
+          "verificationCommands": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cleanPasses": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          },
+          "cleanPassesNeeded": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "openFailure": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "rule": {
+                    "type": "string",
+                    "enum": ["exact-base", "mode-pin", "base", "step-down", "escalated", "untouched"]
+                  },
+                  "level": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["low", "standard", "deep"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "effort": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["rule"],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mode",
+          "agent",
+          "support",
+          "control",
+          "baseLevel",
+          "initialized",
+          "verificationCommands",
+          "cleanPasses"
+        ],
         "additionalProperties": false
       },
       "Session.Event.Durable": {

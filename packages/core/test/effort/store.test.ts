@@ -97,6 +97,22 @@ describe("EffortStore", () => {
     })
   })
 
+  it.effect("records a selection without overwriting newer workspace or verifier state", () =>
+    Effect.gen(function* () {
+      const store = yield* EffortStore.Service
+      const id = SessionID.make("ses_effort_selection_race")
+      yield* seed(id)
+      yield* store.set({ sessionID: id, baseLevel: "standard", revision: 0, level: "standard", cleanPasses: 1 })
+      const stale = yield* store.get(id)
+      yield* store.bumpRevision(id)
+      yield* store.setOpenFailure(id, { verifier: "bun test", sequence: 4, revision: 1 })
+      yield* store.setLevel(id, "deep", 0)
+      yield* store.recordSelection({ ...stale!, lastAppliedVariant: "max" })
+      expect(yield* store.get(id)).toMatchObject({ revision: 1, level: "deep", cleanPasses: 0,
+        openFailure: { verifier: "bun test", sequence: 4, revision: 1 }, lastAppliedVariant: "max" })
+    }),
+  )
+
   it.effect("invalidates all sessions in the same workspace", () =>
     Effect.gen(function* () {
       const db = (yield* Database.Service).db

@@ -25,6 +25,8 @@ import type {
   SessionActiveOutput,
   SessionGetInput,
   SessionGetOutput,
+  SessionEffortInput,
+  SessionEffortOutput,
   SessionRemoveInput,
   SessionRemoveOutput,
   SessionForkInput,
@@ -661,6 +663,17 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/session/${encodeURIComponent(input.sessionID)}`,
+            successStatus: 200,
+            declaredStatuses: [400, 401, 404],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      effort: (input: SessionEffortInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionEffortOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/effort`,
             successStatus: 200,
             declaredStatuses: [400, 401, 404],
             empty: false,

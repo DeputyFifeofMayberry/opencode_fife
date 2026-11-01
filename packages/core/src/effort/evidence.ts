@@ -84,7 +84,7 @@ export function matchVerifier(command: string, verifiers: readonly string[]): st
   if (!simple.test(value) || /[\r\n]/.test(value)) return undefined
   return verifiers.map((verifier) => verifier.trim()).find((verifier) =>
     verifier.length > 0 && simple.test(verifier) && !/[\r\n]/.test(verifier) &&
-    (value === verifier || value.startsWith(`${verifier} `)),
+    value === verifier,
   )
 }
 

@@ -468,6 +468,13 @@ const Root = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME
             sessionID: Argument.String("sessionID").pipe(Argument.withDescription("Session ID to delete")),
           },
         }),
+        Spec.make("effort", {
+          description: "Show the selected effort and policy status for a session",
+          params: {
+            sessionID: Argument.String("sessionID").pipe(Argument.withDescription("Session ID to inspect")),
+            format: Flag.Literals("format", ["text", "json"]).pipe(Flag.withDefault("text")),
+          },
+        }),
         Spec.make("export", {
           description: "Export session data as JSON",
           params: {

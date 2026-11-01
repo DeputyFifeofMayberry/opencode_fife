@@ -116,12 +116,13 @@ describe("EffortEvidence", () => {
       yield* settle(id, "shell", "pnpm typecheck 2>&1 | Select-String -Pattern error", 1)
       yield* settle(id, "shell", "pnpm typecheck > out.log 2>&1", 1)
       expect((yield* efforts.get(id))?.openFailure).toBeUndefined()
-      // Appended flags classify at the token boundary; a longer word does not.
+      // Flags can change what runs, including --help, so only the configured command counts.
       yield* settle(id, "shell", "pnpm typecheck --pretty=false", 1)
-      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
-      yield* efforts.setOpenFailure(id, undefined)
       yield* settle(id, "shell", "pnpm typecheck-strict", 1)
       expect((yield* efforts.get(id))?.openFailure).toBeUndefined()
+      yield* settle(id, "shell", "pnpm typecheck", 1)
+      yield* settle(id, "shell", "pnpm typecheck --help", 0)
+      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
     })
   })
 

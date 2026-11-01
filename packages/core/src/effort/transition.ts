@@ -78,7 +78,7 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
     // A user pick replaces a policy write as the session's baseline; the echo
     // case already filtered out, so this write happens once per pick.
     if (exact !== undefined && row?.lastAppliedVariant !== undefined)
-      yield* deps.efforts.set({
+      yield* deps.efforts.recordSelection({
         sessionID: input.sessionID,
         baseLevel: row.baseLevel,
         openFailure: row.openFailure,
@@ -91,10 +91,14 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
 
   const target = decision.effort
   if (target === variant) {
-    // Nothing to transition. An adaptive session's first decision still
-    // materializes the seed row so later evidence can raise the level.
-    if (adaptive && row === undefined)
-      yield* deps.efforts.set({ sessionID: input.sessionID, baseLevel, revision: 0, level: baseLevel, cleanPasses: 0 })
+    // Even without a variant transition, evidence needs a durable row in both modes.
+    if (row === undefined)
+      yield* deps.efforts.recordSelection({
+        sessionID: input.sessionID,
+        baseLevel,
+        revision: 0,
+        ...(adaptive ? { level: baseLevel, cleanPasses: 0 } : {}),
+      })
     return false
   }
 
@@ -113,13 +117,13 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
     },
     { metadata: { source: "effort-policy", rule: decision.rule, level: decision.level! } },
   )
-  yield* deps.efforts.set({
+  yield* deps.efforts.recordSelection({
     sessionID: input.sessionID,
     baseLevel,
     openFailure: row?.openFailure,
     revision: row?.revision ?? 0,
     lastAppliedVariant: target,
-    level: adaptive ? (decision.level ?? baseLevel) : undefined,
+    level: adaptive ? (row?.level ?? baseLevel) : undefined,
     cleanPasses: row?.cleanPasses ?? 0,
   })
   yield* deps.bus.publish(SessionEvent.EffortTransitioned, {

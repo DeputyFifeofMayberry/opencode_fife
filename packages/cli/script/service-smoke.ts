@@ -48,6 +48,25 @@ try {
   const token = encodeURIComponent(credential)
   const serverInfo = await waitForReady(info.url, headers)
   if (serverInfo.pid !== info.pid) throw new Error("Server info does not match registration")
+  const created = await fetch(new URL("/api/session", info.url), {
+    method: "POST",
+    headers: { ...headers, "content-type": "application/json" },
+    body: JSON.stringify({ location: { directory: root }, title: "Effort status smoke test" }),
+    signal: AbortSignal.timeout(5_000),
+  })
+  if (!created.ok) throw new Error(`Could not create isolated status session: ${created.status}`)
+  const session = (await created.json()) as { data?: { id?: string } }
+  if (!session.data?.id) throw new Error("Isolated status session has no ID")
+  const status = Bun.spawn([binary, "session", "effort", session.data.id, "--format", "json", "--server", info.url], {
+    env: { ...env, OPENCODE_PASSWORD: info.password }, stdout: "pipe", stderr: "pipe", stdin: "ignore",
+  })
+  const [statusText, statusError, statusExit] = await Promise.all([
+    new Response(status.stdout).text(), new Response(status.stderr).text(), status.exited,
+  ])
+  if (statusExit !== 0) throw new Error(`Compiled effort status failed: ${statusError}`)
+  const effort = JSON.parse(statusText) as { mode?: string; support?: string; initialized?: boolean }
+  if (effort.mode !== "static" || effort.support !== "unknown" || effort.initialized !== false)
+    throw new Error("Compiled effort status returned an unexpected result")
   const tokenInfo = await fetch(new URL(`/api/info?auth_token=${token}`, info.url), {
     signal: AbortSignal.timeout(5_000),
   })

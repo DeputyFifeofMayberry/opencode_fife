@@ -1,3 +1,7 @@
+import { Config } from "@opencode/core/config"
+import { Model } from "@opencode/core/model"
+import { EffortStore } from "@opencode/core/effort/store"
+import { EffortStatus } from "@opencode/core/effort/status"
 import { Agent } from "@opencode/core/agent"
 import { Instance } from "@opencode/core/instance/service"
 import { Session } from "@opencode/core/session"
@@ -41,6 +45,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
   Effect.gen(function* () {
     const session = yield* Session.Service
     const transfer = yield* SessionTransfer.Service
+    const efforts = yield* EffortStore.Service
     // Clients may send an agent display name ("Build"/"Plan") where the id is
     // expected; store the id so session agent selection always resolves.
     const resolveAgentID = (input: Agent.ID) =>
@@ -190,6 +195,24 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
               .get(ctx.params.sessionID)
               .pipe(Effect.catchTag("Session.NotFoundError", missingSession)),
           }
+        }),
+      )
+      .handle(
+        "session.effort",
+        Effect.fn(function* (ctx) {
+          const info = yield* requireSession(ctx.params.sessionID)
+          const state = yield* efforts.get(info.id)
+          const data = yield* Effect.gen(function* () {
+            const config = yield* Config.Service
+            const models = yield* Model.Service
+            const agents = yield* Agent.Service
+            const agent = yield* agents.select(info.agent)
+            const model = info.model ? yield* models.get(info.model.providerID, info.model.id) : undefined
+            return EffortStatus.describe({
+              policy: Config.effortPolicy(yield* config.entries()), state, agent: agent.id, model, selection: info.model,
+            })
+          }).pipe(instances.provide(info), locationErrors)
+          return { data }
         }),
       )
       .handle(

@@ -39,6 +39,27 @@ import { FileDiff } from "@opencode/schema/file-diff"
 import { Form } from "@opencode/schema/form"
 import { PublicSessionMessage } from "./message.js"
 
+const EffortStatus = Schema.Struct({
+  mode: Schema.Literals(["static", "adaptive"]),
+  agent: Schema.String,
+  support: Schema.Literals(["unknown", "unsupported", "supported"]),
+  control: Schema.Literals(["manual", "automatic"]),
+  model: Schema.Struct({ providerID: Schema.String, id: Schema.String }).pipe(Schema.optional),
+  selectedVariant: Schema.String.pipe(Schema.optional),
+  baseLevel: Schema.Literals(["low", "standard", "deep"]),
+  currentLevel: Schema.Literals(["low", "standard", "deep"]).pipe(Schema.optional),
+  initialized: Schema.Boolean,
+  verificationCommands: Schema.Array(Schema.String),
+  cleanPasses: Schema.Number,
+  cleanPassesNeeded: Schema.Number.pipe(Schema.optional),
+  openFailure: Schema.String.pipe(Schema.optional),
+  next: Schema.Struct({
+    rule: Schema.Literals(["exact-base", "mode-pin", "base", "step-down", "escalated", "untouched"]),
+    level: Schema.Literals(["low", "standard", "deep"]).pipe(Schema.optional),
+    effort: Schema.String.pipe(Schema.optional),
+  }).pipe(Schema.optional),
+}).annotate({ identifier: "Session.EffortStatus" })
+
 const SessionActive = Schema.Struct({
   type: Schema.Literal("running"),
 }).annotate({ identifier: "SessionActive" })
@@ -241,6 +262,17 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S, FormI ext
           description: "Retrieve a session by ID.",
         }),
       ),
+    )
+    .add(
+      HttpApiEndpoint.get("session.effort", "/api/session/:sessionID/effort", {
+        params: { sessionID: Session.ID },
+        success: Schema.Struct({ data: EffortStatus }),
+        error: [SessionNotFoundError, LocationNotFoundError],
+      }).annotateMerge(OpenApi.annotations({
+        identifier: "session.effort",
+        summary: "Get session effort status",
+        description: "Read the selected variant and the policy decision for the next step.",
+      })),
     )
     .add(
       HttpApiEndpoint.delete("session.remove", "/api/session/:sessionID", {

@@ -36,6 +36,8 @@ export interface Info {
 export interface Interface {
   readonly get: (sessionID: SessionSchema.ID) => Effect.Effect<Info | undefined>
   readonly set: (info: Info) => Effect.Effect<void>
+  /** Records a policy-owned selection without overwriting concurrently updated evidence. */
+  readonly recordSelection: (info: Info) => Effect.Effect<void>
   /** Replaces only the open failure; the revision column is untouched, so concurrent bumps never race this write. */
   readonly setOpenFailure: (sessionID: SessionSchema.ID, openFailure: OpenFailure | undefined) => Effect.Effect<void>
   /** Replaces only the adaptive level and clean-pass counter; the revision column is untouched. */
@@ -99,6 +101,25 @@ export const layer = Layer.effect(
               level: info.level ?? null,
               clean_passes: info.cleanPasses ?? 0,
             },
+          })
+          .run()
+          .pipe(Effect.orDie)
+      }),
+      recordSelection: Effect.fnUntraced(function* (info) {
+        yield* db
+          .insert(SessionEffortTable)
+          .values({
+            session_id: info.sessionID,
+            base_level: info.baseLevel,
+            open_failure: info.openFailure ?? null,
+            revision: info.revision,
+            last_applied_variant: info.lastAppliedVariant ?? null,
+            level: info.level ?? null,
+            clean_passes: info.cleanPasses ?? 0,
+          })
+          .onConflictDoUpdate({
+            target: SessionEffortTable.session_id,
+            set: { last_applied_variant: info.lastAppliedVariant ?? null },
           })
           .run()
           .pipe(Effect.orDie)

@@ -169,6 +169,31 @@ export type SessionGetInput = { readonly sessionID: Session.ID }
 export type SessionGetOutput = Session.Info
 export type SessionGetOperation<E = never> = (input: SessionGetInput) => Effect.Effect<SessionGetOutput, E>
 
+export type SessionEffortInput = { readonly sessionID: Session.ID }
+export type SessionEffortOutput = {
+  readonly mode: "static" | "adaptive"
+  readonly agent: string
+  readonly support: "unknown" | "unsupported" | "supported"
+  readonly control: "manual" | "automatic"
+  readonly model?: { readonly providerID: string; readonly id: string } | undefined
+  readonly selectedVariant?: string | undefined
+  readonly baseLevel: "low" | "standard" | "deep"
+  readonly currentLevel?: "low" | "standard" | "deep" | undefined
+  readonly initialized: boolean
+  readonly verificationCommands: ReadonlyArray<string>
+  readonly cleanPasses: number
+  readonly cleanPassesNeeded?: number | undefined
+  readonly openFailure?: string | undefined
+  readonly next?:
+    | {
+        readonly rule: "exact-base" | "mode-pin" | "base" | "step-down" | "escalated" | "untouched"
+        readonly level?: "low" | "standard" | "deep" | undefined
+        readonly effort?: string | undefined
+      }
+    | undefined
+}
+export type SessionEffortOperation<E = never> = (input: SessionEffortInput) => Effect.Effect<SessionEffortOutput, E>
+
 export type SessionRemoveInput = { readonly sessionID: Session.ID }
 export type SessionRemoveOutput = void
 export type SessionRemoveOperation<E = never> = (input: SessionRemoveInput) => Effect.Effect<SessionRemoveOutput, E>
@@ -410,6 +435,7 @@ export interface SessionApi<E = never> {
   readonly create: SessionCreateOperation<E>
   readonly active: SessionActiveOperation<E>
   readonly get: SessionGetOperation<E>
+  readonly effort: SessionEffortOperation<E>
   readonly remove: SessionRemoveOperation<E>
   readonly fork: SessionForkOperation<E>
   readonly switchAgent: SessionSwitchAgentOperation<E>

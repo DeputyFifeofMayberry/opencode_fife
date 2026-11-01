@@ -81,6 +81,29 @@ export type SessionsCursor = string
 
 export type SessionActive = { type: "running" }
 
+export type SessionEffortStatus = {
+  mode: "static" | "adaptive"
+  agent: string
+  support: "unknown" | "unsupported" | "supported"
+  control: "manual" | "automatic"
+  model?: { providerID: string; id: string } | undefined
+  selectedVariant?: string | undefined
+  baseLevel: "low" | "standard" | "deep"
+  currentLevel?: "low" | "standard" | "deep" | undefined
+  initialized: boolean
+  verificationCommands: Array<string>
+  cleanPasses: number
+  cleanPassesNeeded?: number | undefined
+  openFailure?: string | undefined
+  next?:
+    | {
+        rule: "exact-base" | "mode-pin" | "base" | "step-down" | "escalated" | "untouched"
+        level?: "low" | "standard" | "deep" | undefined
+        effort?: string | undefined
+      }
+    | undefined
+}
+
 export type PromptBase64 = string
 
 export type PromptFileSource = { type: "inline" } | { type: "uri"; uri: string }
@@ -3350,6 +3373,10 @@ export type SessionActiveOutput = { data: { [x: SessionID]: SessionActive } }["d
 export type SessionGetInput = { readonly sessionID: string }
 
 export type SessionGetOutput = { data: SessionInfo }["data"]
+
+export type SessionEffortInput = { readonly sessionID: string }
+
+export type SessionEffortOutput = { data: SessionEffortStatus }["data"]
 
 export type SessionRemoveInput = { readonly sessionID: string }
 

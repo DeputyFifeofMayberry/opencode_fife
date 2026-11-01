@@ -2508,6 +2508,22 @@ describe("SessionRunnerLLM", () => {
     expect(yield* Queue.isFull(seen)).toBe(false)
   })
 
+  scenario("a fresh static session records its first verifier failure", function* (s) {
+    effortModelInfo()
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) => editor.add({
+      name: "shell", description: "Failing verifier", input: Schema.Struct({ command: Schema.String }),
+      output: Schema.Struct({}), options: { codemode: false },
+      execute: () => Effect.succeed({ output: {}, content: [{ type: "text" as const, text: "" }], metadata: { exit: 1 } }),
+    }))
+    yield* s.llm.push(TestLLM.toolCall("static-first-failure", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.text("Failed", "static-first-result"))
+    yield* s.runPrompt("Verify")
+    const row = yield* (yield* EffortStore.Service).get(sessionID)
+    expect(row?.openFailure?.verifier).toBe("pnpm typecheck")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("max" as Model.VariantID)
+  })
+
   scenario("escalates while a configured verifier fails and returns when it passes", function* (s) {
     effortModelInfo()
     s.currentModel = LanguageModel.make({ id: "claude-effort", provider: "anthropic", route: AnthropicMessages.route })
