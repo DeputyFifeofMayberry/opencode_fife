@@ -41,7 +41,7 @@ export const runIfDirty = Effect.fn("EffortVerification.runIfDirty")(function* (
   deps: Deps,
   input: { readonly sessionID: SessionSchema.ID; readonly directory: string },
 ) {
-  const settings = Config.latest(yield* deps.config.entries(), "effort_policy")
+  const settings = Config.effortPolicy(yield* deps.config.entries())
   if (settings?.mode !== "adaptive") return
   const verifiers = settings.verification_commands ?? []
   if (verifiers.length === 0) return

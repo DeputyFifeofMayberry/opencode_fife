@@ -32,7 +32,7 @@ export const observe = Effect.fn("EffortEvidence.observe")(function* (
   sessionID: SessionSchema.ID,
   settlement: { readonly tool: string; readonly input: unknown; readonly metadata: unknown },
 ) {
-  const settings = Config.latest(yield* deps.config.entries(), "effort_policy")
+  const settings = Config.effortPolicy(yield* deps.config.entries())
   const verifiers = settings?.verification_commands ?? []
   const mutating = settings?.mutating_tools ?? ["write", "edit", "patch"]
   const adaptive = settings?.mode === "adaptive"

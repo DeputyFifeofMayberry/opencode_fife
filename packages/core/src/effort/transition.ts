@@ -47,7 +47,7 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
   const session = yield* deps.store.get(input.sessionID)
   if (!session) return false
   const row = yield* deps.efforts.get(input.sessionID)
-  const policy = Config.latest(yield* deps.config.entries(), "effort_policy")
+  const policy = Config.effortPolicy(yield* deps.config.entries())
   // "default" is the store's read representation of no explicit pick (session/info.ts); the policy treats it as unset.
   const variant = session.model?.variant === "default" ? undefined : session.model?.variant
   // The policy's own echo is not a user pick; anything else is exact and wins verbatim.

@@ -213,7 +213,7 @@ export const Plugin = {
                 yield* EffortDelegation.seed(
                   {
                     efforts,
-                    overrides: Config.latest(yield* config.entries(), "effort_policy")?.agent_operations,
+                    overrides: Config.effortPolicy(yield* config.entries())?.agent_operations,
                   },
                   {
                     sessionID: child.id,

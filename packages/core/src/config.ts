@@ -30,6 +30,16 @@ export function latest<K extends keyof Info>(entries: readonly Entry[], key: K):
     ?.info[key]
 }
 
+/** Merge effort policy fields from lowest to highest priority. Arrays and maps are replaced when supplied. */
+export function effortPolicy(entries: readonly Entry[]): Info["effort_policy"] | undefined {
+  let result: Info["effort_policy"] | undefined
+  for (const entry of entries) {
+    if (entry.type !== "document" || entry.info.effort_policy === undefined) continue
+    result = { ...result, ...entry.info.effort_policy }
+  }
+  return result
+}
+
 export interface Interface {
   /** Returns location config documents and discovery sources from lowest to highest priority. */
   readonly entries: () => Effect.Effect<Entry[]>
