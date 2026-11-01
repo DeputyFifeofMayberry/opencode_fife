@@ -34,7 +34,7 @@ export class Info extends Schema.Class<Info>("Config.Effort")({
   }),
   mutating_tools: Schema.String.pipe(Schema.Array).pipe(optional).annotate({
     description:
-      "Tool names whose successful settlement advances the workspace revision used to discard stale verification passes (default: write, edit, patch)",
+      "Tool names whose dispatch advances the workspace revision used to discard stale verification passes (default: write, edit, patch)",
   }),
   agent_operations: Schema.Record(Schema.String, Operation).pipe(optional).annotate({
     description: "Maps agent ids to delegation operations that fix subagent starting effort",

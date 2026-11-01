@@ -214,6 +214,7 @@ const schema: Omit<DatabaseMigration.Migration, "id"> = {
           \`base_level\` text NOT NULL,
           \`open_failure\` text,
           \`revision\` integer DEFAULT 0 NOT NULL,
+          \`evidence_sequence\` integer DEFAULT 0 NOT NULL,
           \`last_applied_variant\` text,
           \`level\` text,
           \`clean_passes\` integer DEFAULT 0 NOT NULL,

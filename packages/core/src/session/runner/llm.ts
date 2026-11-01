@@ -546,10 +546,13 @@ const layer = Layer.effect(
         verifications,
         input.sessionID,
         steps.workspaceLock.withPermit(
-          EffortVerification.runIfDirty(
-            { db, efforts, config, runProcess: (command, options) => processes.run(command, options) },
-            { sessionID: input.sessionID, directory: location.directory },
-          ),
+          Effect.gen(function* () {
+            const settings = Config.effortPolicy(yield* config.entries())
+            yield* EffortVerification.runIfDirty(
+              { db, efforts, settings, runProcess: (command, options) => processes.run(command, options) },
+              { sessionID: input.sessionID, directory: location.directory },
+            )
+          }),
         ).pipe(Effect.raceFirst(wake), Effect.asVoid),
         { onlyIfMissing: true },
       )

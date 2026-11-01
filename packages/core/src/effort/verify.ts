@@ -3,11 +3,11 @@ export * as EffortVerification from "./verify.js"
 import { ChildProcess } from "effect/process"
 import { Duration, Effect } from "effect"
 import { AppProcessError, type RunOptions, type RunResult } from "@opencode/util/process"
-import { Config } from "../config.js"
 import type { Database } from "../database/database.js"
 import { EffortEvidence } from "./evidence.js"
 import { EffortStore } from "./store.js"
 import type { SessionSchema } from "../session/schema.js"
+import type { ConfigEffort } from "@opencode/schema/config/effort"
 
 const DEFAULT_TIMEOUT_MS = 120_000
 const DIGEST_TIMEOUT = Duration.seconds(10)
@@ -17,7 +17,8 @@ const ERROR_BYTES = 1024 * 1024
 export interface Deps {
   readonly db: Database.Interface["db"]
   readonly efforts: EffortStore.Interface
-  readonly config: Config.Interface
+  /** Resolved by the caller, so the harness reads no configuration itself. */
+  readonly settings: ConfigEffort.Info | undefined
   readonly runProcess: (
     command: ChildProcess.Command,
     options?: RunOptions,
@@ -39,10 +40,13 @@ export const runIfDirty = Effect.fn("EffortVerification.runIfDirty")(function* (
   deps: Deps,
   input: { readonly sessionID: SessionSchema.ID; readonly directory: string },
 ) {
-  const settings = Config.effortPolicy(yield* deps.config.entries())
+  const settings = deps.settings
+  yield* EffortEvidence.warnUnmatchable(settings)
   if (settings?.mode !== "adaptive") return
-  const verifiers = settings.verification_commands ?? []
-  if (verifiers.length === 0) return
+  const configured = (settings.verification_commands ?? [])
+    .map((command) => command.trim())
+    .filter((command) => command.length > 0)
+  if (configured.length === 0) return
   const row = yield* deps.efforts.get(input.sessionID)
   if (!row) return
 
@@ -54,17 +58,17 @@ export const runIfDirty = Effect.fn("EffortVerification.runIfDirty")(function* (
     (digest !== undefined && row.verdictDigest !== undefined && digest !== row.verdictDigest)
   if (!dirty) return
 
-  // Re-verify the failing command first so its clearing pass lands; otherwise the first
-  // configured command is the session's standing verifier.
+  // A failure clears only for its own verifier, so that verifier has to run. When it is no
+  // longer configured, nothing the harness can run would recover the session: running the
+  // first usable entry instead would spend a verifier run on every idle pass, forever.
   const failing = row.openFailure?.verifier
+  if (failing !== undefined && !configured.includes(failing)) return
   const command =
-    failing !== undefined && verifiers.some((verifier) => verifier.trim() === failing) ? failing : verifiers[0]!
+    failing ?? configured.find((candidate) => EffortEvidence.matchVerifier(candidate, [candidate]) !== undefined)
 
-  // A compound configured command has no attributable per-verifier exit.
-  if (EffortEvidence.matchVerifier(command, [command]) === undefined) {
-    yield* Effect.logWarning("harness verifier is not a simple command", { sessionID: input.sessionID, command })
-    return
-  }
+  // An unattributable command has no exit that belongs to a verifier, so there is nothing
+  // to record. `warnUnmatchable` has already said which entries are unusable.
+  if (command === undefined || EffortEvidence.matchVerifier(command, [command]) === undefined) return
 
   const result = yield* deps
     .runProcess(ChildProcess.make(command, [], { shell: true, cwd: input.directory, extendEnv: true }), {
@@ -89,9 +93,10 @@ export const runIfDirty = Effect.fn("EffortVerification.runIfDirty")(function* (
     exit: result.exitCode,
   })
   yield* EffortEvidence.observe(
-    { db: deps.db, efforts: deps.efforts, config: deps.config },
+    { db: deps.db, efforts: deps.efforts },
+    settings,
     input.sessionID,
-    { tool: "harness-verifier", input: { command }, metadata: { exit: result.exitCode }, expectedRevision: row.revision },
+    { tool: EffortEvidence.HARNESS_TOOL, input: { command }, metadata: { exit: result.exitCode }, expectedRevision: row.revision },
   )
   const current = yield* deps.efforts.get(input.sessionID)
   if (current?.revision !== row.revision) return

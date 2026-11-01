@@ -140,6 +140,8 @@ export const SessionEffortTable = sqliteTable("session_effort", {
     revision: number
   }>(),
   revision: integer().notNull().default(0),
+  /** Durable observation order; claimed once per qualifying settlement. Independent of the event log. */
+  evidence_sequence: integer().notNull().default(0),
   last_applied_variant: text(),
   /** Adaptive mode: the durable controller level; null until adaptive evidence or a seed writes it. */
   level: text().$type<EffortLevel>(),

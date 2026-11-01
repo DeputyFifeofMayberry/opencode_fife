@@ -1,6 +1,6 @@
 export * as EffortStore from "./store.js"
 
-import { eq, sql } from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 import { Context, Effect, Layer } from "effect"
 import { makeGlobalNode } from "@opencode/util/effect/app-node"
 import type { SessionSchema } from "../session/schema.js"
@@ -38,16 +38,32 @@ export interface Interface {
   readonly set: (info: Info) => Effect.Effect<void>
   /** Records a policy-owned selection without overwriting concurrently updated evidence. */
   readonly recordSelection: (info: Info) => Effect.Effect<void>
-  /** Replaces only the open failure; the revision column is untouched, so concurrent bumps never race this write. */
-  readonly setOpenFailure: (sessionID: SessionSchema.ID, openFailure: OpenFailure | undefined) => Effect.Effect<void>
-  /** Replaces only the adaptive level and clean-pass counter; the revision column is untouched. */
-  readonly setLevel: (sessionID: SessionSchema.ID, level: EffortLevel, cleanPasses: number) => Effect.Effect<void>
+  /**
+   * Claims the next observation order for this session.
+   *
+   * Runs inside the caller's transaction so the claim and the evidence write commit
+   * together. Absent when the expected revision no longer matches, so a stale settlement
+   * consumes no number, and absent when the session has no effort row yet — in which case
+   * nothing is recorded, matching the behavior before this store existed.
+   */
+  readonly claimSequence: (
+    sessionID: SessionSchema.ID,
+    expectedRevision?: number,
+  ) => Effect.Effect<number | undefined>
+  /** Writes one observation's policy output in a single statement; the revision column is untouched. */
+  readonly recordEvidence: (sessionID: SessionSchema.ID, evidence: EvidenceWrite) => Effect.Effect<void>
   /** Records the workspace state a harness-initiated verdict observed; the revision column is untouched. */
   readonly setVerdict: (sessionID: SessionSchema.ID, verdict: { revision: number; digest?: string }) => Effect.Effect<void>
-  /** Advances the workspace revision by one; atomic, so concurrent bumps all land. */
-  readonly bumpRevision: (sessionID: SessionSchema.ID) => Effect.Effect<void>
   /** Invalidates effort evidence for sessions in the same working directory. */
   readonly bumpWorkspaceRevision: (sessionID: SessionSchema.ID) => Effect.Effect<void>
+}
+
+/** The policy's output for one observation. Absent adaptive fields leave those columns untouched. */
+export interface EvidenceWrite {
+  /** Required: absent clears the failure. Optional would let a partial write erase evidence. */
+  readonly openFailure: OpenFailure | undefined
+  readonly level?: EffortLevel
+  readonly cleanPasses?: number
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/EffortStore") {}
@@ -124,18 +140,28 @@ export const layer = Layer.effect(
           .run()
           .pipe(Effect.orDie)
       }),
-      setOpenFailure: Effect.fnUntraced(function* (sessionID, openFailure) {
-        yield* db
+      claimSequence: Effect.fnUntraced(function* (sessionID, expectedRevision) {
+        const claimed = yield* db
           .update(SessionEffortTable)
-          .set({ open_failure: openFailure ?? null })
-          .where(eq(SessionEffortTable.session_id, sessionID))
-          .run()
+          .set({ evidence_sequence: sql`${SessionEffortTable.evidence_sequence} + 1` })
+          .where(
+            expectedRevision === undefined
+              ? eq(SessionEffortTable.session_id, sessionID)
+              : and(eq(SessionEffortTable.session_id, sessionID), eq(SessionEffortTable.revision, expectedRevision)),
+          )
+          .returning({ sequence: SessionEffortTable.evidence_sequence })
+          .get()
           .pipe(Effect.orDie)
+        return claimed?.sequence
       }),
-      setLevel: Effect.fnUntraced(function* (sessionID, level, cleanPasses) {
+      recordEvidence: Effect.fnUntraced(function* (sessionID, evidence) {
         yield* db
           .update(SessionEffortTable)
-          .set({ level, clean_passes: cleanPasses })
+          .set({
+            open_failure: evidence.openFailure ?? null,
+            ...(evidence.level === undefined ? {} : { level: evidence.level }),
+            ...(evidence.cleanPasses === undefined ? {} : { clean_passes: evidence.cleanPasses }),
+          })
           .where(eq(SessionEffortTable.session_id, sessionID))
           .run()
           .pipe(Effect.orDie)
@@ -156,14 +182,6 @@ export const layer = Layer.effect(
             select ${SessionTable.id} from ${SessionTable}
             where ${SessionTable.directory} = (select ${SessionTable.directory} from ${SessionTable} where ${SessionTable.id} = ${sessionID})
           )`)
-          .run()
-          .pipe(Effect.orDie)
-      }),
-      bumpRevision: Effect.fnUntraced(function* (sessionID) {
-        yield* db
-          .update(SessionEffortTable)
-          .set({ revision: sql`${SessionEffortTable.revision} + 1`, clean_passes: 0 })
-          .where(eq(SessionEffortTable.session_id, sessionID))
           .run()
           .pipe(Effect.orDie)
       }),

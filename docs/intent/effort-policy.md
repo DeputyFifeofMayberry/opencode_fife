@@ -65,14 +65,18 @@ per-message `Message.effort` markers), but nothing decides *when* to switch.
 | V1 scope? | Full policy surface: escalation + delegation minimums + plan-mode pin. |
 | How the core lands? | Vendored as a module inside `packages/core/src`, tests ported to the repo's bun-test style. |
 
-## Deferred to spec (proposed defaults)
+## Deferred to spec
 
-- Verifier configuration shape: shell commands in opencode config, matched
-  against tool calls; verifier identity = tool + normalized command + cwd
-  (the core's `\0`-joined form).
+Superseded by `docs/spec/effort-policy.md` and, for the evidence-ownership
+correction, `docs/spec/effort-evidence-owner.md`. Two proposals here were not
+adopted: verifier identity is the bare command with the working directory ignored
+(not the core's `\0`-joined tool + command + cwd), and observation order is owned
+by the effort subsystem (`evidence_sequence`) rather than mapped onto the session's
+event sequence.
+
+Still accurate from the original proposal:
+
 - Classification: configured verifier exit ≠ 0 → `verification-failure`; exit 0 →
   `verification-pass`; spawn/crash errors → `infrastructure`.
 - Escalation state is durable per session.
 - Agent → `DelegationOperation` mapping defined against the repo's actual agents.
-- Sequence and revision counters mapped onto existing session/workspace monotonic
-  values.

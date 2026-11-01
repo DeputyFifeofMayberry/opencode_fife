@@ -133,6 +133,7 @@ export const make = Effect.gen(function* () {
             fiber: yield* Effect.uninterruptibleMask((restore) =>
               Effect.gen(function* () {
                 const settings = Config.effortPolicy(yield* config.entries())
+                yield* EffortEvidence.warnUnmatchable(settings)
                 const configured = (settings?.mutating_tools ?? ["write", "edit", "patch"]).includes(event.name)
                 const command =
                   typeof event.input === "object" && event.input !== null
@@ -142,7 +143,7 @@ export const make = Effect.gen(function* () {
                   event.name === "shell" &&
                   typeof command === "string" &&
                   EffortEvidence.matchVerifier(command, settings?.verification_commands ?? []) !== undefined
-                const mutates = configured || (event.name === "shell" && !verifier)
+                const mutates = !verifier && (configured || event.name === "shell")
                 const work = Effect.gen(function* () {
                   if (mutates) yield* efforts.bumpWorkspaceRevision(input.sessionID)
                   yield* restore(executeTool(event)).pipe(
@@ -151,9 +152,10 @@ export const make = Effect.gen(function* () {
                       publisher.toolExecution(event.id, event.name, outcome).pipe(
                         Effect.tap(() =>
                           EffortEvidence.observe(
-                            { db, efforts, config },
+                            { db, efforts },
+                            settings,
                             input.sessionID,
-                            { tool: event.name, input: event.input, metadata: outcome.metadata, startedMutation: mutates },
+                            { tool: event.name, input: event.input, metadata: outcome.metadata },
                           ),
                         ),
                       ),

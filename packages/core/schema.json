@@ -1,8 +1,8 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "4f6e16c6-f070-4545-b9d0-19fcb6e5210c",
-  "prevIds": ["0ac88673-a402-45a0-b931-e694d59ccefa"],
+  "id": "89bab026-6af6-480b-9cde-9dd613a4d00a",
+  "prevIds": ["4f6e16c6-f070-4545-b9d0-19fcb6e5210c"],
   "ddl": [
     {
       "name": "account_state",
@@ -73,11 +73,19 @@
       "entityType": "tables"
     },
     {
+      "name": "session_effort",
+      "entityType": "tables"
+    },
+    {
       "name": "session_inbox",
       "entityType": "tables"
     },
     {
       "name": "session_message",
+      "entityType": "tables"
+    },
+    {
+      "name": "session_message_text",
       "entityType": "tables"
     },
     {
@@ -1332,6 +1340,106 @@
       "autoincrement": false,
       "default": null,
       "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "base_level",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "open_failure",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "evidence_sequence",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_applied_variant",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "level",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "clean_passes",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "verdict_revision",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "verdict_digest",
+      "entityType": "columns",
+      "table": "session_effort"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
       "name": "id",
       "entityType": "columns",
       "table": "session_inbox"
@@ -1465,6 +1573,66 @@
       "name": "data",
       "entityType": "columns",
       "table": "session_message"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "message_id",
+      "entityType": "columns",
+      "table": "session_message_text"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "session_message_text"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "seq",
+      "entityType": "columns",
+      "table": "session_message_text"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "type",
+      "entityType": "columns",
+      "table": "session_message_text"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_created",
+      "entityType": "columns",
+      "table": "session_message_text"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "text",
+      "entityType": "columns",
+      "table": "session_message_text"
     },
     {
       "type": "text",
@@ -2112,6 +2280,17 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
+      "name": "fk_session_effort_session_id_session_v2_id_fk",
+      "entityType": "fks",
+      "table": "session_effort"
+    },
+    {
+      "columns": ["session_id"],
+      "tableTo": "session_v2",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
       "name": "fk_session_inbox_session_id_session_v2_id_fk",
       "entityType": "fks",
       "table": "session_inbox"
@@ -2126,6 +2305,28 @@
       "name": "fk_session_message_session_id_session_v2_id_fk",
       "entityType": "fks",
       "table": "session_message"
+    },
+    {
+      "columns": ["message_id"],
+      "tableTo": "session_message",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_session_message_text_message_id_session_message_id_fk",
+      "entityType": "fks",
+      "table": "session_message_text"
+    },
+    {
+      "columns": ["session_id"],
+      "tableTo": "session_v2",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_session_message_text_session_id_session_v2_id_fk",
+      "entityType": "fks",
+      "table": "session_message_text"
     },
     {
       "columns": ["message_id"],
@@ -2305,6 +2506,13 @@
       "entityType": "pks"
     },
     {
+      "columns": ["session_id"],
+      "nameExplicit": false,
+      "name": "session_effort_pk",
+      "table": "session_effort",
+      "entityType": "pks"
+    },
+    {
       "columns": ["id"],
       "nameExplicit": false,
       "name": "session_inbox_pk",
@@ -2316,6 +2524,13 @@
       "nameExplicit": false,
       "name": "session_message_pk",
       "table": "session_message",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["message_id"],
+      "nameExplicit": false,
+      "name": "session_message_text_pk",
+      "table": "session_message_text",
       "entityType": "pks"
     },
     {
@@ -2619,6 +2834,24 @@
           "isExpression": false
         },
         {
+          "value": "seq",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "session_message_text_session_seq_idx",
+      "entityType": "indexes",
+      "table": "session_message_text"
+    },
+    {
+      "columns": [
+        {
+          "value": "session_id",
+          "isExpression": false
+        },
+        {
           "value": "message_id",
           "isExpression": false
         },
@@ -2689,229 +2922,6 @@
       "name": "session_v2_time_suspended_idx",
       "entityType": "indexes",
       "table": "session_v2"
-    },
-    {
-      "name": "session_effort",
-      "entityType": "tables"
-    },
-    {
-      "name": "session_message_text",
-      "entityType": "tables"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "session_id",
-      "entityType": "columns",
-      "table": "session_effort"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "base_level",
-      "entityType": "columns",
-      "table": "session_effort"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "open_failure",
-      "entityType": "columns",
-      "table": "session_effort"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "0",
-      "generated": null,
-      "name": "revision",
-      "entityType": "columns",
-      "table": "session_effort"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "last_applied_variant",
-      "entityType": "columns",
-      "table": "session_effort"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "level",
-      "entityType": "columns",
-      "table": "session_effort"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "0",
-      "generated": null,
-      "name": "clean_passes",
-      "entityType": "columns",
-      "table": "session_effort"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "verdict_revision",
-      "entityType": "columns",
-      "table": "session_effort"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "verdict_digest",
-      "entityType": "columns",
-      "table": "session_effort"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "message_id",
-      "entityType": "columns",
-      "table": "session_message_text"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "session_id",
-      "entityType": "columns",
-      "table": "session_message_text"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "seq",
-      "entityType": "columns",
-      "table": "session_message_text"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "type",
-      "entityType": "columns",
-      "table": "session_message_text"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "time_created",
-      "entityType": "columns",
-      "table": "session_message_text"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "text",
-      "entityType": "columns",
-      "table": "session_message_text"
-    },
-    {
-      "columns": ["session_id"],
-      "tableTo": "session_v2",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_session_effort_session_id_session_v2_id_fk",
-      "entityType": "fks",
-      "table": "session_effort"
-    },
-    {
-      "columns": ["message_id"],
-      "tableTo": "session_message",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_session_message_text_message_id_session_message_id_fk",
-      "entityType": "fks",
-      "table": "session_message_text"
-    },
-    {
-      "columns": ["session_id"],
-      "tableTo": "session_v2",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_session_message_text_session_id_session_v2_id_fk",
-      "entityType": "fks",
-      "table": "session_message_text"
-    },
-    {
-      "columns": ["session_id"],
-      "nameExplicit": false,
-      "name": "session_effort_pk",
-      "table": "session_effort",
-      "entityType": "pks"
-    },
-    {
-      "columns": ["message_id"],
-      "nameExplicit": false,
-      "name": "session_message_text_pk",
-      "table": "session_message_text",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        {
-          "value": "session_id",
-          "isExpression": false
-        },
-        {
-          "value": "seq",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "session_message_text_session_seq_idx",
-      "entityType": "indexes",
-      "table": "session_message_text"
     }
   ],
   "renames": []

@@ -1,10 +1,12 @@
 import { describe, expect, test } from "bun:test"
 import { Effect, Layer } from "effect"
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
+import { Bus } from "@opencode/core/bus"
 import { Database } from "@opencode/core/database/database"
+import { backfillEvidenceSequence } from "@opencode/core/database/migration/20261101223922_add_session_effort_sequence"
 import { EffortStore } from "@opencode/core/effort/store"
 import { ProjectTable } from "@opencode/core/project/sql"
-import { SessionTable } from "@opencode/core/session/sql"
+import { SessionEffortTable, SessionTable } from "@opencode/core/session/sql"
 import { Project } from "@opencode/schema/project"
 import { AbsolutePath } from "@opencode/schema/schema"
 import { SessionID } from "@opencode/schema/session-id"
@@ -26,7 +28,11 @@ const it = testEffect(Layer.mergeAll(DatabaseLayer, EffortStore.layer.pipe(Layer
 const seed = Effect.fn(function* (sessionID: SessionID) {
   const database = yield* Database.Service
   const worktree = AbsolutePath.make("/work")
-  yield* database.db.insert(ProjectTable).values({ id: Project.ID.global, worktree, sandboxes: [] }).run()
+  yield* database.db
+    .insert(ProjectTable)
+    .values({ id: Project.ID.global, worktree, sandboxes: [] })
+    .onConflictDoNothing()
+    .run()
   yield* database.db
     .insert(SessionTable)
     .values({ id: sessionID, project_id: Project.ID.global, directory: worktree, slug: "effort", version: "test" })
@@ -41,7 +47,7 @@ describe("EffortStore", () => {
       yield* seed(id)
       expect(yield* store.get(id)).toBeUndefined()
 
-      const openFailure = { verifier: "pwsh\0pnpm typecheck\0/work", sequence: 4, revision: 7 }
+      const openFailure = { verifier: "pnpm typecheck", sequence: 4, revision: 7 }
       yield* store.set({
         sessionID: id,
         baseLevel: "low",
@@ -61,7 +67,7 @@ describe("EffortStore", () => {
         cleanPasses: 1,
       })
 
-      yield* store.setLevel(id, "low", 0)
+      yield* store.recordEvidence(id, { openFailure, level: "low", cleanPasses: 0 })
       const stepped = yield* store.get(id)
       expect(stepped?.level).toBe("low")
       expect(stepped?.cleanPasses).toBe(0)
@@ -83,6 +89,31 @@ describe("EffortStore", () => {
     })
   })
 
+  it.effect("backfills the observation order from the session's latest event sequence", () => {
+    return Effect.gen(function* () {
+      const database = yield* Database.Service
+      const store = yield* EffortStore.Service
+      const progressed = SessionID.make("ses_effort_backfill_progressed")
+      const fresh = SessionID.make("ses_effort_backfill_fresh")
+      yield* seed(progressed)
+      yield* seed(fresh)
+      yield* store.set({ sessionID: progressed, baseLevel: "standard", revision: 0 })
+      yield* store.set({ sessionID: fresh, baseLevel: "standard", revision: 0 })
+      yield* Bus.reserveSequence(database.db, progressed, 7)
+
+      yield* database.db.run(sql.raw(backfillEvidenceSequence))
+
+      const sequenceOf = (sessionID: SessionID) =>
+        database.db
+          .select({ sequence: SessionEffortTable.evidence_sequence })
+          .from(SessionEffortTable)
+          .where(eq(SessionEffortTable.session_id, sessionID))
+          .get()
+      expect((yield* sequenceOf(progressed))?.sequence).toBe(7)
+      expect((yield* sequenceOf(fresh))?.sequence).toBe(0)
+    })
+  })
+
   it.effect("counts every concurrent revision bump", () => {
     return Effect.gen(function* () {
       const store = yield* EffortStore.Service
@@ -90,10 +121,58 @@ describe("EffortStore", () => {
       yield* seed(id)
       yield* store.set({ sessionID: id, baseLevel: "standard", revision: 0 })
       yield* Effect.all(
-        Array.from({ length: 8 }, () => store.bumpRevision(id)),
+        Array.from({ length: 8 }, () => store.bumpWorkspaceRevision(id)),
         { concurrency: "unbounded", discard: true },
       )
       expect((yield* store.get(id))?.revision).toBe(8)
+    })
+  })
+
+  it.effect("hands every concurrent settlement a distinct observation order", () => {
+    return Effect.gen(function* () {
+      const store = yield* EffortStore.Service
+      const id = SessionID.make("ses_effort_sequence")
+      yield* seed(id)
+      yield* store.set({ sessionID: id, baseLevel: "standard", revision: 0 })
+      const claims = yield* Effect.all(
+        Array.from({ length: 8 }, () => store.claimSequence(id)),
+        { concurrency: "unbounded" },
+      )
+      expect(claims.every((claim) => claim !== undefined)).toBe(true)
+      expect(new Set(claims).size).toBe(8)
+    })
+  })
+
+  it.effect("claims no observation order when the expected revision moved", () => {
+    return Effect.gen(function* () {
+      const store = yield* EffortStore.Service
+      const id = SessionID.make("ses_effort_sequence_guard")
+      yield* seed(id)
+      yield* store.set({ sessionID: id, baseLevel: "standard", revision: 0 })
+      yield* store.bumpWorkspaceRevision(id)
+      expect(yield* store.claimSequence(id, 0)).toBeUndefined()
+      expect(yield* store.claimSequence(id, 1)).toBe(1)
+    })
+  })
+
+  it.effect("rolls the observation order back with the transaction", () => {
+    return Effect.gen(function* () {
+      const database = yield* Database.Service
+      const store = yield* EffortStore.Service
+      const id = SessionID.make("ses_effort_sequence_rollback")
+      yield* seed(id)
+      yield* store.set({ sessionID: id, baseLevel: "standard", revision: 0 })
+
+      yield* database.db
+        .transaction(() =>
+          Effect.gen(function* () {
+            yield* store.claimSequence(id)
+            yield* Effect.die(new Error("abandoned settlement"))
+          }),
+        )
+        .pipe(Effect.exit)
+
+      expect(yield* store.claimSequence(id)).toBe(1)
     })
   })
 
@@ -104,9 +183,12 @@ describe("EffortStore", () => {
       yield* seed(id)
       yield* store.set({ sessionID: id, baseLevel: "standard", revision: 0, level: "standard", cleanPasses: 1 })
       const stale = yield* store.get(id)
-      yield* store.bumpRevision(id)
-      yield* store.setOpenFailure(id, { verifier: "bun test", sequence: 4, revision: 1 })
-      yield* store.setLevel(id, "deep", 0)
+      yield* store.bumpWorkspaceRevision(id)
+      yield* store.recordEvidence(id, {
+        openFailure: { verifier: "bun test", sequence: 4, revision: 1 },
+        level: "deep",
+        cleanPasses: 0,
+      })
       yield* store.recordSelection({ ...stale!, lastAppliedVariant: "max" })
       expect(yield* store.get(id)).toMatchObject({ revision: 1, level: "deep", cleanPasses: 0,
         openFailure: { verifier: "bun test", sequence: 4, revision: 1 }, lastAppliedVariant: "max" })
@@ -161,8 +243,15 @@ test("adaptive failure and clean-pass state survives closing and reopening the d
   const phase = (run: Effect.Effect<void, unknown, Database.Service | EffortStore.Service | Config.Service>) =>
     Effect.runPromise(run.pipe(Effect.provide(layer), Effect.scoped))
   const observe = (exit: number) => Effect.gen(function* () {
-    yield* EffortEvidence.observe({ db: (yield* Database.Service).db, efforts: yield* EffortStore.Service, config: yield* Config.Service }, id,
-      { tool: "shell", input: { command: "bun test" }, metadata: { exit } })
+    const database = yield* Database.Service
+    const efforts = yield* EffortStore.Service
+    const config = yield* Config.Service
+    yield* EffortEvidence.observe(
+      { db: database.db, efforts },
+      Config.effortPolicy(yield* config.entries()),
+      id,
+      { tool: "shell", input: { command: "bun test" }, metadata: { exit } },
+    )
   })
   await phase(Effect.gen(function* () {
     yield* seed(id)

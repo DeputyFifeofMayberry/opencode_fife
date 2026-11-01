@@ -2469,7 +2469,7 @@ describe("SessionRunnerLLM", () => {
     yield* efforts.set({
       sessionID,
       baseLevel: "low",
-      openFailure: { verifier: "pwsh\0pnpm typecheck\0/work", sequence: 4, revision: 7 },
+      openFailure: { verifier: "pnpm typecheck", sequence: 4, revision: 7 },
       revision: 7,
       lastAppliedVariant: "low",
     })
@@ -2653,6 +2653,36 @@ describe("SessionRunnerLLM", () => {
     const row = yield* efforts.get(sessionID)
     expect(row?.revision).toBe(1)
     expect(row?.cleanPasses).toBe(0)
+  })
+
+  scenario("a shell verifier stays non-mutating even when mutating_tools names shell", function* (s) {
+    // SAFETY: this fixture replaces Config.Service with Config.testLayer.
+    const config = (yield* Config.Service) as Config.TestInterface
+    yield* config.setEntries([
+      new Document({
+        type: "document",
+        info: new Info({
+          effort_policy: new ConfigEffort.Info({
+            verification_commands: ["pnpm typecheck"],
+            mutating_tools: ["shell"],
+          }),
+        }),
+      }),
+    ])
+    effortModelInfo()
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "standard", revision: 0 })
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) => editor.add({
+      name: "shell", description: "Simulated shell", input: Schema.Struct({ command: Schema.String }),
+      output: Schema.Struct({}), options: { codemode: false },
+      execute: () => Effect.succeed({ output: {}, content: [{ type: "text" as const, text: "" }], metadata: { exit: 0 } }),
+    }))
+    yield* s.llm.push(TestLLM.toolCall("configured-shell-verify", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.text("Verified", "configured-shell-answer"))
+    yield* s.runPrompt("Verify")
+    // Running a verifier is not a mutation, even when the config calls shell mutating.
+    expect((yield* efforts.get(sessionID))?.revision).toBe(0)
   })
 
   scenario("a verifier waits for an in-flight shell change", function* (s) {

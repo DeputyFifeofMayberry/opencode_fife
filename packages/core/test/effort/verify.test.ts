@@ -47,6 +47,50 @@ const staticLayer = testEffect(
   ),
 )
 
+const laterVerifierLayer = testEffect(
+  Layer.mergeAll(
+    DatabaseLayer,
+    EffortStore.layer.pipe(Layer.provide(DatabaseLayer)),
+    configLayer(
+      new ConfigEffort.Info({ verification_commands: ["bun test", "bun typecheck"], mode: "adaptive" }),
+    ),
+  ),
+)
+
+const invalidFirstLayer = testEffect(
+  Layer.mergeAll(
+    DatabaseLayer,
+    EffortStore.layer.pipe(Layer.provide(DatabaseLayer)),
+    configLayer(
+      new ConfigEffort.Info({
+        verification_commands: ["bun test && bun typecheck", "bun typecheck"],
+        mode: "adaptive",
+      }),
+    ),
+  ),
+)
+
+const removedVerifierLayer = testEffect(
+  Layer.mergeAll(
+    DatabaseLayer,
+    EffortStore.layer.pipe(Layer.provide(DatabaseLayer)),
+    configLayer(new ConfigEffort.Info({ verification_commands: ["bun test"], mode: "adaptive" })),
+  ),
+)
+
+const unmatchableFailureLayer = testEffect(
+  Layer.mergeAll(
+    DatabaseLayer,
+    EffortStore.layer.pipe(Layer.provide(DatabaseLayer)),
+    configLayer(
+      new ConfigEffort.Info({
+        verification_commands: ["bun typecheck || exit 0", "bun test"],
+        mode: "adaptive",
+      }),
+    ),
+  ),
+)
+
 const worktree = AbsolutePath.make("/work")
 const directory = "/work"
 
@@ -101,6 +145,19 @@ const seed = Effect.fn(function* (sessionID: SessionID) {
   yield* efforts.set({ sessionID, baseLevel: "standard", revision: 0 })
 })
 
+/** Harness dependencies with the layer's policy already resolved, as the caller does. */
+const deps = Effect.fn(function* (runProcess: EffortVerification.Deps["runProcess"]) {
+  const database = yield* Database.Service
+  const efforts = yield* EffortStore.Service
+  const config = yield* Config.Service
+  return {
+    db: database.db,
+    efforts,
+    settings: Config.effortPolicy(yield* config.entries()),
+    runProcess,
+  }
+})
+
 describe("EffortVerification", () => {
   ambiguousLayer.effect("skips an ambiguous configured verifier without recording a verdict", () =>
     Effect.gen(function* () {
@@ -108,9 +165,9 @@ describe("EffortVerification", () => {
       const id = SessionID.make("ses_verify_ambiguous")
       yield* seed(id)
       const efforts = yield* EffortStore.Service
-      yield* efforts.bumpRevision(id)
+      yield* efforts.bumpWorkspaceRevision(id)
       yield* EffortVerification.runIfDirty(
-        { db: (yield* Database.Service).db, efforts, config: yield* Config.Service, runProcess: runs.runProcess },
+        yield* deps(runs.runProcess),
         { sessionID: id, directory },
       )
       expect(runs.verifierCalls).toBe(0)
@@ -125,10 +182,10 @@ describe("EffortVerification", () => {
       yield* seed(id)
       const efforts = yield* EffortStore.Service
       // A model mutation since the seed marks the session dirty.
-      yield* efforts.bumpRevision(id)
+      yield* efforts.bumpWorkspaceRevision(id)
 
       yield* EffortVerification.runIfDirty(
-        { db: (yield* Database.Service).db, efforts, config: yield* Config.Service, runProcess: runs.runProcess },
+        yield* deps(runs.runProcess),
         { sessionID: id, directory },
       )
 
@@ -146,17 +203,12 @@ describe("EffortVerification", () => {
       const id = SessionID.make("ses_verify_decay")
       yield* seed(id)
       const efforts = yield* EffortStore.Service
-      yield* efforts.setLevel(id, "standard", 0)
-      yield* efforts.bumpRevision(id)
+      yield* efforts.recordEvidence(id, { openFailure: undefined, level: "standard", cleanPasses: 0 })
+      yield* efforts.bumpWorkspaceRevision(id)
       const run = () =>
         Effect.gen(function* () {
           yield* EffortVerification.runIfDirty(
-            {
-              db: (yield* Database.Service).db,
-              efforts,
-              config: yield* Config.Service,
-              runProcess: runs.runProcess,
-            },
+            yield* deps(runs.runProcess),
             { sessionID: id, directory },
           )
         })
@@ -185,10 +237,10 @@ describe("EffortVerification", () => {
       const id = SessionID.make("ses_verify_digest")
       yield* seed(id)
       const efforts = yield* EffortStore.Service
-      yield* efforts.bumpRevision(id)
+      yield* efforts.bumpWorkspaceRevision(id)
 
       yield* EffortVerification.runIfDirty(
-        { db: (yield* Database.Service).db, efforts, config: yield* Config.Service, runProcess: runs.runProcess },
+        yield* deps(runs.runProcess),
         { sessionID: id, directory },
       )
 
@@ -213,7 +265,7 @@ describe("EffortVerification", () => {
           return result
         })
       yield* EffortVerification.runIfDirty(
-        { db: (yield* Database.Service).db, efforts, config: yield* Config.Service, runProcess },
+        yield* deps(runProcess),
         { sessionID: id, directory },
       )
       const row = yield* efforts.get(id)
@@ -230,10 +282,10 @@ describe("EffortVerification", () => {
       const id = SessionID.make("ses_verify_spawn")
       yield* seed(id)
       const efforts = yield* EffortStore.Service
-      yield* efforts.bumpRevision(id)
+      yield* efforts.bumpWorkspaceRevision(id)
 
       yield* EffortVerification.runIfDirty(
-        { db: (yield* Database.Service).db, efforts, config: yield* Config.Service, runProcess: runs.runProcess },
+        yield* deps(runs.runProcess),
         { sessionID: id, directory },
       )
 
@@ -249,12 +301,8 @@ describe("EffortVerification", () => {
       const runs = scriptedRuns([], [])
       const id = SessionID.make("ses_verify_clean")
       yield* seed(id)
-      const efforts = yield* EffortStore.Service
 
-      yield* EffortVerification.runIfDirty(
-        { db: (yield* Database.Service).db, efforts, config: yield* Config.Service, runProcess: runs.runProcess },
-        { sessionID: id, directory },
-      )
+      yield* EffortVerification.runIfDirty(yield* deps(runs.runProcess), { sessionID: id, directory })
 
       // The digest probe observes workspace state; only the verifier stays silent.
       expect(runs.gitCalls).toBe(1)
@@ -268,15 +316,106 @@ describe("EffortVerification", () => {
       const id = SessionID.make("ses_verify_static")
       yield* seed(id)
       const efforts = yield* EffortStore.Service
-      yield* efforts.bumpRevision(id)
+      yield* efforts.bumpWorkspaceRevision(id)
 
-      yield* EffortVerification.runIfDirty(
-        { db: (yield* Database.Service).db, efforts, config: yield* Config.Service, runProcess: runs.runProcess },
-        { sessionID: id, directory },
-      )
+      yield* EffortVerification.runIfDirty(yield* deps(runs.runProcess), { sessionID: id, directory })
 
       expect(runs.gitCalls).toBe(0)
       expect(runs.verifierCalls).toBe(0)
     })
   })
+
+  unmatchableFailureLayer.effect("stops when the failing verifier cannot be attributed", () =>
+    Effect.gen(function* () {
+      const runs = scriptedRuns([1], [0])
+      const id = SessionID.make("ses_verify_unmatchable_failure")
+      yield* seed(id)
+      const efforts = yield* EffortStore.Service
+      yield* efforts.set({
+        sessionID: id,
+        baseLevel: "standard",
+        revision: 1,
+        level: "deep",
+        cleanPasses: 0,
+        openFailure: { verifier: "bun typecheck || exit 0", sequence: 0, revision: 1 },
+      })
+
+      yield* EffortVerification.runIfDirty(yield* deps(runs.runProcess), { sessionID: id, directory })
+
+      // No other command can clear that failure, so running one would only burn a pass.
+      expect(runs.verifierCalls).toBe(0)
+      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("bun typecheck || exit 0")
+    }),
+  )
+
+  laterVerifierLayer.effect("clears a failure opened by a later configured verifier", () =>
+    Effect.gen(function* () {
+      const runs = scriptedRuns([1], [0])
+      const id = SessionID.make("ses_verify_later_verifier")
+      yield* seed(id)
+      const efforts = yield* EffortStore.Service
+      yield* efforts.set({
+        sessionID: id,
+        baseLevel: "standard",
+        revision: 1,
+        level: "deep",
+        cleanPasses: 0,
+        openFailure: { verifier: "bun typecheck", sequence: 0, revision: 1 },
+      })
+
+      yield* EffortVerification.runIfDirty(yield* deps(runs.runProcess), { sessionID: id, directory })
+
+      // The failing verifier is not the first entry; running `bun test` would never clear it.
+      expect(runs.verifierCalls).toBe(1)
+      expect((yield* efforts.get(id))?.openFailure).toBeUndefined()
+    }),
+  )
+
+  invalidFirstLayer.effect("skips an unusable first entry and runs a later usable one", () =>
+    Effect.gen(function* () {
+      const runs = scriptedRuns([1], [0])
+      const id = SessionID.make("ses_verify_invalid_first")
+      yield* seed(id)
+      const efforts = yield* EffortStore.Service
+      yield* efforts.set({
+        sessionID: id,
+        baseLevel: "standard",
+        revision: 0,
+        level: "standard",
+        cleanPasses: 0,
+      })
+      yield* efforts.bumpWorkspaceRevision(id)
+
+      yield* EffortVerification.runIfDirty(yield* deps(runs.runProcess), { sessionID: id, directory })
+
+      // A clean pass only counts when the command is attributable. The first entry is a
+      // compound command, so this fails if the harness takes it instead of the usable one.
+      expect(runs.verifierCalls).toBe(1)
+      expect((yield* efforts.get(id))?.cleanPasses).toBe(1)
+    }),
+  )
+
+  removedVerifierLayer.effect("runs nothing when the failing verifier is no longer configured", () =>
+    Effect.gen(function* () {
+      const runs = scriptedRuns([1], [0])
+      const id = SessionID.make("ses_verify_removed_verifier")
+      yield* seed(id)
+      const efforts = yield* EffortStore.Service
+      yield* efforts.set({
+        sessionID: id,
+        baseLevel: "standard",
+        revision: 1,
+        level: "deep",
+        cleanPasses: 0,
+        openFailure: { verifier: "bun typecheck", sequence: 0, revision: 1 },
+      })
+
+      yield* EffortVerification.runIfDirty(yield* deps(runs.runProcess), { sessionID: id, directory })
+
+      // `bun test` cannot clear a `bun typecheck` failure, so running it would only burn a
+      // verifier run on every idle pass without ever recovering.
+      expect(runs.verifierCalls).toBe(0)
+      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("bun typecheck")
+    }),
+  )
 })

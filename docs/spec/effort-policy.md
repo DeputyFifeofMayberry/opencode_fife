@@ -67,16 +67,28 @@ shown. What the provider actually applies on the wire is a benchmark concern
 ## Escalation loop
 
 Configured commands (`effort_policy.verification_commands`) classify at tool
-settlement. Agents rarely run a verifier verbatim — they pipe it into an output
-filter or append flags — so matching tolerates decorated invocations: compound
-commands (`build && pnpm typecheck`, `typecheck 2>&1 | Select-String …`)
-classify on any segment after redirection tokens are stripped, and appended
-flags count at the token boundary (`pnpm typecheck --pretty=false` matches,
-`pnpm typecheck-strict` does not); a non-zero exit opens an escalation and a
-zero exit clears one. Clearing requires the pass to be no older than the failure
-(sequence) and not from a pre-mutation workspace (revision): file-mutating
-tools — `write`, `edit`, `patch` by default, extensible via
-`effort_policy.mutating_tools` — advance the revision on successful settlement.
+settlement. Identity is the bare command, matched exactly, with the working
+directory ignored: `pnpm typecheck` matches, while
+`pnpm typecheck --pretty=false`, `build && pnpm typecheck`, redirections, quotes,
+and shell substitution do not. A shell reports one status for a complete
+expression, so a compound or decorated command has no exit that can be attributed
+to the verifier itself.
+
+A non-zero exit opens an escalation; a zero exit clears one. Clearing requires the
+same verifier, a strictly newer observation order, and a revision that is not
+older than the failure's. File-mutating tools — `write`, `edit`, `patch` by
+default, extensible via `effort_policy.mutating_tools` — advance the revision when
+they start, and so does any shell command that is not a verifier. Running a
+verifier never advances it.
+
+Because identity ignores the working directory, a session can clear its escalation
+by running the configured command wherever that command succeeds. The pass has to
+be real, but the directory is not part of the evidence. That is the accepted
+trade-off for not silently disabling escalation when a directory moves.
+
+Observation order is a durable per-session counter (`evidence_sequence`), claimed
+once per qualifying settlement inside the transaction that records its effect. It
+is independent of the session's event log.
 
 ## Adaptive mode
 
@@ -93,7 +105,9 @@ controller; `static` (default) keeps the behavior above.
 - **Down slow.** Consecutive qualifying clean passes — the clearing pass is the
   first — step the level down one at a time once `effort_policy.clean_passes`
   (default 2) accumulate, floored at the seed. Stale passes and infrastructure
-  observations neither count nor reset. A failure resets the counter.
+  observations neither count nor reset. A failure resets the counter, and so does
+  any revision bump; because every non-verifier shell dispatch bumps, the counter
+  only accumulates across quiet stretches.
 - **Decide.** The working level is the durable level, raised by the plan pin;
   the open failure holds the raise instead of deriving it. A level above the
   base with no open failure reports `step-down`, and the timeline renders it as
@@ -112,13 +126,24 @@ changed workspace digest — the runner executes one configured verifier itself 
 the session's directory and feeds the settlement through the same evidence path
 (`EffortEvidence.observe`, tool `harness-verifier`).
 
-- **Selection.** The verifier with the open failure if one exists, else the
-  first configured command. One command per idle boundary.
+- **Selection.** The verifier named by the open failure, when it is still
+  configured; otherwise the first configured entry whose exit can be attributed.
+  One command per idle boundary. An unusable entry is skipped and warned about
+  once per process. The harness runs nothing when the failure's verifier cannot
+  clear it — because it is configured but unusable, or because it is no longer
+  configured at all. The policy clears a failure only for the same verifier, so
+  another command could never recover it and would spend one run per idle pass.
 - **Currency.** A harness run records the revision and a workspace digest
   (`git status --porcelain` hash when the session directory is a repository;
   revision fallback otherwise) in `session_effort` (`verdict_revision`,
-  `verdict_digest`), and bypasses the stale-pass guard that model-initiated
-  settlements need — a harness run at idle is current by construction.
+  `verdict_digest`), so the next idle pass can tell whether the work it verified
+  is still the work on disk. The digest is taken before the run, so a verifier
+  that touches the workspace leaves it stale and costs one more pass. A raised
+  level also keeps the session dirty until the clean-pass threshold decays it, so
+  several passes can follow one failure.
+- **Overlap.** A verdict is discarded when the session revision changed while the
+  verifier ran. The session stays dirty and the next idle pass tries again; any
+  evidence the run already recorded stands.
 - **Cancellation.** A new busy period for the same session cancels the pending
   run (`session.effort` fibers join by session in a `FiberMap`). Cancelled,
   timed-out (`verification_timeout`, default 120s), and spawn-failed runs are
@@ -131,10 +156,9 @@ the session's directory and feeds the settlement through the same evidence path
 
 - The policy is inert while `verification_commands` is empty.
 - Spawn failures, cancels, timeouts, and unconfigured commands change nothing.
-- The v1 verifier identity is the configured command per session; it ignores
-  the working directory. Known v1 limitation: shell-mediated file mutations do
-  not advance the revision, so a stale pass through the shell can clear an
-  escalation that a tool-path mutation would have kept open.
+- Verifier identity is the configured command alone; it ignores the working
+  directory. A shell command that is not a verifier advances the revision, so a
+  shell-mediated mutation no longer lets a stale pass clear an escalation.
 
 State is one durable row per session (`session_effort`), so escalation survives
 restarts. `session.effort.transitioned` is published edge-triggered — when an

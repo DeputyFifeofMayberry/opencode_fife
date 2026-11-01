@@ -1,9 +1,8 @@
 export * as EffortEvidence from "./evidence.js"
 
 import { Effect } from "effect"
-import { Bus } from "../bus.js"
-import { Config } from "../config.js"
 import type { Database } from "../database/database.js"
+import type { ConfigEffort } from "@opencode/schema/config/effort"
 import type { SessionSchema } from "../session/schema.js"
 import { applyEvidence } from "./policy/index.js"
 import { EffortStore } from "./store.js"
@@ -11,68 +10,116 @@ import { EffortStore } from "./store.js"
 /**
  * Observes one settled tool call and applies it to the session's durable state.
  *
- * Only configured verification commands classify: a non-zero exit opens an
- * escalation, a zero exit clears one, and everything else — spawn failures,
- * cancels, timeouts, unconfigured commands — changes nothing. File-mutating
- * tools advance the workspace revision their settlement observed. Only direct,
- * simple verifier invocations are attributed: a shell exit belongs to the whole
- * command, so pipelines, redirects, shell expansions and compound expressions
- * cannot establish the verifier's own result. The verifier identity omits cwd.
+ * Classification is delegated to `classify`, so the model path and the idle harness
+ * cannot disagree about what a verifier run is. Settings arrive already resolved, so this
+ * module reads no configuration. The observation order is claimed and the policy's output
+ * written in one transaction; a settlement whose expected revision no longer matches claims
+ * nothing. The workspace revision is not touched here — it advances when a mutating tool
+ * starts.
  */
 export const observe = Effect.fn("EffortEvidence.observe")(function* (
   deps: {
     readonly db: Database.Interface["db"]
     readonly efforts: EffortStore.Interface
-    readonly config: Config.Interface
   },
+  settings: ConfigEffort.Info | undefined,
   sessionID: SessionSchema.ID,
-  settlement: { readonly tool: string; readonly input: unknown; readonly metadata: unknown; readonly startedMutation?: boolean; readonly expectedRevision?: number },
+  settlement: Settlement & { readonly expectedRevision?: number },
 ) {
-  const settings = Config.effortPolicy(yield* deps.config.entries())
-  const verifiers = settings?.verification_commands ?? []
-  const mutating = settings?.mutating_tools ?? ["write", "edit", "patch"]
-  const adaptive = settings?.mode === "adaptive"
+  const verdict = classify(settings, settlement)
+  if (verdict.kind === "not-a-verifier" || verdict.kind === "infrastructure") return
 
-  if (mutating.includes(settlement.tool) && !settlement.startedMutation) yield* deps.efforts.bumpRevision(sessionID)
-
-  if (settlement.tool !== "shell" && settlement.tool !== "harness-verifier") return
-  const command = commandOf(settlement.input)
-  const exit = exitOf(settlement.metadata)
-  if (command === undefined || exit === undefined) return
-  const verifier = matchVerifier(command, verifiers)
-  if (verifier === undefined) return
-
-  yield* deps.db.transaction(() => Effect.gen(function* () {
-    const row = yield* deps.efforts.get(sessionID)
-    if (settlement.expectedRevision !== undefined && row?.revision !== settlement.expectedRevision) return
-    const sequence = (yield* Bus.latestSequence(deps.db, sessionID)) + 1
-    yield* Bus.reserveSequence(deps.db, sessionID, sequence)
-    const state = {
-      base: row?.baseLevel ?? ("standard" as const),
-      ...(row?.openFailure === undefined ? {} : { openFailure: row.openFailure }),
-      ...(row?.lastAppliedVariant === undefined ? {} : { lastAppliedVariant: row.lastAppliedVariant }),
-      ...(adaptive && row !== undefined
-        ? {
-            level: row.level ?? row.baseLevel,
-            cleanPasses: row.cleanPasses ?? 0,
-            cleanPassesNeeded: settings?.clean_passes ?? 2,
-          }
-        : {}),
-    }
-    const next = applyEvidence(
-      state,
-      {
-        kind: exit === 0 ? "verification-pass" : "verification-failure",
-        verifier,
+  yield* deps.db.transaction(() =>
+    Effect.gen(function* () {
+      const sequence = yield* deps.efforts.claimSequence(sessionID, settlement.expectedRevision)
+      if (sequence === undefined) return
+      const row = yield* deps.efforts.get(sessionID)
+      if (row === undefined) return
+      const adaptive = settings?.mode === "adaptive"
+      const state = {
+        base: row.baseLevel,
+        ...(row.openFailure === undefined ? {} : { openFailure: row.openFailure }),
+        ...(row.lastAppliedVariant === undefined ? {} : { lastAppliedVariant: row.lastAppliedVariant }),
+        ...(adaptive
+          ? {
+              level: row.level ?? row.baseLevel,
+              cleanPasses: row.cleanPasses ?? 0,
+              cleanPassesNeeded: settings?.clean_passes ?? 2,
+            }
+          : {}),
+      }
+      const next = applyEvidence(state, {
+        kind: verdict.kind,
+        verifier: verdict.verifier,
         sequence,
-        revision: row?.revision ?? 0,
-      },
-    )
-    yield* deps.efforts.setOpenFailure(sessionID, next.openFailure)
-    // The evidence loop owns the adaptive level: a failure raises it, clean passes decay it.
-    if (next.level !== state.level || (next.cleanPasses ?? 0) !== (state.cleanPasses ?? 0))
-      yield* deps.efforts.setLevel(sessionID, next.level ?? state.base, next.cleanPasses ?? 0)
-  })).pipe(Effect.orDie)
+        revision: row.revision,
+      })
+      yield* deps.efforts.recordEvidence(sessionID, {
+        openFailure: next.openFailure,
+        ...(adaptive ? { level: next.level ?? state.base, cleanPasses: next.cleanPasses ?? 0 } : {}),
+      })
+    }),
+  ).pipe(Effect.orDie)
+})
+
+/** One finished tool call, before anything has been decided about it. */
+export interface Settlement {
+  readonly tool: string
+  readonly input: unknown
+  readonly metadata: unknown
+}
+
+/** What one settlement means for the session's verification state. */
+export type VerifierVerdict =
+  | { readonly kind: "not-a-verifier" }
+  | { readonly kind: "infrastructure" }
+  | { readonly kind: "verification-pass"; readonly verifier: string }
+  | { readonly kind: "verification-failure"; readonly verifier: string }
+
+/** Tool name the idle harness uses for its settlements, so both paths agree it is a verifier. */
+export const HARNESS_TOOL = "harness-verifier"
+
+/**
+ * Decide what one finished tool call means, given resolved settings.
+ *
+ * Pure: it reads no configuration and performs no I/O, so the model path and the idle
+ * harness reach the same verdict from the same facts. Only a configured command's own
+ * exit counts; infrastructure outcomes leave the state untouched.
+ */
+export function classify(settings: ConfigEffort.Info | undefined, settlement: Settlement): VerifierVerdict {
+  if (settlement.tool !== "shell" && settlement.tool !== HARNESS_TOOL) return { kind: "not-a-verifier" }
+  const command = commandOf(settlement.input)
+  if (command === undefined) return { kind: "not-a-verifier" }
+  const verifier = matchVerifier(command, settings?.verification_commands ?? [])
+  if (verifier === undefined) return { kind: "not-a-verifier" }
+  const exit = exitOf(settlement.metadata)
+  if (exit === undefined) return { kind: "infrastructure" }
+  return { kind: exit === 0 ? "verification-pass" : "verification-failure", verifier }
+}
+
+/** Configured commands that already produced a warning in this process. */
+const warnedCommands = new Set<string>()
+
+/**
+ * Warn once per distinct configured command that can never be attributed.
+ *
+ * A compound or decorated entry silently disables escalation, so it is worth saying out
+ * loud — but only once per process, not on every step.
+ */
+export const warnUnmatchable = Effect.fn("EffortEvidence.warnUnmatchable")(function* (
+  settings: ConfigEffort.Info | undefined,
+) {
+  const configured = (settings?.verification_commands ?? []).map((command) => command.trim())
+  const pending = [...new Set(configured)].filter(
+    (command) =>
+      command.length > 0 && matchVerifier(command, [command]) === undefined && !warnedCommands.has(command),
+  )
+  pending.forEach((command) => warnedCommands.add(command))
+  yield* Effect.forEach(
+    pending,
+    (command) => Effect.logWarning("configured verification command is not a simple command", { command }),
+    { discard: true },
+  )
 })
 
 /** Match only a simple command whose process exit can belong to the verifier. */
