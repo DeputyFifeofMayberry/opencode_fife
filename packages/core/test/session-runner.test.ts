@@ -2621,6 +2621,85 @@ describe("SessionRunnerLLM", () => {
       expect(request.model.defaults?.providerOptions).toMatchObject({ effort: "high" })
   })
 
+  scenario("shell changes invalidate prior clean passes", function* (s) {
+    effortModelInfo()
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "standard", revision: 0, level: "deep", cleanPasses: 1 })
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) => editor.add({
+      name: "shell", description: "Simulated shell", input: Schema.Struct({ command: Schema.String }),
+      output: Schema.Struct({}), options: { codemode: false },
+      execute: () => Effect.succeed({ output: {}, content: [{ type: "text" as const, text: "" }], metadata: { exit: 0 } }),
+    }))
+    yield* s.llm.push(TestLLM.toolCall("shell-change", "shell", { command: "node edit.js" }))
+    yield* s.llm.push(TestLLM.text("Changed", "shell-change-answer"))
+    yield* s.runPrompt("Change a file")
+    const row = yield* efforts.get(sessionID)
+    expect(row?.revision).toBe(1)
+    expect(row?.cleanPasses).toBe(0)
+  })
+
+  scenario("a verifier waits for an in-flight shell change", function* (s) {
+    effortModelInfo()
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "standard", revision: 0, level: "deep", cleanPasses: 1 })
+    const started = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    const executions: string[] = []
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) => editor.add({
+      name: "shell", description: "Simulated shell", input: Schema.Struct({ command: Schema.String }),
+      output: Schema.Struct({}), options: { codemode: false },
+      execute: ({ command }) => Effect.gen(function* () {
+        executions.push(command)
+        if (command === "node edit.js") {
+          yield* Deferred.succeed(started, undefined)
+          yield* Deferred.await(release)
+        }
+        return { output: {}, content: [{ type: "text" as const, text: "" }], metadata: { exit: 0 } }
+      }),
+    }))
+    yield* s.admit("Run change and verifier")
+    yield* s.llm.push(TestLLM.toolCalls(
+      LLMEvent.toolCall({ id: "change-parallel", name: "shell", input: { command: "node edit.js" } }),
+      LLMEvent.toolCall({ id: "verify-parallel", name: "shell", input: { command: "pnpm typecheck" } }),
+    ), TestLLM.text("Done", "parallel-verifier-answer"))
+    const running = yield* s.resume.pipe(Effect.forkChild)
+    yield* Deferred.await(started)
+    // Give the provider fiber a chance to schedule the second call while the first remains blocked.
+    for (let i = 0; i < 10; i++) yield* Effect.yieldNow
+    expect(executions).toEqual(["node edit.js"])
+    yield* Deferred.succeed(release, undefined)
+    yield* Fiber.join(running)
+    expect(executions).toEqual(["node edit.js", "pnpm typecheck"])
+    expect((yield* efforts.get(sessionID))?.revision).toBe(1)
+  })
+
+  scenario("interrupting a shell releases the workspace lock", function* (s) {
+    effortModelInfo()
+    const efforts = yield* EffortStore.Service
+    yield* efforts.set({ sessionID, baseLevel: "standard", revision: 0 })
+    const started = yield* Deferred.make<void>()
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) => editor.add({
+      name: "shell", description: "Simulated shell", input: Schema.Struct({ command: Schema.String }),
+      output: Schema.Struct({}), options: { codemode: false },
+      execute: ({ command }) => command === "node wait.js"
+        ? Deferred.succeed(started, undefined).pipe(Effect.andThen(Effect.never))
+        : Effect.succeed({ output: {}, content: [{ type: "text" as const, text: "" }], metadata: { exit: 0 } }),
+    }))
+    yield* s.admit("Run shell")
+    yield* s.llm.push(TestLLM.toolCall("shell-wait", "shell", { command: "node wait.js" }))
+    const running = yield* s.resume.pipe(Effect.forkChild)
+    yield* Deferred.await(started)
+    yield* s.session.interrupt(sessionID)
+    expect(yield* Fiber.await(running)).toMatchObject({ _tag: "Failure" })
+    yield* s.llm.push(TestLLM.toolCall("shell-after-cancel", "shell", { command: "node next.js" }))
+    yield* s.llm.push(TestLLM.text("Done", "shell-after-cancel-answer"))
+    yield* s.runPrompt("Continue")
+    expect((yield* efforts.get(sessionID))?.revision).toBe(2)
+  })
+
   scenario("preserves instruction values while a source is temporarily unavailable", function* (s) {
     yield* s.runPrompt("First")
     yield* s.bus.publish(SessionEvent.ModelSelected, {

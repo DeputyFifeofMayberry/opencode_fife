@@ -30,9 +30,7 @@ export interface Deps {
  *
  * This is the adaptive loop's guaranteed signal: it does not depend on the model choosing
  * to run a verification command, on the shape of its invocation, or on pipeline exit-code
- * semantics. A harness run at an idle boundary is definitionally current, so it records the
- * workspace state it observed and never goes through the stale-pass guard that
- * model-initiated settlements need.
+ * semantics. A harness verdict is discarded if the session revision changes while it runs.
  *
  * Spawn failures and timeouts are infrastructure: they change nothing, matching the
  * model-initiated classification.
@@ -93,8 +91,10 @@ export const runIfDirty = Effect.fn("EffortVerification.runIfDirty")(function* (
   yield* EffortEvidence.observe(
     { db: deps.db, efforts: deps.efforts, config: deps.config },
     input.sessionID,
-    { tool: "harness-verifier", input: { command }, metadata: { exit: result.exitCode } },
+    { tool: "harness-verifier", input: { command }, metadata: { exit: result.exitCode }, expectedRevision: row.revision },
   )
+  const current = yield* deps.efforts.get(input.sessionID)
+  if (current?.revision !== row.revision) return
   yield* deps.efforts.setVerdict(input.sessionID, {
     revision: row.revision,
     ...(digest !== undefined ? { digest } : {}),

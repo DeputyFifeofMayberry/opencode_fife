@@ -198,6 +198,32 @@ describe("EffortVerification", () => {
     })
   })
 
+  adaptiveLayer.effect("discards a verifier result when the workspace changes during the run", () =>
+    Effect.gen(function* () {
+      const runs = scriptedRuns([1], [0])
+      const id = SessionID.make("ses_verify_concurrent_change")
+      yield* seed(id)
+      const efforts = yield* EffortStore.Service
+      yield* efforts.set({ sessionID: id, baseLevel: "standard", revision: 1, level: "deep", cleanPasses: 0,
+        openFailure: { verifier: "bun typecheck", sequence: 1, revision: 1 } })
+      const runProcess = (command: ChildProcess.Command, options?: unknown): Effect.Effect<RunResult, AppProcessError> =>
+        Effect.gen(function* () {
+          const result = yield* runs.runProcess(command, options)
+          if (runs.verifierCalls === 1) yield* efforts.bumpWorkspaceRevision(id)
+          return result
+        })
+      yield* EffortVerification.runIfDirty(
+        { db: (yield* Database.Service).db, efforts, config: yield* Config.Service, runProcess },
+        { sessionID: id, directory },
+      )
+      const row = yield* efforts.get(id)
+      expect(row?.revision).toBe(2)
+      expect(row?.openFailure?.verifier).toBe("bun typecheck")
+      expect(row?.level).toBe("deep")
+      expect(row?.verdictRevision).toBeUndefined()
+    }),
+  )
+
   adaptiveLayer.effect("treats spawn failures as infrastructure", () => {
     return Effect.gen(function* () {
       const runs = scriptedRuns([1], [new AppProcessError({ command: "bun typecheck" })])

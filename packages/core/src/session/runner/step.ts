@@ -8,7 +8,7 @@ import {
   type ToolCall,
 } from "@opencode/ai/effect"
 import type { Agent } from "@opencode/schema/agent"
-import { Cause, Clock, Data, Effect, Exit, Fiber, Option, Stream } from "effect"
+import { Cause, Clock, Data, Effect, Exit, Fiber, Option, Semaphore, Stream } from "effect"
 import { SessionError } from "@opencode/schema/session-error"
 import { Bus } from "../../bus.js"
 import { Config } from "../../config.js"
@@ -75,6 +75,8 @@ export const make = Effect.gen(function* () {
   const db = (yield* Database.Service).db
   const efforts = yield* EffortStore.Service
   const config = yield* Config.Service
+  // Serialize workspace-mutating tools and verifiers within this runner location.
+  const workspaceLock = Semaphore.makeUnsafe(1)
 
   const attempt = Effect.fn("SessionStep.attempt")(function* (input: Input) {
     // The start snapshot only has to exist before local tools run, which cannot happen before Step.Started,
@@ -129,24 +131,42 @@ export const make = Effect.gen(function* () {
           toolRuns.push({
             call: event,
             fiber: yield* Effect.uninterruptibleMask((restore) =>
-              restore(executeTool(event)).pipe(
-                Effect.flatMap(toolOutput.truncate),
-                Effect.flatMap((outcome) =>
-                  publisher.toolExecution(event.id, event.name, outcome).pipe(
-                    // Evidence lands after the durable settlement, before the step settles.
-                    Effect.tap(() =>
-                      EffortEvidence.observe(
-                        { db, efforts, config },
-                        input.sessionID,
-                        { tool: event.name, input: event.input, metadata: outcome.metadata },
+              Effect.gen(function* () {
+                const settings = Config.effortPolicy(yield* config.entries())
+                const configured = (settings?.mutating_tools ?? ["write", "edit", "patch"]).includes(event.name)
+                const command =
+                  typeof event.input === "object" && event.input !== null
+                    ? (event.input as { command?: unknown }).command
+                    : undefined
+                const verifier =
+                  event.name === "shell" &&
+                  typeof command === "string" &&
+                  EffortEvidence.matchVerifier(command, settings?.verification_commands ?? []) !== undefined
+                const mutates = configured || (event.name === "shell" && !verifier)
+                const work = Effect.gen(function* () {
+                  if (mutates) yield* efforts.bumpWorkspaceRevision(input.sessionID)
+                  yield* restore(executeTool(event)).pipe(
+                    Effect.flatMap(toolOutput.truncate),
+                    Effect.flatMap((outcome) =>
+                      publisher.toolExecution(event.id, event.name, outcome).pipe(
+                        Effect.tap(() =>
+                          EffortEvidence.observe(
+                            { db, efforts, config },
+                            input.sessionID,
+                            { tool: event.name, input: event.input, metadata: outcome.metadata, startedMutation: mutates },
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                Effect.catchTag("Tool.Error", (error) =>
-                  publisher.failTool(event.id, toSessionError(error), error.metadata).pipe(Effect.asVoid),
-                ),
-              ),
+                    Effect.catchTag("Tool.Error", (error) =>
+                      publisher.failTool(event.id, toSessionError(error), error.metadata).pipe(Effect.asVoid),
+                    ),
+                  )
+                })
+                if ((event.name === "shell" || configured) && (settings?.verification_commands?.length ?? 0) > 0)
+                  yield* restore(workspaceLock.withPermit(Effect.uninterruptible(work)))
+                else yield* work
+              }),
             ).pipe(Effect.forkScoped),
           })
         }),
@@ -318,7 +338,7 @@ export const make = Effect.gen(function* () {
     )
   }, Effect.scoped)
 
-  return { attempt }
+  return { attempt, workspaceLock }
 })
 
 const isInterruptedStream = (failure: AIError) => {

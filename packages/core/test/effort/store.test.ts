@@ -97,6 +97,29 @@ describe("EffortStore", () => {
     })
   })
 
+  it.effect("invalidates all sessions in the same workspace", () =>
+    Effect.gen(function* () {
+      const db = (yield* Database.Service).db
+      const store = yield* EffortStore.Service
+      const first = SessionID.make("ses_effort_workspace_first")
+      const second = SessionID.make("ses_effort_workspace_second")
+      const other = SessionID.make("ses_effort_workspace_other")
+      yield* seed(first)
+      yield* db.insert(SessionTable).values([
+        { id: second, project_id: Project.ID.global, directory: AbsolutePath.make("/work"), slug: "second", version: "test" },
+        { id: other, project_id: Project.ID.global, directory: AbsolutePath.make("/other"), slug: "other", version: "test" },
+      ]).run()
+      for (const sessionID of [first, second, other])
+        yield* store.set({ sessionID, baseLevel: "standard", level: "deep", cleanPasses: 1, revision: 0 })
+      yield* store.bumpWorkspaceRevision(first)
+      expect((yield* store.get(first))?.revision).toBe(1)
+      expect((yield* store.get(second))?.revision).toBe(1)
+      expect((yield* store.get(second))?.cleanPasses).toBe(0)
+      expect((yield* store.get(other))?.revision).toBe(0)
+      expect((yield* store.get(other))?.cleanPasses).toBe(1)
+    }),
+  )
+
   it.effect("removes state with its session", () => {
     return Effect.gen(function* () {
       const database = yield* Database.Service

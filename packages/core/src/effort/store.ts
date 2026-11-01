@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm"
 import { Context, Effect, Layer } from "effect"
 import { makeGlobalNode } from "@opencode/util/effect/app-node"
 import type { SessionSchema } from "../session/schema.js"
-import { SessionEffortTable } from "../session/sql.js"
+import { SessionEffortTable, SessionTable } from "../session/sql.js"
 import { Database } from "../database/database.js"
 import type { EffortLevel } from "./policy/types.js"
 
@@ -44,6 +44,8 @@ export interface Interface {
   readonly setVerdict: (sessionID: SessionSchema.ID, verdict: { revision: number; digest?: string }) => Effect.Effect<void>
   /** Advances the workspace revision by one; atomic, so concurrent bumps all land. */
   readonly bumpRevision: (sessionID: SessionSchema.ID) => Effect.Effect<void>
+  /** Invalidates effort evidence for sessions in the same working directory. */
+  readonly bumpWorkspaceRevision: (sessionID: SessionSchema.ID) => Effect.Effect<void>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/EffortStore") {}
@@ -125,10 +127,21 @@ export const layer = Layer.effect(
           .run()
           .pipe(Effect.orDie)
       }),
+      bumpWorkspaceRevision: Effect.fnUntraced(function* (sessionID) {
+        yield* db
+          .update(SessionEffortTable)
+          .set({ revision: sql`${SessionEffortTable.revision} + 1`, clean_passes: 0 })
+          .where(sql`${SessionEffortTable.session_id} in (
+            select ${SessionTable.id} from ${SessionTable}
+            where ${SessionTable.directory} = (select ${SessionTable.directory} from ${SessionTable} where ${SessionTable.id} = ${sessionID})
+          )`)
+          .run()
+          .pipe(Effect.orDie)
+      }),
       bumpRevision: Effect.fnUntraced(function* (sessionID) {
         yield* db
           .update(SessionEffortTable)
-          .set({ revision: sql`${SessionEffortTable.revision} + 1` })
+          .set({ revision: sql`${SessionEffortTable.revision} + 1`, clean_passes: 0 })
           .where(eq(SessionEffortTable.session_id, sessionID))
           .run()
           .pipe(Effect.orDie)

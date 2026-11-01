@@ -545,9 +545,11 @@ const layer = Layer.effect(
       yield* FiberMap.run(
         verifications,
         input.sessionID,
-        EffortVerification.runIfDirty(
-          { db, efforts, config, runProcess: (command, options) => processes.run(command, options) },
-          { sessionID: input.sessionID, directory: location.directory },
+        steps.workspaceLock.withPermit(
+          EffortVerification.runIfDirty(
+            { db, efforts, config, runProcess: (command, options) => processes.run(command, options) },
+            { sessionID: input.sessionID, directory: location.directory },
+          ),
         ).pipe(Effect.raceFirst(wake), Effect.asVoid),
         { onlyIfMissing: true },
       )

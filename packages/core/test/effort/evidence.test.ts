@@ -182,6 +182,23 @@ describe("EffortEvidence adaptive", () => {
     ),
   )
 
+  adaptiveIt.effect("a mutation invalidates clean passes from the previous revision", () =>
+    Effect.gen(function* () {
+      const efforts = yield* EffortStore.Service
+      const id = SessionID.make("ses_evidence_mutation_resets_passes")
+      yield* seed(id)
+      yield* efforts.setLevel(id, "standard", 0)
+      yield* settle(id, "shell", "pnpm typecheck", 1)
+      yield* settle(id, "shell", "pnpm typecheck", 0)
+      expect((yield* efforts.get(id))?.cleanPasses).toBe(1)
+      yield* settle(id, "write", undefined, 0)
+      expect((yield* efforts.get(id))?.cleanPasses).toBe(0)
+      yield* settle(id, "shell", "pnpm typecheck", 0)
+      expect((yield* efforts.get(id))?.level).toBe("deep")
+      expect((yield* efforts.get(id))?.cleanPasses).toBe(1)
+    }),
+  )
+
   adaptiveIt.effect("raises the durable level on failure and decays it after clean passes", () => {
     return Effect.gen(function* () {
       const efforts = yield* EffortStore.Service
