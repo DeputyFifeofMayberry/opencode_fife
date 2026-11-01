@@ -1,0 +1,173 @@
+{
+ "evals/corpus/ai_email_vendor.md": {
+  "score": 3,
+  "label": "Minimal AI signals",
+  "issues": 4,
+  "types": {
+   "transition": 2,
+   "hollow-intensifier": 1,
+   "em-dash": 1
+  }
+ },
+ "evals/corpus/ai_essay_remote_work.md": {
+  "score": 15,
+  "label": "Minimal AI signals",
+  "issues": 10,
+  "types": {
+   "tier1": 2,
+   "tier1-clarity": 2,
+   "transition": 2,
+   "hollow-intensifier": 1,
+   "negative-parallelism": 2,
+   "em-dash": 1
+  }
+ },
+ "evals/corpus/ai_howto_network.md": {
+  "score": 18,
+  "label": "Some AI patterns",
+  "issues": 8,
+  "types": {
+   "tier1": 4,
+   "tier1-clarity": 1,
+   "transition": 2,
+   "chatbot": 1
+  }
+ },
+ "evals/corpus/ai_marketing_saas.md": {
+  "score": 11,
+  "label": "Minimal AI signals",
+  "issues": 6,
+  "types": {
+   "tier1": 3,
+   "transition": 1,
+   "negative-parallelism": 1,
+   "em-dash": 1
+  }
+ },
+ "evals/corpus/ai_review_grinder.md": {
+  "score": 11,
+  "label": "Minimal AI signals",
+  "issues": 8,
+  "types": {
+   "tier1": 2,
+   "tier1-clarity": 1,
+   "transition": 2,
+   "hollow-intensifier": 1,
+   "negative-parallelism": 1,
+   "em-dash": 1
+  }
+ },
+ "evals/corpus/ai_technical_release.md": {
+  "score": 16,
+  "label": "Some AI patterns",
+  "issues": 11,
+  "types": {
+   "tier1": 2,
+   "tier1-clarity": 1,
+   "tier2": 2,
+   "transition": 3,
+   "filler": 1,
+   "significance-inflation": 1,
+   "cross-para-burstiness": 1
+  }
+ },
+ "evals/rewrite/email_v310.md": {
+  "score": 0,
+  "label": "Clean",
+  "issues": 1,
+  "types": {
+   "em-dash": 1
+  }
+ },
+ "evals/rewrite/email_v330.md": {
+  "score": 0,
+  "label": "Clean",
+  "issues": 1,
+  "types": {
+   "em-dash": 1
+  }
+ },
+ "evals/rewrite/essay_v310.md": {
+  "score": 5,
+  "label": "Minimal AI signals",
+  "issues": 3,
+  "types": {
+   "tier1": 1,
+   "tier1-clarity": 1,
+   "em-dash": 1
+  }
+ },
+ "evals/rewrite/essay_v330.md": {
+  "score": 0,
+  "label": "Clean",
+  "issues": 0,
+  "types": {}
+ },
+ "evals/rewrite/howto_v310.md": {
+  "score": 0,
+  "label": "Clean",
+  "issues": 1,
+  "types": {
+   "em-dash": 1
+  }
+ },
+ "evals/rewrite/howto_v330.md": {
+  "score": 0,
+  "label": "Clean",
+  "issues": 1,
+  "types": {
+   "em-dash": 1
+  }
+ },
+ "evals/rewrite/marketing_v310.md": {
+  "score": 3,
+  "label": "Minimal AI signals",
+  "issues": 2,
+  "types": {
+   "tier1": 1,
+   "em-dash": 1
+  }
+ },
+ "evals/rewrite/marketing_v330.md": {
+  "score": 0,
+  "label": "Clean",
+  "issues": 1,
+  "types": {
+   "em-dash": 1
+  }
+ },
+ "evals/rewrite/review_v310.md": {
+  "score": 0,
+  "label": "Clean",
+  "issues": 1,
+  "types": {
+   "em-dash": 1
+  }
+ },
+ "evals/rewrite/review_v330.md": {
+  "score": 0,
+  "label": "Clean",
+  "issues": 1,
+  "types": {
+   "em-dash": 1
+  }
+ },
+ "evals/rewrite/technical_v310.md": {
+  "score": 3,
+  "label": "Minimal AI signals",
+  "issues": 2,
+  "types": {
+   "tier1": 1,
+   "em-dash": 1
+  }
+ },
+ "evals/rewrite/technical_v330.md": {
+  "score": 3,
+  "label": "Minimal AI signals",
+  "issues": 2,
+  "types": {
+   "tier1": 1,
+   "em-dash": 1
+  }
+ }
+}

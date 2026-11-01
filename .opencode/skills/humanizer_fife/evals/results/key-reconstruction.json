@@ -1,0 +1,68 @@
+{
+ "run1-smoke": {
+  "email": {
+   "A": "email_v330.md",
+   "B": "email_v310.md"
+  },
+  "essay": {
+   "A": "essay_v310.md",
+   "B": "essay_v330.md"
+  },
+  "howto": {
+   "A": "howto_v310.md",
+   "B": "howto_v330.md"
+  }
+ },
+ "run2": {
+  "email": {
+   "A": "email_v310.md",
+   "B": "email_v330.md"
+  },
+  "essay": {
+   "A": "essay_v310.md",
+   "B": "essay_v330.md"
+  },
+  "howto": {
+   "A": "howto_v330.md",
+   "B": "howto_v310.md"
+  },
+  "marketing": {
+   "A": "marketing_v310.md",
+   "B": "marketing_v330.md"
+  },
+  "review": {
+   "A": "review_v310.md",
+   "B": "review_v330.md"
+  },
+  "technical": {
+   "A": "technical_v310.md",
+   "B": "technical_v330.md"
+  }
+ },
+ "run3": {
+  "email": {
+   "A": "email_v310.md",
+   "B": "email_v360.md"
+  },
+  "essay": {
+   "A": "essay_v360.md",
+   "B": "essay_v310.md"
+  },
+  "howto": {
+   "A": "pre-edit (best match howto_v360.md@0.906)",
+   "B": "howto_v310.md"
+  },
+  "marketing": {
+   "A": "marketing_v310.md",
+   "B": "pre-edit (best match marketing_v310.md@0.921)"
+  },
+  "review": {
+   "A": "review_v310.md",
+   "B": "pre-edit (best match review_v310.md@0.735)"
+  },
+  "technical": {
+   "A": "technical_v310.md",
+   "B": "technical_v360.md"
+  }
+ }
+}

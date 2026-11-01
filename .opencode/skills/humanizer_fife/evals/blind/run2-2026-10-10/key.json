@@ -1,0 +1,26 @@
+{
+  "essay-1647e644": {
+    "A": "essay_v310.md",
+    "B": "essay_v330.md"
+  },
+  "howto-28c21b7e": {
+    "A": "howto_v310.md",
+    "B": "howto_v330.md"
+  },
+  "email-7c35534c": {
+    "A": "email_v310.md",
+    "B": "email_v330.md"
+  },
+  "marketing-aa3ebdfd": {
+    "A": "marketing_v310.md",
+    "B": "marketing_v330.md"
+  },
+  "review-bd5d67d7": {
+    "A": "review_v310.md",
+    "B": "review_v330.md"
+  },
+  "technical-69167e30": {
+    "A": "technical_v310.md",
+    "B": "technical_v330.md"
+  }
+}

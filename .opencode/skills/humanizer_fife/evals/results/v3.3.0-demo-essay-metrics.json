@@ -1,0 +1,36 @@
+{
+  "evals\\corpus\\ai_essay_remote_work.md": {
+    "words": 192,
+    "sentences": 14,
+    "paragraphs": 5,
+    "headings": 1,
+    "sentence_len_cv": 0.42,
+    "para_word_cv": 0.091,
+    "para_sent_cv": 0.299,
+    "punchy_closers": 0,
+    "sections": 1,
+    "one_line_paragraphs": 0,
+    "contraction_rate": 0.357,
+    "triads": 1,
+    "anaphora_runs": 0,
+    "balanced_clause_share": 0.5,
+    "colons": 0.52
+  },
+  "evals\\results\\demo_v3.3.0_essay_rewrite.md": {
+    "words": 182,
+    "sentences": 13,
+    "paragraphs": 5,
+    "headings": 0,
+    "sentence_len_cv": 0.54,
+    "para_word_cv": 0.589,
+    "para_sent_cv": 0.583,
+    "punchy_closers": 0,
+    "sections": 1,
+    "one_line_paragraphs": 1,
+    "contraction_rate": 0.154,
+    "triads": 1,
+    "anaphora_runs": 0,
+    "balanced_clause_share": 0.5,
+    "colons": 0.55
+  }
+}

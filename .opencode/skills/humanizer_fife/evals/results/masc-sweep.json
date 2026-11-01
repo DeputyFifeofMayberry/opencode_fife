@@ -1,0 +1,1380 @@
+{
+ "corpus": "Y:\\_refs\\masc",
+ "files": 279,
+ "docs_over_min_words": 209,
+ "skipped_short": 70,
+ "para_word_cv_excluded_single_para": 45,
+ "min_words": 200,
+ "words_total": 378965,
+ "distributions": {
+  "sentence_len_cv": {
+   "min": 0.216,
+   "p5": 0.443,
+   "median": 0.676,
+   "p95": 1.022,
+   "max": 1.547,
+   "n": 209
+  },
+  "para_word_cv": {
+   "min": 0.238,
+   "p5": 0.419,
+   "median": 0.951,
+   "p95": 1.717,
+   "max": 2.959,
+   "n": 164
+  },
+  "contraction_rate": {
+   "min": 0.0,
+   "p5": 0.0,
+   "median": 0.038,
+   "p95": 0.235,
+   "max": 0.455,
+   "n": 209
+  },
+  "balanced_clause_share": {
+   "min": 0.0,
+   "p5": 0.0,
+   "median": 0.235,
+   "p95": 0.423,
+   "max": 1.0,
+   "n": 209
+  },
+  "colons": {
+   "min": 0.0,
+   "p5": 0.0,
+   "median": 0.5,
+   "p95": 8.57,
+   "max": 21.15,
+   "n": 209
+  },
+  "punchy_closers": {
+   "min": 0,
+   "p5": 0,
+   "median": 0,
+   "p95": 1,
+   "max": 4,
+   "n": 209
+  },
+  "triads": {
+   "min": 0,
+   "p5": 0,
+   "median": 1,
+   "p95": 12,
+   "max": 32,
+   "n": 209
+  },
+  "anaphora_runs": {
+   "min": 0,
+   "p5": 0,
+   "median": 0,
+   "p95": 1,
+   "max": 6,
+   "n": 209
+  },
+  "one_line_paragraphs": {
+   "min": 0,
+   "p5": 0,
+   "median": 3,
+   "p95": 34,
+   "max": 124,
+   "n": 209
+  }
+ },
+ "per_genre": {
+  "written/blog": {
+   "sentence_len_cv": {
+    "min": 0.53,
+    "p5": 0.552,
+    "median": 0.713,
+    "p95": 0.959,
+    "max": 1.05,
+    "n": 21
+   },
+   "para_word_cv": {
+    "min": 0.54,
+    "p5": 0.758,
+    "median": 1.116,
+    "p95": 2.019,
+    "max": 2.252,
+    "n": 21
+   },
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.059,
+    "median": 0.174,
+    "p95": 0.283,
+    "max": 0.3,
+    "n": 21
+   },
+   "balanced_clause_share": {
+    "min": 0.0,
+    "p5": 0.067,
+    "median": 0.273,
+    "p95": 0.438,
+    "max": 0.45,
+    "n": 21
+   },
+   "colons": {
+    "min": 0.31,
+    "p5": 0.69,
+    "median": 1.11,
+    "p95": 2.6,
+    "max": 2.68,
+    "n": 21
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 3,
+    "n": 21
+   },
+   "triads": {
+    "min": 0,
+    "p5": 0,
+    "median": 1,
+    "p95": 4,
+    "max": 9,
+    "n": 21
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 0,
+    "n": 21
+   },
+   "one_line_paragraphs": {
+    "min": 1,
+    "p5": 2,
+    "median": 5,
+    "p95": 18,
+    "max": 42,
+    "n": 21
+   }
+  },
+  "written/email": {
+   "sentence_len_cv": {
+    "min": 0.507,
+    "p5": 0.557,
+    "median": 0.758,
+    "p95": 1.084,
+    "max": 1.188,
+    "n": 43
+   },
+   "para_word_cv": {
+    "min": 0.504,
+    "p5": 0.668,
+    "median": 1.055,
+    "p95": 1.484,
+    "max": 1.525,
+    "n": 43
+   },
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.04,
+    "p95": 0.333,
+    "max": 0.455,
+    "n": 43
+   },
+   "balanced_clause_share": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.2,
+    "p95": 0.5,
+    "max": 1.0,
+    "n": 43
+   },
+   "colons": {
+    "min": 0.68,
+    "p5": 1.2,
+    "median": 5.76,
+    "p95": 13.71,
+    "max": 21.15,
+    "n": 43
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 4,
+    "n": 43
+   },
+   "triads": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 2,
+    "n": 43
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 1,
+    "n": 43
+   },
+   "one_line_paragraphs": {
+    "min": 1,
+    "p5": 2,
+    "median": 6,
+    "p95": 27,
+    "max": 31,
+    "n": 43
+   }
+  },
+  "written/essays": {
+   "sentence_len_cv": {
+    "min": 0.505,
+    "p5": 0.505,
+    "median": 0.787,
+    "p95": 0.91,
+    "max": 0.91,
+    "n": 8
+   },
+   "para_word_cv": {
+    "min": 0.814,
+    "p5": 0.814,
+    "median": 1.638,
+    "p95": 2.959,
+    "max": 2.959,
+    "n": 7
+   },
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.0,
+    "p95": 0.044,
+    "max": 0.044,
+    "n": 8
+   },
+   "balanced_clause_share": {
+    "min": 0.242,
+    "p5": 0.242,
+    "median": 0.28,
+    "p95": 0.385,
+    "max": 0.385,
+    "n": 8
+   },
+   "colons": {
+    "min": 0.07,
+    "p5": 0.07,
+    "median": 0.78,
+    "p95": 1.94,
+    "max": 1.94,
+    "n": 8
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 8
+   },
+   "triads": {
+    "min": 1,
+    "p5": 1,
+    "median": 5,
+    "p95": 12,
+    "max": 12,
+    "n": 8
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 8
+   },
+   "one_line_paragraphs": {
+    "min": 0,
+    "p5": 0,
+    "median": 2,
+    "p95": 76,
+    "max": 76,
+    "n": 8
+   }
+  },
+  "written/ficlets": {
+   "sentence_len_cv": {
+    "min": 0.729,
+    "p5": 0.729,
+    "median": 0.815,
+    "p95": 0.906,
+    "max": 0.906,
+    "n": 5
+   },
+   "para_word_cv": {
+    "min": 1.302,
+    "p5": 1.302,
+    "median": 1.318,
+    "p95": 1.355,
+    "max": 1.355,
+    "n": 5
+   },
+   "contraction_rate": {
+    "min": 0.016,
+    "p5": 0.016,
+    "median": 0.024,
+    "p95": 0.065,
+    "max": 0.065,
+    "n": 5
+   },
+   "balanced_clause_share": {
+    "min": 0.31,
+    "p5": 0.31,
+    "median": 0.372,
+    "p95": 0.418,
+    "max": 0.418,
+    "n": 5
+   },
+   "colons": {
+    "min": 2.78,
+    "p5": 2.78,
+    "median": 3.06,
+    "p95": 3.64,
+    "max": 3.64,
+    "n": 5
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 5
+   },
+   "triads": {
+    "min": 0,
+    "p5": 0,
+    "median": 5,
+    "p95": 7,
+    "max": 7,
+    "n": 5
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 5
+   },
+   "one_line_paragraphs": {
+    "min": 49,
+    "p5": 49,
+    "median": 56,
+    "p95": 59,
+    "max": 59,
+    "n": 5
+   }
+  },
+  "written/fiction": {
+   "sentence_len_cv": {
+    "min": 0.546,
+    "p5": 0.546,
+    "median": 0.682,
+    "p95": 0.848,
+    "max": 0.848,
+    "n": 6
+   },
+   "para_word_cv": {
+    "min": 0.683,
+    "p5": 0.683,
+    "median": 1.198,
+    "p95": 1.729,
+    "max": 1.729,
+    "n": 6
+   },
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.098,
+    "p95": 0.227,
+    "max": 0.227,
+    "n": 6
+   },
+   "balanced_clause_share": {
+    "min": 0.143,
+    "p5": 0.143,
+    "median": 0.249,
+    "p95": 0.333,
+    "max": 0.333,
+    "n": 6
+   },
+   "colons": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.13,
+    "p95": 0.33,
+    "max": 0.33,
+    "n": 6
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 6
+   },
+   "triads": {
+    "min": 2,
+    "p5": 2,
+    "median": 7,
+    "p95": 9,
+    "max": 9,
+    "n": 6
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 6
+   },
+   "one_line_paragraphs": {
+    "min": 1,
+    "p5": 1,
+    "median": 2,
+    "p95": 54,
+    "max": 54,
+    "n": 6
+   }
+  },
+  "written/govt-docs": {
+   "sentence_len_cv": {
+    "min": 0.54,
+    "p5": 0.54,
+    "median": 0.656,
+    "p95": 1.03,
+    "max": 1.03,
+    "n": 5
+   },
+   "para_word_cv": {
+    "min": 0.622,
+    "p5": 0.622,
+    "median": 0.789,
+    "p95": 2.843,
+    "max": 2.843,
+    "n": 5
+   },
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.0,
+    "p95": 0.004,
+    "max": 0.004,
+    "n": 5
+   },
+   "balanced_clause_share": {
+    "min": 0.167,
+    "p5": 0.167,
+    "median": 0.189,
+    "p95": 0.207,
+    "max": 0.207,
+    "n": 5
+   },
+   "colons": {
+    "min": 0.08,
+    "p5": 0.08,
+    "median": 0.33,
+    "p95": 0.74,
+    "max": 0.74,
+    "n": 5
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 0,
+    "n": 5
+   },
+   "triads": {
+    "min": 1,
+    "p5": 1,
+    "median": 13,
+    "p95": 22,
+    "max": 22,
+    "n": 5
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 0,
+    "n": 5
+   },
+   "one_line_paragraphs": {
+    "min": 4,
+    "p5": 4,
+    "median": 6,
+    "p95": 19,
+    "max": 19,
+    "n": 5
+   }
+  },
+  "written/jokes": {
+   "sentence_len_cv": {
+    "min": 0.65,
+    "p5": 0.65,
+    "median": 0.796,
+    "p95": 1.127,
+    "max": 1.127,
+    "n": 16
+   },
+   "para_word_cv": {
+    "min": 0.415,
+    "p5": 0.415,
+    "median": 0.909,
+    "p95": 1.752,
+    "max": 1.752,
+    "n": 16
+   },
+   "contraction_rate": {
+    "min": 0.034,
+    "p5": 0.034,
+    "median": 0.121,
+    "p95": 0.197,
+    "max": 0.197,
+    "n": 16
+   },
+   "balanced_clause_share": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.267,
+    "p95": 0.423,
+    "max": 0.423,
+    "n": 16
+   },
+   "colons": {
+    "min": 0.07,
+    "p5": 0.07,
+    "median": 0.44,
+    "p95": 4.72,
+    "max": 4.72,
+    "n": 16
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 16
+   },
+   "triads": {
+    "min": 0,
+    "p5": 0,
+    "median": 1,
+    "p95": 4,
+    "max": 4,
+    "n": 16
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 16
+   },
+   "one_line_paragraphs": {
+    "min": 0,
+    "p5": 0,
+    "median": 1,
+    "p95": 9,
+    "max": 9,
+    "n": 16
+   }
+  },
+  "written/journal": {
+   "sentence_len_cv": {
+    "min": 0.404,
+    "p5": 0.404,
+    "median": 0.549,
+    "p95": 0.79,
+    "max": 0.79,
+    "n": 9
+   },
+   "para_word_cv": {
+    "min": 0.419,
+    "p5": 0.419,
+    "median": 0.728,
+    "p95": 1.121,
+    "max": 1.121,
+    "n": 9
+   },
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.077,
+    "p95": 0.25,
+    "max": 0.25,
+    "n": 9
+   },
+   "balanced_clause_share": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.182,
+    "p95": 0.636,
+    "max": 0.636,
+    "n": 9
+   },
+   "colons": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.21,
+    "p95": 0.68,
+    "max": 0.68,
+    "n": 9
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 0,
+    "n": 9
+   },
+   "triads": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 32,
+    "max": 32,
+    "n": 9
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 9
+   },
+   "one_line_paragraphs": {
+    "min": 1,
+    "p5": 1,
+    "median": 2,
+    "p95": 124,
+    "max": 124,
+    "n": 9
+   }
+  },
+  "written/letters": {
+   "sentence_len_cv": {
+    "min": 0.392,
+    "p5": 0.433,
+    "median": 0.617,
+    "p95": 0.803,
+    "max": 1.022,
+    "n": 46
+   },
+   "para_word_cv": {
+    "min": 0.238,
+    "p5": 0.238,
+    "median": 0.721,
+    "p95": 1.497,
+    "max": 1.497,
+    "n": 19
+   },
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.0,
+    "p95": 0.235,
+    "max": 0.294,
+    "n": 46
+   },
+   "balanced_clause_share": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.2,
+    "p95": 0.417,
+    "max": 0.5,
+    "n": 46
+   },
+   "colons": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.26,
+    "p95": 0.9,
+    "max": 2.45,
+    "n": 46
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 46
+   },
+   "triads": {
+    "min": 0,
+    "p5": 0,
+    "median": 2,
+    "p95": 4,
+    "max": 10,
+    "n": 46
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 1,
+    "n": 46
+   },
+   "one_line_paragraphs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 11,
+    "max": 22,
+    "n": 46
+   }
+  },
+  "written/movie-script": {
+   "sentence_len_cv": {
+    "min": 0.659,
+    "p5": 0.659,
+    "median": 0.786,
+    "p95": 1.547,
+    "max": 1.547,
+    "n": 5
+   },
+   "para_word_cv": {
+    "min": 0.812,
+    "p5": 0.812,
+    "median": 1.054,
+    "p95": 1.102,
+    "max": 1.102,
+    "n": 3
+   },
+   "contraction_rate": {
+    "min": 0.119,
+    "p5": 0.119,
+    "median": 0.178,
+    "p95": 0.234,
+    "max": 0.234,
+    "n": 5
+   },
+   "balanced_clause_share": {
+    "min": 0.091,
+    "p5": 0.091,
+    "median": 0.188,
+    "p95": 0.4,
+    "max": 0.4,
+    "n": 5
+   },
+   "colons": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.0,
+    "p95": 0.51,
+    "max": 0.51,
+    "n": 5
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 5
+   },
+   "triads": {
+    "min": 1,
+    "p5": 1,
+    "median": 2,
+    "p95": 9,
+    "max": 9,
+    "n": 5
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 6,
+    "max": 6,
+    "n": 5
+   },
+   "one_line_paragraphs": {
+    "min": 0,
+    "p5": 0,
+    "median": 14,
+    "p95": 34,
+    "max": 34,
+    "n": 5
+   }
+  },
+  "written/newspaper-newswire": {
+   "sentence_len_cv": {
+    "min": 0.216,
+    "p5": 0.371,
+    "median": 0.597,
+    "p95": 0.933,
+    "max": 0.938,
+    "n": 23
+   },
+   "para_word_cv": {
+    "min": 0.289,
+    "p5": 0.289,
+    "median": 0.607,
+    "p95": 2.208,
+    "max": 2.208,
+    "n": 18
+   },
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.038,
+    "p95": 0.188,
+    "max": 0.2,
+    "n": 23
+   },
+   "balanced_clause_share": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.238,
+    "p95": 0.429,
+    "max": 0.5,
+    "n": 23
+   },
+   "colons": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.13,
+    "p95": 1.15,
+    "max": 1.24,
+    "n": 23
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 23
+   },
+   "triads": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 4,
+    "max": 9,
+    "n": 23
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 0,
+    "n": 23
+   },
+   "one_line_paragraphs": {
+    "min": 0,
+    "p5": 0,
+    "median": 3,
+    "p95": 27,
+    "max": 31,
+    "n": 23
+   }
+  },
+  "written/non-fiction": {
+   "sentence_len_cv": {
+    "min": 0.452,
+    "p5": 0.452,
+    "median": 0.654,
+    "p95": 0.782,
+    "max": 0.782,
+    "n": 5
+   },
+   "para_word_cv": {
+    "min": 0.684,
+    "p5": 0.684,
+    "median": 0.952,
+    "p95": 1.277,
+    "max": 1.277,
+    "n": 4
+   },
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.0,
+    "p95": 0.005,
+    "max": 0.005,
+    "n": 5
+   },
+   "balanced_clause_share": {
+    "min": 0.208,
+    "p5": 0.208,
+    "median": 0.273,
+    "p95": 0.333,
+    "max": 0.333,
+    "n": 5
+   },
+   "colons": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.08,
+    "p95": 0.72,
+    "max": 0.72,
+    "n": 5
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 0,
+    "n": 5
+   },
+   "triads": {
+    "min": 5,
+    "p5": 5,
+    "median": 12,
+    "p95": 26,
+    "max": 26,
+    "n": 5
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 5
+   },
+   "one_line_paragraphs": {
+    "min": 0,
+    "p5": 0,
+    "median": 10,
+    "p95": 34,
+    "max": 34,
+    "n": 5
+   }
+  },
+  "written/technical": {
+   "sentence_len_cv": {
+    "min": 0.345,
+    "p5": 0.345,
+    "median": 0.562,
+    "p95": 0.573,
+    "max": 0.573,
+    "n": 8
+   },
+   "para_word_cv": {
+    "min": 0.712,
+    "p5": 0.712,
+    "median": 1.056,
+    "p95": 1.475,
+    "max": 1.475,
+    "n": 7
+   },
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.0,
+    "p95": 0.0,
+    "max": 0.0,
+    "n": 8
+   },
+   "balanced_clause_share": {
+    "min": 0.091,
+    "p5": 0.091,
+    "median": 0.267,
+    "p95": 0.346,
+    "max": 0.346,
+    "n": 8
+   },
+   "colons": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.16,
+    "p95": 0.38,
+    "max": 0.38,
+    "n": 8
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 8
+   },
+   "triads": {
+    "min": 2,
+    "p5": 2,
+    "median": 3,
+    "p95": 9,
+    "max": 9,
+    "n": 8
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 0,
+    "n": 8
+   },
+   "one_line_paragraphs": {
+    "min": 0,
+    "p5": 0,
+    "median": 3,
+    "p95": 3,
+    "max": 3,
+    "n": 8
+   }
+  },
+  "written/travel-guides": {
+   "sentence_len_cv": {
+    "min": 0.39,
+    "p5": 0.39,
+    "median": 0.46,
+    "p95": 0.672,
+    "max": 0.672,
+    "n": 7
+   },
+   "para_word_cv": {},
+   "contraction_rate": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.0,
+    "p95": 0.0,
+    "max": 0.0,
+    "n": 7
+   },
+   "balanced_clause_share": {
+    "min": 0.197,
+    "p5": 0.197,
+    "median": 0.275,
+    "p95": 0.4,
+    "max": 0.4,
+    "n": 7
+   },
+   "colons": {
+    "min": 0.0,
+    "p5": 0.0,
+    "median": 0.18,
+    "p95": 0.26,
+    "max": 0.26,
+    "n": 7
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 1,
+    "max": 1,
+    "n": 7
+   },
+   "triads": {
+    "min": 3,
+    "p5": 3,
+    "median": 5,
+    "p95": 27,
+    "max": 27,
+    "n": 7
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 0,
+    "n": 7
+   },
+   "one_line_paragraphs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 0,
+    "n": 7
+   }
+  },
+  "written/twitter": {
+   "sentence_len_cv": {
+    "min": 0.911,
+    "p5": 0.911,
+    "median": 1.013,
+    "p95": 1.013,
+    "max": 1.013,
+    "n": 2
+   },
+   "para_word_cv": {
+    "min": 1.262,
+    "p5": 1.262,
+    "median": 1.262,
+    "p95": 1.262,
+    "max": 1.262,
+    "n": 1
+   },
+   "contraction_rate": {
+    "min": 0.125,
+    "p5": 0.125,
+    "median": 0.176,
+    "p95": 0.176,
+    "max": 0.176,
+    "n": 2
+   },
+   "balanced_clause_share": {
+    "min": 0.183,
+    "p5": 0.183,
+    "median": 0.257,
+    "p95": 0.257,
+    "max": 0.257,
+    "n": 2
+   },
+   "colons": {
+    "min": 1.61,
+    "p5": 1.61,
+    "median": 7.14,
+    "p95": 7.14,
+    "max": 7.14,
+    "n": 2
+   },
+   "punchy_closers": {
+    "min": 0,
+    "p5": 0,
+    "median": 1,
+    "p95": 1,
+    "max": 1,
+    "n": 2
+   },
+   "triads": {
+    "min": 7,
+    "p5": 7,
+    "median": 17,
+    "p95": 17,
+    "max": 17,
+    "n": 2
+   },
+   "anaphora_runs": {
+    "min": 0,
+    "p5": 0,
+    "median": 1,
+    "p95": 1,
+    "max": 1,
+    "n": 2
+   },
+   "one_line_paragraphs": {
+    "min": 0,
+    "p5": 0,
+    "median": 0,
+    "p95": 0,
+    "max": 0,
+    "n": 2
+   }
+  }
+ },
+ "floors": {
+  "sentence_len_cv_below": 10,
+  "para_word_cv_below": 4,
+  "below_both": 0,
+  "balanced_clause_over": 3
+ },
+ "rates": {
+  "punchy_closers_per_section": 0.25,
+  "triads_per_100w": 0.1575
+ },
+ "watch_words": {
+  "align": {
+   "hits": 1,
+   "per_100k": 0.264,
+   "files": 1
+  },
+  "bolster": {
+   "hits": 1,
+   "per_100k": 0.264,
+   "files": 1
+  },
+  "comprehensive": {
+   "hits": 12,
+   "per_100k": 3.167,
+   "files": 10
+  },
+  "crucial": {
+   "hits": 10,
+   "per_100k": 2.639,
+   "files": 9
+  },
+  "delve": {
+   "hits": 2,
+   "per_100k": 0.528,
+   "files": 2
+  },
+  "enduring": {
+   "hits": 6,
+   "per_100k": 1.583,
+   "files": 6
+  },
+  "enhance": {
+   "hits": 6,
+   "per_100k": 1.583,
+   "files": 6
+  },
+  "enhancing": {
+   "hits": 0,
+   "per_100k": 0.0,
+   "files": 0
+  },
+  "foster": {
+   "hits": 9,
+   "per_100k": 2.375,
+   "files": 8
+  },
+  "garner": {
+   "hits": 0,
+   "per_100k": 0.0,
+   "files": 0
+  },
+  "highlight": {
+   "hits": 5,
+   "per_100k": 1.319,
+   "files": 5
+  },
+  "interplay": {
+   "hits": 2,
+   "per_100k": 0.528,
+   "files": 1
+  },
+  "intricate": {
+   "hits": 2,
+   "per_100k": 0.528,
+   "files": 2
+  },
+  "landscape": {
+   "hits": 8,
+   "per_100k": 2.111,
+   "files": 6
+  },
+  "leverage": {
+   "hits": 7,
+   "per_100k": 1.847,
+   "files": 2
+  },
+  "leveraging": {
+   "hits": 0,
+   "per_100k": 0.0,
+   "files": 0
+  },
+  "meticulous": {
+   "hits": 0,
+   "per_100k": 0.0,
+   "files": 0
+  },
+  "meticulously": {
+   "hits": 0,
+   "per_100k": 0.0,
+   "files": 0
+  },
+  "navigate": {
+   "hits": 6,
+   "per_100k": 1.583,
+   "files": 2
+  },
+  "optimize": {
+   "hits": 0,
+   "per_100k": 0.0,
+   "files": 0
+  },
+  "optimizing": {
+   "hits": 1,
+   "per_100k": 0.264,
+   "files": 1
+  },
+  "pivotal": {
+   "hits": 4,
+   "per_100k": 1.056,
+   "files": 4
+  },
+  "quietly": {
+   "hits": 7,
+   "per_100k": 1.847,
+   "files": 5
+  },
+  "realm": {
+   "hits": 13,
+   "per_100k": 3.43,
+   "files": 11
+  },
+  "robust": {
+   "hits": 7,
+   "per_100k": 1.847,
+   "files": 6
+  },
+  "seamless": {
+   "hits": 1,
+   "per_100k": 0.264,
+   "files": 1
+  },
+  "seamlessly": {
+   "hits": 4,
+   "per_100k": 1.056,
+   "files": 4
+  },
+  "showcase": {
+   "hits": 0,
+   "per_100k": 0.0,
+   "files": 0
+  },
+  "showcases": {
+   "hits": 1,
+   "per_100k": 0.264,
+   "files": 1
+  },
+  "tapestry": {
+   "hits": 1,
+   "per_100k": 0.264,
+   "files": 1
+  },
+  "testament": {
+   "hits": 3,
+   "per_100k": 0.792,
+   "files": 3
+  },
+  "underscore": {
+   "hits": 0,
+   "per_100k": 0.0,
+   "files": 0
+  },
+  "underscores": {
+   "hits": 0,
+   "per_100k": 0.0,
+   "files": 0
+  },
+  "unlock": {
+   "hits": 2,
+   "per_100k": 0.528,
+   "files": 2
+  },
+  "unlocking": {
+   "hits": 0,
+   "per_100k": 0.0,
+   "files": 0
+  },
+  "vibrant": {
+   "hits": 4,
+   "per_100k": 1.056,
+   "files": 4
+  }
+ }
+}

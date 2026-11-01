@@ -1,0 +1,260 @@
+{
+ "ai_files": 60,
+ "ai_words": 11117,
+ "human_words": 11868228,
+ "matcher": "regex word boundary (\\b), shared with the human sweeps",
+ "words": {
+  "align": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 0.902,
+   "human_hits": 107,
+   "ratio": 0.0
+  },
+  "bolster": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 0.362,
+   "human_hits": 43,
+   "ratio": 0.0
+  },
+  "comprehensive": {
+   "ai_per_100k": 62.97,
+   "ai_hits": 7,
+   "human_per_100k": 5.224,
+   "human_hits": 620,
+   "ratio": 12.1
+  },
+  "crucial": {
+   "ai_per_100k": 80.96,
+   "ai_hits": 9,
+   "human_per_100k": 3.632,
+   "human_hits": 431,
+   "ratio": 22.3
+  },
+  "delve": {
+   "ai_per_100k": 35.98,
+   "ai_hits": 4,
+   "human_per_100k": 0.152,
+   "human_hits": 18,
+   "ratio": 237.2
+  },
+  "enduring": {
+   "ai_per_100k": 9.0,
+   "ai_hits": 1,
+   "human_per_100k": 0.935,
+   "human_hits": 111,
+   "ratio": 9.6
+  },
+  "enhance": {
+   "ai_per_100k": 9.0,
+   "ai_hits": 1,
+   "human_per_100k": 3.539,
+   "human_hits": 420,
+   "ratio": 2.5
+  },
+  "enhancing": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 1.171,
+   "human_hits": 139,
+   "ratio": 0.0
+  },
+  "foster": {
+   "ai_per_100k": 9.0,
+   "ai_hits": 1,
+   "human_per_100k": 2.915,
+   "human_hits": 346,
+   "ratio": 3.1
+  },
+  "garner": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 0.185,
+   "human_hits": 22,
+   "ratio": 0.0
+  },
+  "highlight": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 1.651,
+   "human_hits": 196,
+   "ratio": 0.0
+  },
+  "interplay": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 0.227,
+   "human_hits": 27,
+   "ratio": 0.0
+  },
+  "intricate": {
+   "ai_per_100k": 9.0,
+   "ai_hits": 1,
+   "human_per_100k": 0.649,
+   "human_hits": 77,
+   "ratio": 13.9
+  },
+  "landscape": {
+   "ai_per_100k": 9.0,
+   "ai_hits": 1,
+   "human_per_100k": 3.278,
+   "human_hits": 389,
+   "ratio": 2.7
+  },
+  "leverage": {
+   "ai_per_100k": 9.0,
+   "ai_hits": 1,
+   "human_per_100k": 0.657,
+   "human_hits": 78,
+   "ratio": 13.7
+  },
+  "leveraging": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 0.16,
+   "human_hits": 19,
+   "ratio": 0.0
+  },
+  "meticulous": {
+   "ai_per_100k": 107.94,
+   "ai_hits": 12,
+   "human_per_100k": 0.312,
+   "human_hits": 37,
+   "ratio": 346.2
+  },
+  "meticulously": {
+   "ai_per_100k": 80.96,
+   "ai_hits": 9,
+   "human_per_100k": 0.211,
+   "human_hits": 25,
+   "ratio": 384.3
+  },
+  "navigate": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 0.388,
+   "human_hits": 46,
+   "ratio": 0.0
+  },
+  "optimize": {
+   "ai_per_100k": 9.0,
+   "ai_hits": 1,
+   "human_per_100k": 0.565,
+   "human_hits": 67,
+   "ratio": 15.9
+  },
+  "optimizing": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 0.194,
+   "human_hits": 23,
+   "ratio": 0.0
+  },
+  "pivotal": {
+   "ai_per_100k": 17.99,
+   "ai_hits": 2,
+   "human_per_100k": 0.64,
+   "human_hits": 76,
+   "ratio": 28.1
+  },
+  "quietly": {
+   "ai_per_100k": 44.98,
+   "ai_hits": 5,
+   "human_per_100k": 1.306,
+   "human_hits": 155,
+   "ratio": 34.4
+  },
+  "realm": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 1.011,
+   "human_hits": 120,
+   "ratio": 0.0
+  },
+  "robust": {
+   "ai_per_100k": 44.98,
+   "ai_hits": 5,
+   "human_per_100k": 2.561,
+   "human_hits": 304,
+   "ratio": 17.6
+  },
+  "seamless": {
+   "ai_per_100k": 35.98,
+   "ai_hits": 4,
+   "human_per_100k": 0.16,
+   "human_hits": 19,
+   "ratio": 224.7
+  },
+  "seamlessly": {
+   "ai_per_100k": 17.99,
+   "ai_hits": 2,
+   "human_per_100k": 0.202,
+   "human_hits": 24,
+   "ratio": 89.0
+  },
+  "showcase": {
+   "ai_per_100k": 62.97,
+   "ai_hits": 7,
+   "human_per_100k": 0.438,
+   "human_hits": 52,
+   "ratio": 143.7
+  },
+  "showcases": {
+   "ai_per_100k": 62.97,
+   "ai_hits": 7,
+   "human_per_100k": 0.101,
+   "human_hits": 12,
+   "ratio": 622.8
+  },
+  "tapestry": {
+   "ai_per_100k": 26.99,
+   "ai_hits": 3,
+   "human_per_100k": 0.152,
+   "human_hits": 18,
+   "ratio": 178.0
+  },
+  "testament": {
+   "ai_per_100k": 53.97,
+   "ai_hits": 6,
+   "human_per_100k": 1.036,
+   "human_hits": 123,
+   "ratio": 52.1
+  },
+  "underscore": {
+   "ai_per_100k": 9.0,
+   "ai_hits": 1,
+   "human_per_100k": 0.463,
+   "human_hits": 55,
+   "ratio": 19.4
+  },
+  "underscores": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 0.303,
+   "human_hits": 36,
+   "ratio": 0.0
+  },
+  "unlock": {
+   "ai_per_100k": 80.96,
+   "ai_hits": 9,
+   "human_per_100k": 0.152,
+   "human_hits": 18,
+   "ratio": 533.8
+  },
+  "unlocking": {
+   "ai_per_100k": 0.0,
+   "ai_hits": 0,
+   "human_per_100k": 0.034,
+   "human_hits": 4,
+   "ratio": 0.0
+  },
+  "vibrant": {
+   "ai_per_100k": 9.0,
+   "ai_hits": 1,
+   "human_per_100k": 0.716,
+   "human_hits": 85,
+   "ratio": 12.6
+  }
+ }
+}

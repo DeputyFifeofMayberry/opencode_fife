@@ -1,0 +1,5 @@
+Smoke judging 2026-10-10 (self-judged, contaminated, see JUDGMENTS-smoke.md): recorded v3.3.0 3/3; corrected 2026-10-11 to v3.3.0 2-1 (email pair keyed wrong). Pipeline validated; not evidence.
+Human judging 2026-10-10 (blind, clean, see JUDGMENTS-human.md): recorded v3.1.0 3/0; corrected to v3.1.0 2-1 (email pair keyed wrong). Reason "cleaner/tidier".
+Human judging run 2, six registers (see JUDGMENTS-human-2.md): recorded v3.1.0 6/0; corrected to v3.1.0 5-1 (how-to pair keyed wrong). Cumulative runs 1-2: v3.1.0 6-3 over v3.3.0. Rhythm check loses its gate; gated off in 3.5.0.
+Human judging run 3, v3.6.0 vs v3.1.0 (see JUDGMENTS-human-3.md): recorded 3-3; corrected to v3.1.0 4-2 (keys wrong; how-to/marketing/review pairs judged pre-edit text). v3.6.0 gate NOT met; changes gate-pending clean re-judge.
+Key-generation bug (make_pairs.py hardcoded A=old, B=new) found by audit 2026-10-11, fixed with self-test; true historical keys reconstructed in results/key-reconstruction.json.
