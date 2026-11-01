@@ -3,13 +3,16 @@ import { ai, LanguageModel, Message } from "@opencode/ai/effect"
 import { OpenAIChat } from "@opencode/ai/protocols"
 import { compileRequest } from "@opencode/ai/testing"
 import { ConfigProvider, Effect, Layer } from "effect"
-import { Headers } from "effect/http"
+import { Headers, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http"
+import { LLMClient, RequestExecutor } from "@opencode/ai/route"
+import { Stream } from "effect"
 import { AISDKNative } from "@opencode/core/aisdk-native"
 import { Credential } from "@opencode/core/credential"
 import { Integration } from "@opencode/core/integration"
 import { Compatibility, ID, Info, Model, VariantID } from "@opencode/core/model"
 import { Provider } from "@opencode/core/provider"
 import { Variant } from "@opencode/core/variant"
+import { EffortAdapter } from "@opencode/core/effort/adapter"
 import { ModelResolver } from "@opencode/core/model-resolver"
 import { AISDK } from "@opencode/core/aisdk"
 import { Npm } from "@opencode/util/npm"
@@ -1641,4 +1644,77 @@ describe("ModelResolver", () => {
       expect(ModelResolver.hasPackage(model(undefined))).toBe(false)
     }),
   )
+  it.effect("serializes bundled catalog effort routes through the real resolver and offline transport", () =>
+    Effect.gen(function* () {
+      const snapshot = JSON.parse(yield* Effect.promise(() => Bun.file(new URL("../src/models-dev/snapshot.txt", import.meta.url)).text())) as Record<string, { models: Record<string, { capabilities: { reasoning: { supported: boolean; toggle?: boolean; effort?: string[]; default?: { type: "effort"; value: string } } }, api: Record<string, { sdk: { opencodeai: string } }> }> }>
+      const cases = [
+        ["deepseek", "deepseek-flash", "chat-completions", "low", "max", "chat"],
+        ["deepseek", "deepseek-v4-pro", "chat-completions", "low", "max", "chat"],
+        ["openai", "gpt-6.1-sol", "responses", "low", "max", "responses"],
+        ["anthropic", "claude-opus-5", "messages", "low", "max", "messages"],
+        ["opencode-go", "kimi-k3.1-pro", "chat-completions", "low", "max", "chat"],
+        ["opencode-go", "deepseek-v4-pro", "chat-completions", "high", "max", "chat"],
+        ["zai-coding-plan", "glm-5.3", "chat-completions", "low", "max", "chat"],
+        ["zai-coding-plan", "glm-5.3-flash", "chat-completions", "low", "max", "chat"],
+        ["openrouter", "z-ai/glm-5.3-flash", "chat-completions", "low", "max", "openrouter"],
+        ["opencode", "deepseek-v4.1-flash-free", "chat-completions", "low", "max", "chat"],
+      ] as const
+      let body: Record<string, unknown> | undefined
+      const http = Layer.succeed(HttpClient.HttpClient, HttpClient.make((request) => Effect.gen(function* () {
+        const web = yield* HttpClientRequest.toWeb(request).pipe(Effect.orDie)
+        body = JSON.parse(yield* Effect.promise(() => web.text())) as Record<string, unknown>
+        return HttpClientResponse.fromWeb(request, new Response("offline fixture", { status: 400 }))
+      })))
+      const executor = RequestExecutor.layer.pipe(Layer.provide(http))
+      const client = LLMClient.layer.pipe(Layer.provide(executor))
+      for (const [providerID, modelID, protocol, low, deep, kind] of cases) {
+        const source = snapshot[providerID]!.models[modelID]!
+        const base = model(source.api[protocol]!.sdk.opencodeai, { providerID: Provider.ID.make(providerID), modelID, settings: { baseURL: "https://offline.invalid/v1" } })
+        const catalog = Info.make({ ...base, variants: Variant.resolve(base, Variant.supports(source.capabilities.reasoning)) })
+        for (const [baseLevel, expected, variant] of [["low", low, undefined], ["deep", deep, undefined], ["deep", "high", "high"]] as const) {
+          const decision = EffortAdapter.decideFor(catalog, { baseLevel, variant })
+          expect(decision.effort).toBe(expected)
+          const resolved = yield* ModelResolver.resolveModel(catalog, VariantID.make(expected), Credential.Key.make({ type: "key", key: "fixture" }))
+          body = undefined
+          yield* LLMClient.stream(ai.request({ model: resolved, prompt: "test" })).pipe(Stream.runDrain, Effect.provide(client), Effect.exit)
+          expect(body).toBeDefined()
+          if (kind === "responses") expect(body).toMatchObject({ reasoning: { effort: expected } })
+          if (kind === "messages") expect(body).toMatchObject({ output_config: { effort: expected } })
+          if (kind === "openrouter") expect(body).toMatchObject({ reasoning: { effort: expected } })
+          if (kind === "chat") expect(body).toMatchObject({ reasoning_effort: expected })
+          if (providerID === "deepseek") expect(body).toMatchObject({ thinking: { type: "enabled" } })
+          if (providerID === "zai-coding-plan") expect(body).toMatchObject({ thinking: { type: "enabled" } })
+        }
+        expect(EffortAdapter.decideFor(catalog, { baseLevel: "deep", variant: "high" })).toMatchObject({ rule: "exact-base", effort: "high" })
+        const transitionModel = yield* ModelResolver.resolveModel(catalog, VariantID.make(low), Credential.Key.make({ type: "key", key: "fixture" }))
+        const prior = [Message.user("before"), Message.effort({ effort: low, previous: "max" }), Message.user("after")]
+        const transitioned = yield* compileRequest(ai.request({ model: transitionModel, messages: prior, cache: "none" }))
+        const plain = yield* compileRequest(ai.request({ model: transitionModel, messages: [Message.user("before"), Message.user("after")], cache: "none" }))
+        if (kind === "responses")
+          expect(transitioned.body).toMatchObject({ input: expect.arrayContaining([{ type: "configuration_update", reasoning: { effort: low } }]) })
+        else if (kind === "messages")
+          expect(transitioned.body).toMatchObject({ messages: expect.arrayContaining([{ role: "system", content: [], output_config: { effort: low } }]) })
+        else expect(transitioned.body).toEqual(plain.body)
+        const standard = EffortAdapter.decideFor(catalog, { baseLevel: "standard" })
+        expect(standard.effort).toBeUndefined()
+        const defaultModel = yield* ModelResolver.resolveModel(catalog, undefined, Credential.Key.make({ type: "key", key: "fixture" }))
+        body = undefined
+        yield* LLMClient.stream(ai.request({ model: defaultModel, prompt: "test" })).pipe(Stream.runDrain, Effect.provide(client), Effect.exit)
+        expect(body).toBeDefined()
+        if (kind === "chat") expect(body).not.toHaveProperty("reasoning_effort")
+        if (kind === "responses" || kind === "openrouter") expect(body).not.toHaveProperty("reasoning.effort")
+        if (kind === "messages") expect(body).not.toHaveProperty("output_config.effort")
+        const unavailable = yield* ModelResolver.resolveModel(catalog, VariantID.make("not-a-variant")).pipe(Effect.flip)
+        expect(unavailable._tag).toBe("SessionRunnerModel.VariantUnavailableError")
+      }
+      const unsupportedSource = snapshot["opencode"]!.models["big-pickle"]!
+      expect(unsupportedSource.capabilities.reasoning.effort).toBeUndefined()
+      const unsupportedBase = model(unsupportedSource.api["chat-completions"]!.sdk.opencodeai)
+      const unsupported = Info.make({ ...unsupportedBase, variants: Variant.resolve(unsupportedBase, Variant.supports(unsupportedSource.capabilities.reasoning)) })
+      expect(EffortAdapter.decideFor(unsupported, { baseLevel: "deep" }).rule).toBe("untouched")
+      expect(snapshot["opencode-go"]!.models["kimi-k3.1-pro"]!.capabilities.reasoning.default).toEqual({ type: "effort", value: "max" })
+      expect(snapshot["zai-coding-plan"]!.models["glm-5.3"]!.capabilities.reasoning.default).toEqual({ type: "effort", value: "max" })
+    }),
+  )
+
 })
