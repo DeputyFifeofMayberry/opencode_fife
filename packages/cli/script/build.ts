@@ -80,7 +80,7 @@ const watcherPlatforms = [
 ]
 const watcherPackages = watcherPlatforms.map((platform) => `${platform}@${pkg.dependencies["@parcel/watcher"]}`)
 if (!skipInstall)
-  await $`bun install --os="*" --cpu="*" --libc="*" @opentui/core@${pkg.dependencies["@opentui/core"]} @opencode-ai/pty@${pkg.dependencies["@opencode-ai/pty"]} ${watcherPackages}`
+  await $`bun install --os="*" --cpu="*" --libc="*" @opentui/core@${pkg.dependencies["@opentui/core"]} @opencode/pty@${pkg.dependencies["@opencode/pty"]} ${watcherPackages}`
 const appArchive = path.join(dir, ".cache", "bun-app-archive.bin")
 await Bun.write(appArchive, await buildAppArchive(Script.channel, { skipBuild: skipWebUi }))
 const appAssetsPlugin: BunPlugin = {

@@ -547,27 +547,6 @@ export const createLLMEventPublisher = (bus: Pick<Bus.Interface, "publish">, inp
         })
         return
       }
-      case "tool-error": {
-        const tool = tools.get(event.id)
-        if (!tool?.called) return yield* Effect.die(new Error(`Tool error before call: ${event.id}`))
-        if (tool.name !== event.name)
-          return yield* Effect.die(new Error(`Tool error name changed for ${event.id}: ${tool.name} -> ${event.name}`))
-        if (tool.settled) return yield* Effect.die(new Error(`Duplicate tool error: ${event.id}`))
-        tool.settled = true
-        yield* bus.publish(SessionEvent.Tool.Failed, {
-          sessionID: input.sessionID,
-          assistantMessageID,
-          id: event.id,
-          error:
-            event.message === `Unknown tool: ${event.name}`
-              ? { type: "tool.unknown", message: event.message }
-              : { type: "tool.execution", message: event.message },
-          ...failureSnapshot(tool),
-          executed: tool.providerExecuted,
-          native: native(event.providerMetadata),
-        })
-        return
-      }
       case "step-finish":
         yield* flushFragments()
         if (stepSettlement) return yield* Effect.die(new Error("Duplicate step finish"))
@@ -585,14 +564,8 @@ export const createLLMEventPublisher = (bus: Pick<Bus.Interface, "publish">, inp
         return
       case "finish":
         return
-      case "provider-error":
-        providerFailed = true
-        yield* failAssistant({ type: "provider.unknown", message: event.message })
-        return
     }
   }, Effect.uninterruptible)
-
-  const publishTraced = Effect.fn("SessionRunner.publishLLMEvent")(publish)
 
   const progress = Effect.fnUntraced(function* (id: string, update: Tool.Metadata) {
     const tool = tools.get(id)
@@ -634,11 +607,7 @@ export const createLLMEventPublisher = (bus: Pick<Bus.Interface, "publish">, inp
   })
 
   return {
-    publish: (event: LLMEvent) => {
-      if (event.type === "text-delta" || event.type === "reasoning-delta" || event.type === "tool-input-delta")
-        return publish(event)
-      return publishTraced(event)
-    },
+    publish: (event: LLMEvent): Effect.Effect<void> => publish(event),
     progress,
     interrupted,
     toolExecution,

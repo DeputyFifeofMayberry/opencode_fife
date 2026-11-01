@@ -84,7 +84,6 @@ export const layer = Layer.effect(
       })
       yield* llm.stream(prepared.request, prepared.options).pipe(
         Stream.runForEach((event) => {
-          if (LLMEvent.is.providerError(event)) failed = true
           if (LLMEvent.is.textDelta(event)) chunks.push(event.text)
           if (LLMEvent.is.stepFinish(event)) {
             const step = SessionUsage.record(event.usage, model.cost)

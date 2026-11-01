@@ -43,6 +43,12 @@
 - Prefer `dev:live` over plain `bun run dev`. Implicit managed-service connection may replace the live server when worktree client version differs; explicit `--server` warns and continues without replacing it.
 - **Concurrent testing:** Worktree isolation does not isolate background servers, ports, storage, or live sessions — `dev:live` targets the currently elected server and the shared `dev` TUI storage channel from any worktree. Coordinate concurrent tests; use separate instances or storage to prevent interference.
 
+## Live Desktop Diagnostics
+
+- When attaching Playwright to a running desktop app, use `chromium.connectOverCDP(endpoint, { noDefaults: true })`.
+- Without `noDefaults`, Playwright applies light-mode media emulation during attachment. An app following the system theme then flashes light until the connection closes. The option also preserves the existing focus and other media preferences.
+- Do not emulate a color scheme or reduced-motion preference on the user's live window unless explicitly requested; use an isolated test context for those scenarios.
+
 ## TUI Stories
 
 - TUI story request → fixture-driven story under `packages/tui/src/feature-plugins/system/storybook`, registered in `index.tsx`.
@@ -206,6 +212,17 @@ const table = sqliteTable("session", {
   createdAt: integer("created_at").notNull(),
 })
 ```
+
+### Experimental API
+
+- An experimental endpoint lives at `/api/experimental/<group>/...`, its OpenAPI identifier is `experimental.<group>.<method>`, and it lands in the SDK as `client.experimental.<group>.<method>`. Its description says "Experimental: may change without compatibility guarantees."
+- `packages/protocol/test/experimental-identifiers.test.ts` enforces the path and identifier match in both directions; the SDK namespace follows from the path.
+- An experimental field or parameter on a stable endpoint goes under an `experimental` key (`experimental.<name>`), the same way config does (`config.experimental.*`).
+- New endpoints and new default behaviors start experimental.
+- To graduate one, move the route out of `/api/experimental`, drop the `experimental.` prefix, and note it in `CHANGELOG.md`.
+- Experimental HTTP routes change without aliases: rename or remove the route, then update the callers.
+- A breaking move of shipped SDK or plugin API (including moving it under `experimental`) keeps the old path and type names as deprecated aliases of the new ones until the next minor, each marked `@deprecated` with the replacement and "Removed in the next minor". Generated SDK moves get them from the codegen (`compile(..., { aliases: true })` in `packages/client/script/generate.ts`), not by hand.
+- Experimental plugin hooks are named `experimental.*` (`experimental.ws.handshake`).
 
 ## Testing
 

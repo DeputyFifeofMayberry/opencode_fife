@@ -137,7 +137,7 @@ console.log(file)`,
     expect(localInstalled.stdout.toString().trim()).toBe(path.join(localHome, ".local/bin", native.name))
     const manifest = await Bun.file(path.join(localHome, ".local/bin/opencode-build.json")).json()
     expect(manifest.channel).toBe("dev")
-    expect(manifest.version).toMatch(/^0\.0\.0-dev-\d{17}$/)
+    expect(manifest.version).toMatch(/^0\.0\.0-dev-\d{8}\.\d{6}$/)
     expect(manifest.source.commit).toMatch(/^[a-f0-9]{40}$/)
     expect(manifest.source.dirty).toBe(false)
     expect(await Bun.file(path.join(manifest.previousBuild, "opencode.exe")).exists()).toBe(true)

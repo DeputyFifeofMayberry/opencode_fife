@@ -12,6 +12,8 @@ import { SessionCompaction } from "../compaction.js"
 import { SessionContext } from "../context.js"
 import { SessionEvent } from "../event.js"
 import { SessionInbox } from "../inbox.js"
+import { SessionBackground } from "../background.js"
+import { Job } from "../../job.js"
 import { SessionHistory } from "../history.js"
 import { SessionModelRequest } from "../model-request.js"
 import { SessionModelTransport } from "../model-transport.js"
@@ -36,6 +38,7 @@ import { SessionRunnerRetry } from "./retry.js"
 import { SessionStep } from "./step.js"
 import { ToolOutput } from "../../tool-output.js"
 import { Plugin } from "../../plugin.js"
+import { PluginHooks } from "../../plugin/hooks.js"
 import { MAX_STEPS_PROMPT } from "./max-steps.js"
 
 const CONTINUE_AFTER_INCOMPLETE_STREAM =
@@ -43,6 +46,8 @@ const CONTINUE_AFTER_INCOMPLETE_STREAM =
 
 const CONTINUE_AFTER_OUTPUT_LIMIT =
   "Your last response hit the output token limit (stop reason: length). Do not apologize, recap, or repeat yourself. Break the remaining work into smaller pieces."
+
+type DrainInput = Parameters<Interface["drain"]>[0]
 
 const layer = Layer.effect(
   Service,
@@ -55,6 +60,8 @@ const layer = Layer.effect(
     const db = (yield* Database.Service).db
     const compaction = yield* SessionCompaction.Service
     const plugins = yield* Plugin.Service
+    const hooks = yield* PluginHooks.Service
+    const jobs = yield* Job.Service
     const title = yield* SessionTitle.Service
     const steps = yield* SessionStep.make
     const efforts = yield* EffortStore.Service
@@ -68,14 +75,16 @@ const layer = Layer.effect(
     // Title generation starts once input is visible and must not delay model execution.
     const titles = yield* FiberMap.make<SessionSchema.ID, void, never>()
 
-    const drain = Effect.fn("SessionRunner.drain")(function* (input: Parameters<Interface["drain"]>[0]) {
+    // Each drain is one turn and starts its own trace, whatever fiber woke it.
+    const drain = Effect.fn("SessionRunner.drain", { root: true })(function* (input: DrainInput) {
       const sessionID = input.sessionID
       let force = input.force
       let continuing = input.continuation !== undefined
       let step = input.continuation?.step ?? 1
       let entering = true
+      let stepped = input.stepped ?? false
       const promotable = input.promotable ?? "input"
-      if (!force && !continuing) {
+      if (!force && !continuing && !stepped) {
         const pending = yield* SessionInbox.nextPromotable(db, sessionID, "input")
         if (!pending) return DrainResult.Complete()
         const control = pending.type === "compaction" || pending.type === "move"
@@ -91,7 +100,11 @@ const layer = Layer.effect(
             while (true) {
               if (lifecycle.isClosed()) {
                 yield* restore(modelTransport.close(sessionID))
-                return DrainResult.Reloaded({ force, continuation: continuing ? { step } : undefined })
+                return DrainResult.Reloaded({
+                  force,
+                  continuation: continuing ? { step } : undefined,
+                  stepped: !continuing && stepped ? true : undefined,
+                })
               }
               // Location entry and idle boundaries allow queued controls, not necessarily queued prompts.
               const pending = yield* SessionInbox.serialized(
@@ -125,7 +138,10 @@ const layer = Layer.effect(
                 step = 1
               }
               if (pending?.type === "move")
-                return DrainResult.Moved({ continuation: continuing ? { step } : undefined })
+                return DrainResult.Moved({
+                  continuation: continuing ? { step } : undefined,
+                  stepped: !continuing && stepped ? true : undefined,
+                })
               if (pending?.type === "compaction") {
                 const compacted = yield* restore(
                   Effect.gen(function* () {
@@ -171,8 +187,18 @@ const layer = Layer.effect(
                 force = false
                 continue
               }
-              if (!force && !continuing && (!pending || (pending.delivery === "queue" && promotable === "steer")))
-                return DrainResult.Complete()
+              if (!force && !continuing && (!pending || (pending.delivery === "queue" && promotable === "steer"))) {
+                // Control-only drains such as a manual compaction never ran the model, so they skip the hook.
+                if (pending || !stepped) return DrainResult.Complete()
+                // The Session would go idle; a plugin may admit input to keep this execution working.
+                yield* restore(
+                  SessionBackground.outstanding(jobs, store, sessionID).pipe(
+                    Effect.flatMap((background) => hooks.trigger("session", "experimental.idle", { sessionID, background })),
+                  ),
+                )
+                if (!(yield* SessionInbox.has(db, sessionID, "input"))) return DrainResult.Complete()
+                continue
+              }
               const ready = yield* restore(
                 Effect.gen(function* () {
                   const selected = yield* prepareContext(sessionID)
@@ -225,6 +251,7 @@ const layer = Layer.effect(
             estimatedPrompt = SessionCompaction.estimateContext(next.context)
           }
           continuing = yield* runStep(next.context, step)
+          stepped = true
           step++
           stepCount++
           if (stepCount === 1) firstStep = yield* firstStepUsage(sessionID)
@@ -527,7 +554,7 @@ const layer = Layer.effect(
       return result
     })
 
-    return Service.of({ drain: drainWithVerification })
+    return Service.of({ drain: (input) => drainWithVerification(input).pipe(Effect.annotateSpans("session.id", input.sessionID)) })
   }),
 )
 
@@ -543,6 +570,8 @@ export const node = makeLocationNode({
     SessionStore.node,
     SessionCompaction.node,
     Plugin.node,
+    PluginHooks.node,
+    Job.node,
     SessionTitle.node,
     Snapshot.node,
     ToolOutput.node,

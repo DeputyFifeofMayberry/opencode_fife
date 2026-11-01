@@ -1,5 +1,5 @@
 import { beforeEach, expect } from "bun:test"
-import { AIError, LLMClient, LLMEvent, LanguageModel, type LLMRequest } from "@opencode/ai/effect"
+import { AIError, LLMClient, LLMEvent, LanguageModel, UnknownProviderError, type LLMRequest } from "@opencode/ai/effect"
 import { OpenAIChat } from "@opencode/ai/protocols"
 import { Agent } from "@opencode/core/agent"
 import { Provider } from "@opencode/schema/provider"
@@ -262,8 +262,7 @@ it.effect("records usage and yields nothing when the provider fails", () =>
             reasoningTokens: 0,
           },
         }),
-        LLMEvent.providerError({ message: "Provider unavailable" }),
-      )
+      ).pipe(Stream.concat(Stream.fail(new AIError({ reason: new UnknownProviderError({ message: "Provider unavailable" }) }))))
 
     const suggestion = yield* SessionSuggestion.Service
     expect(yield* suggestion.generate(sessionID)).toBeUndefined()

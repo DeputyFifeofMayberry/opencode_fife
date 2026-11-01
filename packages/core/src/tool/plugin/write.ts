@@ -76,9 +76,7 @@ export const Plugin = {
                 return yield* new ToolFailure({
                   message: `File ${input.path} changed since you read it — re-read it and retry`,
                 })
-              const current = yield* FileMutation.readText(environment.files, target.absolute).pipe(
-                Effect.catchTag("Environment.NotFound", () => Effect.undefined),
-              )
+              const current = yield* FileMutation.readOptionalText(environment.files, target.absolute)
               const next = Bom.split(input.content)
               const preview = fileDiff(target.resource, current?.text ?? "", next.text, current ? "modified" : "added")
               yield* permission.assert({
@@ -95,13 +93,17 @@ export const Plugin = {
                 return yield* new ToolFailure({
                   message: `File ${input.path} changed since you read it — re-read it and retry`,
                 })
-              const result = yield* fileMutation.writeTextPreservingBom({ target, content: input.content })
-              const bom = (yield* FileMutation.readText(environment.files, target.absolute)).bom
+              const written = yield* fileMutation.writeTextPreservingBom({ target, content: input.content })
               if (yield* formatter.file(target.absolute)) {
-                yield* FileMutation.syncTextBom(environment.files, target.absolute, bom)
+                yield* FileMutation.syncTextBom(environment.files, target.absolute, written.bom)
               }
               yield* fileStamp.refresh(context.sessionID, target.absolute)
-              return result
+              return {
+                operation: written.operation,
+                target: written.target,
+                resource: written.resource,
+                existed: written.existed,
+              }
             }).pipe(
               Effect.map((output) => ({ output, content: toModelContent(output) })),
               Effect.mapError((error) =>

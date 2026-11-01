@@ -20,7 +20,7 @@ export type Config = Omit<RouteDefaultsInput, "providerOptions"> &
 
 export type Settings = ProviderPackage.Settings &
   ChatOptionsInput & {
-    readonly apiKey?: string
+    readonly apiKey?: string | false
     readonly baseURL?: string
   }
 
@@ -66,14 +66,14 @@ export const provider = configure()
 export const image = provider.image
 export const chat = provider.chat
 
-export const model: ProviderPackage.Definition<Settings, ChatOptionsInput>["model"] = (modelID, settings) =>
+export const model: ProviderPackage.Model<Settings, ChatOptionsInput> = (modelID, settings) =>
   configure(config(settings)).model(modelID)
-export const imageModel = (modelID: string, settings: Settings) => {
+export const imageModel = (modelID: string, settings?: Settings) => {
   const input = config(settings)
   return configure(input).image(modelID, input.providerOptions)
 }
 
-function config({ apiKey, baseURL, body, headers, ...providerOptions }: Settings) {
+function config({ apiKey, baseURL, body, headers, ...providerOptions }: Settings = {}) {
   return {
     apiKey,
     baseURL,
