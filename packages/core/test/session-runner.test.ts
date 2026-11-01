@@ -1,3 +1,7 @@
+import { Global } from "@opencode/util/global"
+import { AppProcess } from "@opencode/util/process"
+import path from "node:path"
+import { tmpdir } from "./fixture/tmpdir"
 import { describe, expect, test } from "bun:test"
 import {
   AIError,
@@ -226,6 +230,7 @@ const makeRunnerState = (compaction?: SessionRunnerModel.Resolved["compaction"])
     }).pipe(Effect.andThen(Deferred.succeed(barrier.release, undefined)), Effect.asVoid)
   return {
     currentModel: model,
+    mapEffortVariants: false,
     compaction,
     modelResolveHook: resolvesModel,
     systemBaseline: "Initial context",
@@ -289,7 +294,7 @@ const transformTools = (registry: Tool.Interface, tools: Readonly<Record<string,
   registry.transform((editor) =>
     Object.entries(tools).forEach(([name, tool]) => editor.add({ ...tool, name, options: options ?? tool.options })),
   )
-const layer = Layer.unwrap(
+const runnerLayer = (databasePath?: string) => Layer.unwrap(
   Effect.map(RunnerState, (state) => {
     const modelTransport = Layer.succeed(
       SessionModelTransport.Service,
@@ -342,7 +347,11 @@ const layer = Layer.unwrap(
         state.modelResolveHook.pipe(
           Effect.map(() => {
             const selected = session.model?.id === "replacement" ? replacementModel : state.currentModel
-            return SessionRunnerModel.resolved(selected, {
+            const variant = session.model?.variant
+            const routed = state.mapEffortVariants && variant && variant !== "default"
+              ? LanguageModel.update(selected, { defaults: { providerOptions: { effort: variant } } })
+              : selected
+            return SessionRunnerModel.resolved(routed, {
               capabilities: { tools: true, input: ["text", "image"], output: ["text"] },
               cost: [],
               limit: modelLimits.get(String(selected.id)) ?? defaultModelLimit,
@@ -430,6 +439,10 @@ const layer = Layer.unwrap(
       small: () => Effect.undefined,
     })
     const replacements: LayerNode.Replacements = [
+      ...(databasePath === undefined ? [] : [
+        Database.node.replace(Database.layer({ path: databasePath }).pipe(Layer.provide(Layer.succeed(Global.Service, Global.make({ data: path.dirname(databasePath) }))))),
+        AppProcess.node.replace(Layer.mock(AppProcess.Service, { run: () => Effect.never })),
+      ]),
       Snapshot.node.replace(Snapshot.noopLayer),
       LayerNodePlatform.llmClient.replace(testLLM),
       SessionRunnerModel.node.replace(models),
@@ -517,6 +530,7 @@ const layer = Layer.unwrap(
     )
   }),
 ).pipe(Layer.provideMerge(Layer.sync(RunnerState, makeRunnerState)), Layer.provideMerge(testLLM))
+const layer = runnerLayer()
 const it = testEffect(layer)
 const sessionID = Session.ID.make("ses_runner_test")
 const otherSessionID = Session.ID.make("ses_runner_other")
@@ -1001,6 +1015,58 @@ const watchRename = Effect.fnUntraced(function* (sessionID: Session.ID) {
     Stream.runDrain,
     Effect.forkScoped({ startImmediately: true }),
   )
+})
+
+test("adaptive runner resumes a persisted session after service restart", async () => {
+  await using tmp = await tmpdir()
+  const file = path.join(tmp.path, "restart.db")
+  const run = (phase: 1 | 2) => Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+    const s = yield* setup
+    // SAFETY: the runner fixture installs the Config.testLayer service.
+    const config = (yield* Config.Service) as Config.TestInterface
+    yield* config.setEntries([
+      new Document({ type: "document", info: new Info({ effort_policy: new ConfigEffort.Info({ mode: "adaptive", clean_passes: 2 }) }) }),
+      new Document({ type: "document", info: new Info({ effort_policy: new ConfigEffort.Info({ verification_commands: ["pnpm typecheck"] }) }) }),
+    ])
+    s.mapEffortVariants = true
+    s.currentModel = LanguageModel.make({ id: "claude-restart", provider: "anthropic", route: AnthropicMessages.route })
+    modelInfos.set("anthropic/claude-restart", {
+      ...Model.Info.default(Provider.ID.make("anthropic"), Model.ID.make("claude-restart")),
+      variants: ["low", "high", "max"].map((id) => ({ id: Model.VariantID.make(id) })),
+    })
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) => editor.add({
+      name: "shell", description: "Simulated verifier", input: Schema.Struct({ command: Schema.String }),
+      output: Schema.Struct({}), options: { codemode: false },
+      execute: () => Effect.succeed({ output: {}, content: [{ type: "text" as const, text: "" }], metadata: { exit: verifierExits.shift() ?? 0 } }),
+    }))
+    const efforts = yield* EffortStore.Service
+    if (phase === 1) {
+      verifierExits.push(1)
+      yield* s.llm.push(TestLLM.toolCall("restart-fail", "shell", { command: "pnpm typecheck" }))
+      yield* s.llm.push(TestLLM.text("Failed", "restart-fail-answer"))
+      yield* s.runPrompt("Run verifier")
+      expect((yield* efforts.get(sessionID))?.level).toBe("deep")
+      expect((yield* efforts.get(sessionID))?.openFailure?.verifier).toBe("pnpm typecheck")
+      expect(s.requests.at(-1)?.model.defaults?.providerOptions).toMatchObject({ effort: "max" })
+      return
+    }
+    expect((yield* efforts.get(sessionID))?.level).toBe("deep")
+    expect((yield* efforts.get(sessionID))?.openFailure?.verifier).toBe("pnpm typecheck")
+    verifierExits.push(0, 0)
+    yield* s.llm.push(TestLLM.toolCall("restart-pass-1", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.toolCall("restart-pass-2", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.text("Passed", "restart-pass-answer"))
+    yield* s.runPrompt("Retry verifier")
+    expect(s.requests[0]?.model.defaults?.providerOptions).toMatchObject({ effort: "max" })
+    expect((yield* compileRequest(s.requests[0]!)).body).toMatchObject({ output_config: { effort: "max" } })
+    expect(s.requests[1]?.model.defaults?.providerOptions).toMatchObject({ effort: "max" })
+    expect((yield* efforts.get(sessionID))?.level).toBe("standard")
+    expect((yield* efforts.get(sessionID))?.openFailure).toBeUndefined()
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("default" as Model.VariantID)
+  }).pipe(Effect.provide(runnerLayer(file)))))
+  await run(1)
+  await run(2)
 })
 
 describe("SessionRunnerLLM", () => {
@@ -2503,6 +2569,56 @@ describe("SessionRunnerLLM", () => {
     // The return switch rides the cache-preserving effort update on supporting routes.
     const last = s.requests.at(-1)
     expect(last?.messages).toContainEqual(Message.effort({ effort: undefined, previous: "max" }))
+  })
+
+  scenario("runs the adaptive lifecycle with layered configuration and a simulated provider", function* (s) {
+    // SAFETY: this fixture replaces Config.Service with Config.testLayer.
+    const config = (yield* Config.Service) as Config.TestInterface
+    yield* config.setEntries([
+      new Document({ type: "document", info: new Info({ effort_policy: new ConfigEffort.Info({ mode: "adaptive", clean_passes: 2 }) }) }),
+      new Document({ type: "document", info: new Info({ effort_policy: new ConfigEffort.Info({ verification_commands: ["pnpm typecheck"] }) }) }),
+    ])
+    s.mapEffortVariants = true
+    s.currentModel = LanguageModel.make({ id: "claude-effort", provider: "anthropic", route: AnthropicMessages.route })
+    modelInfos.set("anthropic/claude-effort", {
+      ...Model.Info.default(Provider.ID.make("anthropic"), Model.ID.make("claude-effort")),
+      variants: ["low", "high", "max"].map((id) => ({ id: Model.VariantID.make(id) })),
+    })
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) => editor.add({
+      name: "shell", description: "Simulated verifier", input: Schema.Struct({ command: Schema.String }),
+      output: Schema.Struct({}), options: { codemode: false },
+      execute: () => Effect.succeed({ output: {}, content: [{ type: "text" as const, text: "" }], metadata: { exit: verifierExits.shift() ?? 0 } }),
+    }))
+    const efforts = yield* EffortStore.Service
+    verifierExits.push(1, 0, 0)
+    yield* s.llm.push(TestLLM.toolCall("adaptive-fail", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.toolCall("adaptive-pass-1", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.toolCall("adaptive-pass-2", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.text("Done", "adaptive-finished"))
+    yield* s.runPrompt("Check")
+    const row = yield* efforts.get(sessionID)
+    expect(row?.baseLevel).toBe("standard")
+    expect(row?.level).toBe("standard")
+    expect(row?.openFailure).toBeUndefined()
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("default" as Model.VariantID)
+    expect(s.requests).toHaveLength(4)
+    expect(s.requests[1]?.model.defaults?.providerOptions).toMatchObject({ effort: "max" })
+    expect(s.requests[2]?.model.defaults?.providerOptions).toMatchObject({ effort: "max" })
+    expect(s.requests[3]?.messages).toContainEqual(Message.effort({ effort: undefined, previous: "max" }))
+    const compiled = yield* compileRequest(s.requests[1]!)
+    expect(compiled.body).toMatchObject({ output_config: { effort: "max" } })
+
+    yield* s.bus.publish(SessionEvent.ModelSelected, { sessionID, model: { id: ID.make("claude-effort"), providerID: Provider.ID.make("anthropic"), variant: Model.VariantID.make("high") } })
+    verifierExits.push(1, 0, 0)
+    yield* s.llm.push(TestLLM.toolCall("adaptive-override-fail", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.toolCall("adaptive-override-pass-1", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.toolCall("adaptive-override-pass-2", "shell", { command: "pnpm typecheck" }))
+    yield* s.llm.push(TestLLM.text("Override holds", "adaptive-override"))
+    yield* s.runPrompt("Again")
+    expect((yield* s.session.get(sessionID)).model?.variant).toBe("high" as Model.VariantID)
+    for (const request of s.requests.slice(4))
+      expect(request.model.defaults?.providerOptions).toMatchObject({ effort: "high" })
   })
 
   scenario("preserves instruction values while a source is temporarily unavailable", function* (s) {

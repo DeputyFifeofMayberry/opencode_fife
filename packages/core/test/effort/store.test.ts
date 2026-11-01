@@ -1,4 +1,4 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { Effect, Layer } from "effect"
 import { eq } from "drizzle-orm"
 import { Database } from "@opencode/core/database/database"
@@ -9,6 +9,12 @@ import { Project } from "@opencode/schema/project"
 import { AbsolutePath } from "@opencode/schema/schema"
 import { SessionID } from "@opencode/schema/session-id"
 import { Global } from "@opencode/util/global"
+import path from "node:path"
+import { tmpdir } from "../fixture/tmpdir"
+import { Config } from "@opencode/core/config"
+import { EffortEvidence } from "@opencode/core/effort/evidence"
+import { ConfigEffort } from "@opencode/schema/config/effort"
+import { Document, Info } from "@opencode/schema/config"
 import { testEffect } from "../lib/effect"
 
 const DatabaseLayer = Database.layer({ path: ":memory:" }).pipe(
@@ -102,4 +108,41 @@ describe("EffortStore", () => {
       expect(yield* store.get(id)).toBeUndefined()
     })
   })
+})
+
+
+test("adaptive failure and clean-pass state survives closing and reopening the database", async () => {
+  await using tmp = await tmpdir()
+  const file = path.join(tmp.path, "effort.db")
+  const database = Database.layer({ path: file }).pipe(Layer.provide(Layer.succeed(Global.Service, Global.make({ data: tmp.path }))))
+  const layer = Layer.mergeAll(database, EffortStore.layer.pipe(Layer.provide(database)), Config.testLayer([
+    new Document({ type: "document", info: new Info({ effort_policy: new ConfigEffort.Info({ mode: "adaptive", clean_passes: 2, verification_commands: ["bun test"] }) }) }),
+  ]))
+  const id = SessionID.make("ses_effort_reopen")
+  const phase = (run: Effect.Effect<void, unknown, Database.Service | EffortStore.Service | Config.Service>) =>
+    Effect.runPromise(run.pipe(Effect.provide(layer), Effect.scoped))
+  const observe = (exit: number) => Effect.gen(function* () {
+    yield* EffortEvidence.observe({ db: (yield* Database.Service).db, efforts: yield* EffortStore.Service, config: yield* Config.Service }, id,
+      { tool: "shell", input: { command: "bun test" }, metadata: { exit } })
+  })
+  await phase(Effect.gen(function* () {
+    yield* seed(id)
+    const store = yield* EffortStore.Service
+    yield* store.set({ sessionID: id, baseLevel: "standard", revision: 0, level: "standard", cleanPasses: 0 })
+    yield* observe(1)
+    expect((yield* store.get(id))?.level).toBe("deep")
+  }))
+  await phase(Effect.gen(function* () {
+    const store = yield* EffortStore.Service
+    expect((yield* store.get(id))?.openFailure?.verifier).toBe("bun test")
+    yield* observe(0)
+    expect((yield* store.get(id))?.cleanPasses).toBe(1)
+  }))
+  await phase(Effect.gen(function* () {
+    const store = yield* EffortStore.Service
+    expect((yield* store.get(id))?.level).toBe("deep")
+    expect((yield* store.get(id))?.cleanPasses).toBe(1)
+    yield* observe(0)
+    expect((yield* store.get(id))?.level).toBe("standard")
+  }))
 })
