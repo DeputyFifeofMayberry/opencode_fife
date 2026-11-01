@@ -111,7 +111,7 @@ export const ensure = (db: DatabaseShape, sessionID: SessionSchema.ID) =>
       if (rows.length === 0) break
 
       yield* Effect.forEach(
-        rows,
+        yield* SessionHistory.withParts(db, rows),
         (row) =>
           Effect.gen(function* () {
             const message = yield* Effect.try(() => SessionHistory.decodeMessageRowSync(row)).pipe(

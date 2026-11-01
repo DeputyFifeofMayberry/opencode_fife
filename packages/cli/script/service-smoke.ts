@@ -142,6 +142,9 @@ async function verifyWebUi(url: string) {
   const entry = await fetch(new URL(script, url), { signal: AbortSignal.timeout(5_000) })
   if (entry.status !== 200 || (await entry.text()).length === 0)
     throw new Error(`Compiled service did not serve ${script}`)
+  const favicon = await fetch(new URL("/favicon.svg", url), { signal: AbortSignal.timeout(5_000) })
+  if (favicon.status !== 200 || !/<svg(?:\s|>)/i.test(await favicon.text()))
+    throw new Error("Compiled service did not serve a valid SVG favicon")
 }
 
 async function waitForReady(url: string, headers: HeadersInit) {

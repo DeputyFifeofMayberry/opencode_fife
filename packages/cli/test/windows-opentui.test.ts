@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { rm } from "node:fs/promises"
+import { rm, symlink } from "node:fs/promises"
 import path from "node:path"
 import { windowsOpenTui } from "../script/windows-opentui"
 import { tmpdir } from "./fixture/tmpdir"
@@ -98,6 +98,51 @@ console.log(file)`,
       }
       $global:LASTEXITCODE = if ($env:FAIL_SMOKE -eq '1' -and $args -contains 'script/service-smoke.ts') { 77 } else { 0 }
     }; & '${installer.replaceAll("'", "''")}'`
+    // A clean Windows checkout can contain the text of a tracked symlink instead of the link.
+    const stubRepo = path.join(root.path, "stub repo")
+    expect(Bun.spawnSync(["git", "init", stubRepo]).exitCode).toBe(0)
+    const stubGit = ["git", "-C", stubRepo, "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid"]
+    expect(Bun.spawnSync([...stubGit, "config", "core.symlinks", "false"]).exitCode).toBe(0)
+    const stubName = "assets/link with space.svg"
+    const stub = path.join(stubRepo, stubName)
+    await Bun.write(path.join(stubRepo, "actual.svg"), "<svg/>")
+    expect(Bun.spawnSync([...stubGit, "add", "actual.svg"]).exitCode).toBe(0)
+    await Bun.write(stub, "../actual.svg")
+    const hash = Bun.spawnSync([...stubGit, "hash-object", "-w", stubName])
+      .stdout.toString()
+      .trim()
+    expect(
+      Bun.spawnSync([...stubGit, "update-index", "--add", "--cacheinfo", `120000,${hash},${stubName}`]).exitCode,
+    ).toBe(0)
+    expect(Bun.spawnSync([...stubGit, "commit", "-m", "stub fixture"]).exitCode).toBe(0)
+    expect(Bun.spawnSync([...stubGit, "status", "--porcelain"]).stdout.toString()).toBe("")
+    const stubInstall = Bun.spawnSync(
+      ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", invocation],
+      { cwd: stubRepo, env: { ...env, USERPROFILE: localHome, INSTALL_COMMANDS: commands } },
+    )
+    expect(stubInstall.exitCode).not.toBe(0)
+    expect(stubInstall.stderr.toString()).toContain(`Unresolved tracked symlinks: ${stubName}`)
+    expect(await Bun.file(commands).exists()).toBe(false)
+    expect(await Bun.file(path.join(localHome, ".local/bin/opencode.exe")).bytes()).toEqual(
+      await Bun.file(executable).bytes(),
+    )
+
+    // Windows requires Developer Mode or the symlink privilege; exercise the valid-link path when available.
+    await Bun.write(path.join(local, "actual.svg"), "<svg/>")
+    let hasSymlink = true
+    try {
+      await symlink("actual.svg", path.join(local, "valid link.svg"), "file")
+    } catch (error) {
+      if (!(error instanceof Error) || !("code" in error) || !["EPERM", "EACCES"].includes(String(error.code)))
+        throw error
+      hasSymlink = false
+    }
+    expect(Bun.spawnSync([...gitFixture, "config", "core.symlinks", "true"]).exitCode).toBe(0)
+    expect(
+      Bun.spawnSync([...gitFixture, "add", "actual.svg", ...(hasSymlink ? ["valid link.svg"] : [])]).exitCode,
+    ).toBe(0)
+    expect(Bun.spawnSync([...gitFixture, "commit", "-m", "valid link fixture"]).exitCode).toBe(0)
+
     await Bun.write(path.join(local, "scratch.txt"), "uncommitted\n")
     const dirtyInstall = Bun.spawnSync(
       ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", invocation],

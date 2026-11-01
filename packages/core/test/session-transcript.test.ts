@@ -7,8 +7,10 @@ import { DatabaseFts } from "@opencode/core/database/fts"
 import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
 import { ProjectTable } from "@opencode/core/project/sql"
 import { SessionProjector } from "@opencode/core/session/projector"
-import { SessionMessageTable, SessionMessageTextTable, SessionTable } from "@opencode/core/session/sql"
+import { SessionMessageTable, SessionMessageTextTable, SessionPartTable, SessionTable } from "@opencode/core/session/sql"
 import { SessionTranscript } from "@opencode/core/session/transcript"
+import { DatabaseMigration } from "@opencode/core/database/migration"
+import repairSplitTranscript from "@opencode/core/database/migration/20261101160000_repair_split_transcript"
 import { Agent } from "@opencode/schema/agent"
 import { Model } from "@opencode/schema/model"
 import { Project } from "@opencode/schema/project"
@@ -19,6 +21,7 @@ import { SessionEvent } from "@opencode/schema/session-event"
 import { SessionMessage } from "@opencode/schema/session-message"
 import { Shell } from "@opencode/schema/shell"
 import { LayerNode } from "@opencode/util/effect/layer-node"
+import { Global } from "@opencode/util/global"
 import { testEffect } from "./lib/effect"
 
 const encode = Schema.encodeSync(SessionMessage.Info)
@@ -100,6 +103,83 @@ const seed = Effect.gen(function* () {
 })
 
 describe("SessionTranscript", () => {
+  it.effect("backfills split assistant parts and repairs entries indexed before the upgrade", () =>
+    Effect.gen(function* () {
+      const db = yield* seed
+      const old = assistant("", true, "msg_split_old")
+      const fresh = assistant("", true, "msg_split_new")
+      const indexed = assistant("", true, "msg_split_indexed")
+      const inline = assistant("", true, "msg_inline_empty")
+      yield* db
+        .insert(SessionMessageTable)
+        .values([row(first, 1, old), row(first, 2, fresh), row(first, 3, indexed), row(first, 4, inline)])
+        .run()
+      yield* db
+        .insert(SessionPartTable)
+        .values([
+          {
+            message_id: old.id,
+            session_id: first,
+            ordinal: 0,
+            type: "text",
+            data: { type: "text", text: "older quartzneedle" },
+          },
+          {
+            message_id: fresh.id,
+            session_id: first,
+            ordinal: 0,
+            type: "text",
+            data: { type: "text", text: "newer amethystneedle" },
+          },
+          {
+            message_id: indexed.id,
+            session_id: first,
+            ordinal: 0,
+            type: "text",
+            data: { type: "text", text: "already indexed" },
+          },
+        ])
+        .run()
+      yield* db
+        .insert(SessionMessageTextTable)
+        .values([
+          { message_id: old.id, session_id: first, seq: 1, type: "assistant", time_created: 0, text: "" },
+          {
+            message_id: indexed.id,
+            session_id: first,
+            seq: 3,
+            type: "assistant",
+            time_created: 0,
+            text: "already indexed",
+          },
+          { message_id: inline.id, session_id: first, seq: 4, type: "assistant", time_created: 0, text: "" },
+        ])
+        .run()
+
+      // Fresh test databases record all migrations at bootstrap; simulate an existing database that has not run this one.
+      yield* db.run(sql`DELETE FROM migration WHERE id = ${repairSplitTranscript.id}`)
+      yield* DatabaseMigration.applyOnly(db, [repairSplitTranscript]).pipe(
+        Effect.provideService(Global.Service, Global.make()),
+      )
+      yield* DatabaseMigration.applyOnly(db, [repairSplitTranscript]).pipe(
+        Effect.provideService(Global.Service, Global.make()),
+      )
+
+      const remaining = yield* db.select().from(SessionMessageTextTable).all()
+      expect(remaining.map((entry) => entry.message_id)).toContain(indexed.id)
+      expect(remaining.map((entry) => entry.message_id)).toContain(inline.id)
+      expect(remaining.map((entry) => entry.message_id)).not.toContain(old.id)
+      expect(yield* SessionTranscript.search(db, { sessionID: first, query: "quartzneedle" })).toMatchObject([
+        { messageID: old.id },
+      ])
+      expect(yield* SessionTranscript.search(db, { sessionID: first, query: "amethystneedle" })).toMatchObject([
+        { messageID: fresh.id },
+      ])
+      const restored = yield* SessionTranscript.read(db, { sessionID: first, messageID: old.id })
+      expect(restored?.message.text).toContain("older quartzneedle")
+    }),
+  )
+
   it.effect("backfills completed messages and returns bounded snippets", () =>
     Effect.gen(function* () {
       const db = yield* seed

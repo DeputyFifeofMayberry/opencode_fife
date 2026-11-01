@@ -32,6 +32,21 @@ $sourceState = Get-SourceState
 if ($sourceState.dirty) {
     throw "Source tree has $($sourceState.status.Count) uncommitted change(s). Commit the work on dev first; the installer only packages committed source."
 }
+
+# Git can check out tracked symlinks as text files on Windows. A clean status does
+# not reveal this, and Vite would otherwise package link targets as app assets.
+$tracked = (git ls-files --stage -z) -split "`0"
+if ($LASTEXITCODE -ne 0) { throw "Could not inspect tracked symlinks." }
+$unresolved = @($tracked | Where-Object { $_.StartsWith("120000 ") } | ForEach-Object {
+    $path = $_.Substring($_.IndexOf("`t") + 1)
+    $absolute = Join-Path $root $path
+    $item = Get-Item -LiteralPath $absolute -Force -ErrorAction SilentlyContinue
+    if ($null -eq $item -or -not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+        -not ([IO.File]::Exists($absolute) -or [IO.Directory]::Exists($absolute))) { $path }
+})
+if ($unresolved.Count -gt 0) {
+    throw "Unresolved tracked symlinks: $($unresolved -join ', '). Enable Windows Developer Mode and recreate these links, or create a new worktree with Git symlink support enabled. Nothing installed."
+}
 $env:OPENCODE_CHANNEL = "dev"
 $env:OPENCODE_VERSION = "0.0.0-dev-$(Get-Date -Format 'yyyyMMdd.HHmmss')"
 

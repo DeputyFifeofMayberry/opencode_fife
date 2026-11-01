@@ -31,6 +31,8 @@ This repository's update terms are synonyms: "update opencode", "create local up
 
    The installer refuses a dirty tree, so commit first. It assigns a timestamped `dev` version, builds Windows x64 with its embedded web UI, runs the compiled service smoke test using temporary data and an operating-system-assigned port, then swaps the executable in atomically. Failed builds, failed smoke tests, a changed source fingerprint, or uncommitted source stop installation. The compiled smoke test is the only hard gate; lint, typechecks, and regression tests from step 2 stay your responsibility. Run one build/installer at a time per checkout. Each install archives the previous build and prunes the archive to the newest 5 (about 270 MB per build).
 
+   The installer also checks tracked symlinks before building. If Git checked them out as plain text, enable Windows Developer Mode and recreate the listed links, or create a fresh worktree with Git symlink support enabled. Preserve any local changes before recreating files. The smoke test checks that the packaged favicon is SVG data.
+
 5. When sessions and terminal work are idle, close old clients and launch `opencode .` again. The new client can replace an older shared `dev` server. The installer itself does not stop or restart it. Verify the changed behavior in the installed app.
 
 Source edits do not change an already running compiled executable. Configuration, plugins, and project files remain live inputs. Installing changes the executable on disk; existing processes continue running their previous code. `opencode --version` shows the executable on disk.
