@@ -1,4 +1,4 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { Effect, Layer } from "effect"
 import { Config } from "@opencode/core/config"
 import { Database } from "@opencode/core/database/database"
@@ -96,10 +96,9 @@ describe("EffortEvidence", () => {
       const efforts = yield* EffortStore.Service
       const id = SessionID.make("ses_evidence_noise")
       yield* seed(id)
-      // A matching segment in a compound command classifies.
+      // A compound command cannot attribute its exit to a single segment.
       yield* settle(id, "shell", "pnpm lint && pnpm typecheck", 1)
-      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
-      yield* efforts.setOpenFailure(id, undefined)
+      expect((yield* efforts.get(id))?.openFailure).toBeUndefined()
       // Fully unconfigured commands, missing exits, and non-shell tools change nothing.
       yield* settle(id, "shell", "pnpm lint && exit 0", 1)
       yield* settle(id, "shell", "pnpm typecheck", undefined)
@@ -113,20 +112,33 @@ describe("EffortEvidence", () => {
       const efforts = yield* EffortStore.Service
       const id = SessionID.make("ses_evidence_decorated")
       yield* seed(id)
-      // Agents pipe verifiers into output filters; the pipe segment still classifies.
-      yield* settle(id, "shell", "pnpm typecheck 2>&1 | Select-String -Pattern 'TS[0-9]+|No errors'", 1)
-      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
-      yield* efforts.setOpenFailure(id, undefined)
-      // Stream redirections are stripped before matching.
+      // Pipelines and redirections do not provide a trustworthy verifier exit.
+      yield* settle(id, "shell", "pnpm typecheck 2>&1 | Select-String -Pattern error", 1)
       yield* settle(id, "shell", "pnpm typecheck > out.log 2>&1", 1)
-      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
-      yield* efforts.setOpenFailure(id, undefined)
+      expect((yield* efforts.get(id))?.openFailure).toBeUndefined()
       // Appended flags classify at the token boundary; a longer word does not.
       yield* settle(id, "shell", "pnpm typecheck --pretty=false", 1)
       expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
       yield* efforts.setOpenFailure(id, undefined)
       yield* settle(id, "shell", "pnpm typecheck-strict", 1)
       expect((yield* efforts.get(id))?.openFailure).toBeUndefined()
+    })
+  })
+
+  it.effect("never clears or opens a failure from an ambiguous command", () => {
+    return Effect.gen(function* () {
+      const efforts = yield* EffortStore.Service
+      const id = SessionID.make("ses_evidence_ambiguous")
+      yield* seed(id)
+      for (const command of ["pnpm typecheck && fail", "fail && pnpm typecheck", "pnpm typecheck || exit 0", "pnpm typecheck | filter", "pnpm typecheck; exit 0", "pnpm typecheck > out", "pnpm typecheck $(echo bad)", "pnpm typecheck\nexit 0"]) {
+        yield* settle(id, "shell", command, 1)
+        expect((yield* efforts.get(id))?.openFailure).toBeUndefined()
+      }
+      yield* settle(id, "shell", "pnpm typecheck", 1)
+      yield* settle(id, "shell", "pnpm typecheck || exit 0", 0)
+      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
+      yield* settle(id, "other", "pnpm typecheck", 0)
+      expect((yield* efforts.get(id))?.openFailure?.verifier).toBe("pnpm typecheck")
     })
   })
 
@@ -197,4 +209,14 @@ describe("EffortEvidence adaptive", () => {
       expect(row?.cleanPasses).toBe(0)
     })
   })
+})
+
+
+test.skipIf(process.platform !== "win32")("PowerShell command status is not attributed across a compound command", () => {
+  const direct = Bun.spawnSync(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "cmd /c exit 7"])
+  const masked = Bun.spawnSync(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "cmd /c exit 7; Write-Output ok"])
+  expect(direct.exitCode).not.toBe(0)
+  expect(masked.exitCode).toBe(0)
+  expect(EffortEvidence.matchVerifier("cmd /c exit 7", ["cmd /c exit 7"])).toBe("cmd /c exit 7")
+  expect(EffortEvidence.matchVerifier("cmd /c exit 7; Write-Output ok", ["cmd /c exit 7"])).toBeUndefined()
 })

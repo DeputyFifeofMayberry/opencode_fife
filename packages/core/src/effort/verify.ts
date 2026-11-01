@@ -62,6 +62,12 @@ export const runIfDirty = Effect.fn("EffortVerification.runIfDirty")(function* (
   const command =
     failing !== undefined && verifiers.some((verifier) => verifier.trim() === failing) ? failing : verifiers[0]!
 
+  // A compound configured command has no attributable per-verifier exit.
+  if (EffortEvidence.matchVerifier(command, [command]) === undefined) {
+    yield* Effect.logWarning("harness verifier is not a simple command", { sessionID: input.sessionID, command })
+    return
+  }
+
   const result = yield* deps
     .runProcess(ChildProcess.make(command, [], { shell: true, cwd: input.directory, extendEnv: true }), {
       timeout: Duration.millis(settings.verification_timeout ?? DEFAULT_TIMEOUT_MS),

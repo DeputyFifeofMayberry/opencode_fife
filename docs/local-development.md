@@ -83,3 +83,5 @@ Test database migrations with disposable data first. Stop the server before back
 GitHub Actions and distribution update checks are disabled for this personal setup. Workflow YAML files remain available for a future release. To resume publishing later, explicitly choose the release branch, configure the fork's release jobs and credentials, re-enable Actions, and run the relevant release checks. Current inherited release workflows target `dev`/`beta`; preserving `main` does not make it a configured release branch.
 
 Effort policy fields inherit from lower-priority configuration. A project can override individual fields without disabling a global adaptive mode. Supplied arrays and maps replace their lower-priority values; an empty array clears a list.
+
+Effort evidence only uses exit codes from direct, simple verifier commands. Pipelines, shell operators, redirection, quoting, and expansions are ignored because a shell exit cannot identify the verifier outcome. Configure a simple command or script for harness verification; ambiguous configured commands are skipped.

@@ -14,14 +14,10 @@ import { EffortStore } from "./store.js"
  * Only configured verification commands classify: a non-zero exit opens an
  * escalation, a zero exit clears one, and everything else — spawn failures,
  * cancels, timeouts, unconfigured commands — changes nothing. File-mutating
- * tools advance the workspace revision their settlement observed, which is what
- * makes a later pass stale when it predates the failing state. Command matching
- * tolerates decorated invocations: compound commands (`a && typecheck`,
- * `typecheck | filter`) classify on any segment after redirections are
- * stripped, and appended flags count at the token boundary; the verifier
- * identity is the matched configured command. The v1
- * identity omits the working directory: escalation state is per session, and
- * the configured command is the stable part of the core's opaque identity.
+ * tools advance the workspace revision their settlement observed. Only direct,
+ * simple verifier invocations are attributed: a shell exit belongs to the whole
+ * command, so pipelines, redirects, shell expansions and compound expressions
+ * cannot establish the verifier's own result. The verifier identity omits cwd.
  */
 export const observe = Effect.fn("EffortEvidence.observe")(function* (
   deps: {
@@ -39,6 +35,7 @@ export const observe = Effect.fn("EffortEvidence.observe")(function* (
 
   if (mutating.includes(settlement.tool)) yield* deps.efforts.bumpRevision(sessionID)
 
+  if (settlement.tool !== "shell" && settlement.tool !== "harness-verifier") return
   const command = commandOf(settlement.input)
   const exit = exitOf(settlement.metadata)
   if (command === undefined || exit === undefined) return
@@ -75,33 +72,17 @@ export const observe = Effect.fn("EffortEvidence.observe")(function* (
     yield* deps.efforts.setLevel(sessionID, next.level ?? state.base, next.cleanPasses ?? 0)
 })
 
-/** The configured command a settled call matches, or undefined for unconfigured calls. */
+/** Match only a simple command whose process exit can belong to the verifier. */
 export function matchVerifier(command: string, verifiers: readonly string[]): string | undefined {
-  const configured = verifiers.map((verifier) => verifier.trim())
-  for (const segment of segments(command)) {
-    const match = configured.find((verifier) => matchesVerifier(segment, verifier))
-    if (match !== undefined) return match
-  }
-  return undefined
-}
-
-// Agents rarely run a verifier verbatim: they pipe it into an output filter
-// (`pnpm typecheck 2>&1 | Select-String …`), redirect its streams, or append
-// flags. Classify any shell segment — compound on `&&`, `||`, `|`, `;` — after
-// stripping redirection tokens, matching exactly or at a token boundary so
-// appended flags count while a longer word (`pnpm typecheck-strict`) does not.
-function segments(command: string): readonly string[] {
-  return command
-    .split(/&&|\|\||\||;/)
-    .flatMap((segment) => segment.split(redirection))
-    .map((part) => part.trim())
-    .filter((segment) => segment.length > 0)
-}
-
-const redirection = /(?:^|\s)\d*(?:>>?|<&?)\s?\S*/g
-
-function matchesVerifier(segment: string, verifier: string): boolean {
-  return segment === verifier || segment.startsWith(`${verifier} `)
+  const value = command.trim()
+  // Reject shell syntax conservatively, including quoting and substitutions. The
+  // shell reports one status for a complete expression, never per segment.
+  const simple = /^[\w\s.\/\\:=@+,-]+$/
+  if (!simple.test(value) || /[\r\n]/.test(value)) return undefined
+  return verifiers.map((verifier) => verifier.trim()).find((verifier) =>
+    verifier.length > 0 && simple.test(verifier) && !/[\r\n]/.test(verifier) &&
+    (value === verifier || value.startsWith(`${verifier} `)),
+  )
 }
 
 function commandOf(input: unknown): string | undefined {
@@ -112,6 +93,8 @@ function commandOf(input: unknown): string | undefined {
 
 function exitOf(metadata: unknown): number | undefined {
   if (typeof metadata !== "object" || metadata === null) return undefined
-  const exit = (metadata as { readonly exit?: unknown }).exit
+  const outcome = metadata as { readonly exit?: unknown; readonly timeout?: unknown; readonly signal?: unknown }
+  if (outcome.timeout === true || outcome.signal !== undefined) return undefined
+  const exit = outcome.exit
   return typeof exit === "number" ? exit : undefined
 }

@@ -31,6 +31,14 @@ const adaptiveLayer = testEffect(
   ),
 )
 
+const ambiguousLayer = testEffect(
+  Layer.mergeAll(
+    DatabaseLayer,
+    EffortStore.layer.pipe(Layer.provide(DatabaseLayer)),
+    configLayer(new ConfigEffort.Info({ verification_commands: ["bun typecheck || exit 0"], mode: "adaptive" })),
+  ),
+)
+
 const staticLayer = testEffect(
   Layer.mergeAll(
     DatabaseLayer,
@@ -94,6 +102,22 @@ const seed = Effect.fn(function* (sessionID: SessionID) {
 })
 
 describe("EffortVerification", () => {
+  ambiguousLayer.effect("skips an ambiguous configured verifier without recording a verdict", () =>
+    Effect.gen(function* () {
+      const runs = scriptedRuns([1], [0])
+      const id = SessionID.make("ses_verify_ambiguous")
+      yield* seed(id)
+      const efforts = yield* EffortStore.Service
+      yield* efforts.bumpRevision(id)
+      yield* EffortVerification.runIfDirty(
+        { db: (yield* Database.Service).db, efforts, config: yield* Config.Service, runProcess: runs.runProcess },
+        { sessionID: id, directory },
+      )
+      expect(runs.verifierCalls).toBe(0)
+      expect((yield* efforts.get(id))?.verdictRevision).toBeUndefined()
+    }),
+  )
+
   adaptiveLayer.effect("raises the level from a harness failure and records the verdict", () => {
     return Effect.gen(function* () {
       const runs = scriptedRuns([1], [1])
