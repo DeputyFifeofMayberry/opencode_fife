@@ -4,3 +4,5 @@ package.json
 bun.lock
 .gitignore
 package-lock.json
+__pycache__
+*.pyc
