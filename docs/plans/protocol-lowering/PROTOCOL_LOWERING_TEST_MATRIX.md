@@ -279,29 +279,31 @@ These are the evaluation's §3.2 E items. Each test is written **against current
 
 ### 5.1 System update between a `tool-call` and its `tool-result`
 
-| Protocol | Expected current behaviour | Test |
+| Protocol | Observed behaviour (measured 2026-11-02) | Where |
 | --- | --- | --- |
-| anthropic | throws `InvalidRequestError` (`splitsLocalToolResults`) | exact error |
-| openai-chat | inserts a user message before the tool result | exact body |
-| mistral | inserts a user message | exact body |
-| cohere | inserts a user message | exact body |
-| gemini | merges into previous user turn or pushes one | exact body |
-| bedrock | merges into the user content array | exact body |
-| open-responses | `developer` message between call and output | exact body |
+| anthropic | rejects with `reason._tag === "InvalidRequest"` (`splitsLocalToolResults`) | `lowering-ordering-chat.test.ts` |
+| openai-chat | inserts a `user` message (`<system-update>` wrapper) **before** the tool result | `lowering-ordering-chat.test.ts` |
+| open-responses | inserts a `developer` message between `function_call` and `function_call_output` | `lowering-ordering-responses.test.ts` |
+| openai-responses | identical to `open-responses` through the adapter | `lowering-ordering-responses.test.ts` |
+| cohere | inserts a `user` message with the wrapped system text before the tool message | `lowering-ordering-responses.test.ts` |
+| bedrock | merges the wrapped text into the **same** user message as the `toolResult` | `lowering-ordering-structured.test.ts` |
+| gemini | emits three turns: its own user turn for the system text, then a `functionResponse` turn | `lowering-ordering-structured.test.ts` |
+| google-interactions | accepts it as its own `user_input` step | `lowering-ordering-structured.test.ts` |
+| mistral | **not characterized** — the chat file covers openai-chat and anthropic only | gap |
 
-**Decision rule:** record all seven; if a provider's documented wire requires tool results to immediately follow the call, the inserting protocols are defective and a fix is a separate, approved change. The kit must not normalise this silently.
+Seven distinct outcomes for one input. Whether the inserting protocols produce an invalid history (a `tool` message must usually follow the `tool_calls` message immediately) is a **behaviour question, not a refactor**: it is recorded, not fixed, and the kit must not normalise it.
 
 ### 5.2 Uppercase media type in `cohere-chat`
 
-One case with `mediaType: "IMAGE/PNG"`. If it throws while five other protocols accept it, that is a defect; fix is a `.toLowerCase()` and one test.
+**Observed:** Cohere **rejects** (`reason._tag === "InvalidRequest"`); every other protocol accepts and emits a lowercase media type. The mechanism is narrower than "Cohere compares raw case": `Media.Asset.mediaType` preserves the caller's casing, while `inline().dataUrl` lowercases, so protocols that build a data URL or call `kindOf` normalise for free and Cohere's `mediaType.startsWith("image/")` is the only raw comparison. Reachable through `Media.base64(data, "IMAGE/PNG")`; confirmed in `lowering-ordering-responses.test.ts`. Verdict: latent defect, one-line fix, **not applied** — it is a behaviour change and needs its own approval.
 
 ### 5.3 Blank and zero-part messages
 
-For each protocol: a zero-part assistant message, a whitespace-only text message, and a reasoning-only message with unsigned reasoning. Record emitted body or absence. Do not converge the predicates.
+**Observed:** a zero-part assistant message is dropped by openai-chat, anthropic, bedrock, open-responses, openai-responses and google-interactions; **kept as an empty container** by gemini (`{role:"model",parts:[]}`) and cohere (`{role:"assistant"}`). A whitespace-only text is dropped by openai-chat and anthropic, and kept by bedrock, gemini, cohere and google-interactions. Unsigned reasoning is kept by openai-chat (`reasoning_content`), gemini (`thought`), cohere (`thinking`) and google-interactions (`thought`); dropped by anthropic, bedrock and open-responses. Do not converge these predicates.
 
 ### 5.4 `tools: []` with tool history
 
-Record whether each protocol emits `tools: []`, `tools: undefined`, or omits the key when history contains tool calls and no active tools. Only `openai-chat` is expected to differ. Any change is a behaviour decision, not part of the kit.
+**Observed:** only **openai-chat** sends `tools: []`; anthropic, open-responses, openai-responses, cohere, bedrock, gemini and google-interactions all omit the key. No protocol requires it in a way the current code misses; the divergence is intentional in openai-chat and is pinned. Any change is a behaviour decision, not part of the kit.
 
 ---
 

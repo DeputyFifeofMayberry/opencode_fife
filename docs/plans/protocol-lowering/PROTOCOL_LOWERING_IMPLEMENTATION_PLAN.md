@@ -36,7 +36,7 @@ Five input classes the design does not normalise and that a careless consolidati
 2. **A system update positioned between a `tool-call` and its `tool-result`** — Anthropic throws, four protocols insert a user/developer message. *Test: Task 1.*
 3. **Tool-result media placement** — hoisted (openai-chat, Bedrock for non-claude/nova), inline (Anthropic, open-responses, Mistral), rejected (Cohere). Getting placement wrong changes the message count, not just a field. *Tests: Tasks 11, 12.*
 4. **Mixed-case media types** — five protocols lowercase before comparing; Cohere does not (`cohere-chat:193`). The kit must not add case handling. *Test: Task 1.*
-5. **Id collisions after normalisation** — `MistralToolID` truncates to 9 characters, so two distinct ids can collide. Consolidation must preserve the current collision behaviour, not dedupe or renumber. *Tests: Tasks 2, 5.*
+5. **Id collisions after normalisation** — `openai-chat` has its own naive Mistral-family rule (`replace(/[^a-zA-Z0-9]/g,"").slice(0,9).padEnd(9,"0")`) which can map two distinct ids to one, while `MistralToolID.normalizer` (used by `mistral-chat` and Bedrock) hashes with collision probing. Consolidation must preserve both behaviours and the collision, not unify them by accident. *Tests: Tasks 2, 5.*
 
 ---
 
@@ -99,7 +99,7 @@ import { it } from "../lib/effect.js"
 it.effect("anthropic rejects a system update between a tool call and its result", () =>
   Effect.gen(function* () {
     // request: user, assistant(tool-call), system("update"), tool(tool-result)
-    // assert: AIError whose reason._tag === "InvalidRequestError"
+    // assert: AIError whose reason._tag === "InvalidRequest"
   }))
 
 it.effect("openai-chat inserts a user message for a system update between a tool call and its result", () =>
@@ -236,7 +236,7 @@ it.effect("fails unsupported content with the shared error shape", () =>
   Effect.gen(function* () {
     const part = { type: "tool-call" as const, id: "1", name: "t", input: {} }
     const error = yield* Effect.flip(Content.assert(policy, "user", part))
-    expect(error.reason._tag).toBe("InvalidRequestError")
+    expect(error.reason._tag).toBe("InvalidRequest")
     expect(error.reason.message).toBe("Test Protocol user messages only support text and media content for now")
   }))
 
@@ -357,7 +357,7 @@ it.effect("splits content into texts and files without joining", () =>
 it.effect("rejects files when the protocol cannot carry them", () =>
   Effect.gen(function* () {
     const error = yield* Effect.flip(ToolResult.plan("Cohere Chat", part, "reject"))
-    expect(error.reason._tag).toBe("InvalidRequestError")
+    expect(error.reason._tag).toBe("InvalidRequest")
   }))
 ```
 
@@ -607,7 +607,7 @@ for (const protocol of protocols) {
 }
 ```
 
-`buildRequest` constructs one part of `kind` in `role` via `Message`, `Message.tool`, or `Message.system`, with a single user message first where the protocol needs history. The assertion is: `Either.isRight(result) || result.left.reason._tag === "InvalidRequestError"`. A throw from deeper in the mapper (e.g. a schema decode error, or `unsupportedContent` with the wrong role) fails the case, which is the point.
+`buildRequest` constructs one part of `kind` in `role` via `Message`, `Message.tool`, or `Message.system`, with a single user message first where the protocol needs history. The assertion is: `Either.isRight(result) || result.left.reason._tag === "InvalidRequest"`. A throw from deeper in the mapper (e.g. a schema decode error, or `unsupportedContent` with the wrong role) fails the case, which is the point.
 
 - [ ] **Step 2: Run it and triage**
 

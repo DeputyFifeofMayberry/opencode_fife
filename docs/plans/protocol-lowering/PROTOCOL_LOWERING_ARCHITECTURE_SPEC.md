@@ -111,17 +111,18 @@ Call sites read `Content.assert(policy, role, part)`, matching the existing `Pro
 **Inputs.** `LLMRequest` (for model-family selection) or an explicit policy; an id.
 **Outputs.** The provider-legal id.
 **Dependencies.** `utils/mistral-tool-id.ts` (existing semantics, moved behind the policy type).
-**Invariants.** `apply()` is the only call path for both `tool-call` and `tool-result`; two parts with the same input id produce the same output id; policies are pure and request-scoped only where they already are (`MistralToolID.normalizer(request)`).
+**Invariants.** One policy instance is used for both `tool-call` and `tool-result` in a request; two parts with the same input id produce the same output id; policies are pure except `collisions`, which is request-scoped by construction (`MistralToolID.normalizer(request)`).
 
 **Policies to lift, unchanged in behaviour:**
 
 | Policy | Source | Rule |
 | --- | --- | --- |
 | `identity` | open-responses, cohere | passthrough |
-| `truncate(40)` | openai-chat `L673-683` (OpenAI/Azure branch) | first 40 chars |
-| `scrub(/[^A-Za-z0-9_-]/g, "_")` | anthropic `scrubToolCallID` `L592` | replace illegal chars |
-| `mistral` | `MistralToolID.normalizer` (`L673-683`, `L326`) | 9-char alnum, right-padded `0` |
-| `forModel(request)` | openai-chat `L673-683` | family switch selecting the above |
+| `truncate(40)` | openai-chat (`openai`/`azure`/`openai/` models) | first 40 chars |
+| `scrub(/[^A-Za-z0-9_-]/g, "_")` | anthropic `scrubToolCallID`; claude models in openai-chat | replace illegal chars |
+| `padded(9)` | openai-chat, Mistral-family models | strip non-alnum, slice to 9, right-pad `0` — **can collide** |
+| `collisions(request)` | `MistralToolID.normalizer` (mistral-chat, Bedrock `mistral.*`) | hash plus probe against reserved ids — collision-safe |
+| `forModel({ provider, modelID })` | openai-chat | selects among the four stateless policies above |
 
 ### 3.4 `lowering/fields.ts` — shared presence decisions
 
@@ -228,10 +229,12 @@ export type ToolIDPolicy = (id: string) => string
 export const identity: ToolIDPolicy
 export const truncate: (max: number) => ToolIDPolicy
 export const scrub: (pattern: RegExp, replacement: string) => ToolIDPolicy
-export const mistral: ToolIDPolicy
-export const forModel: (request: LLMRequest) => ToolIDPolicy
-export const apply: (policy: ToolIDPolicy, id: string) => string
+export const padded: (length: number) => ToolIDPolicy
+export const collisions: (request: LLMRequest) => ToolIDPolicy
+export const forModel: (input: { readonly provider: string; readonly modelID: string }) => ToolIDPolicy
 ```
+
+A policy is the function itself; there is no `apply` wrapper.
 
 ```ts
 // lowering/fields.ts
@@ -287,7 +290,7 @@ This affects diagnostic text only — never a wire body — and is accepted deli
 
 ### 8.3 Error taxonomy preserved
 
-`unsupportedContent` and `invalidRequest` continue to produce `AIError` with `InvalidRequestError`. Consumers branching on `reason._tag` are unaffected.
+`unsupportedContent` and `invalidRequest` continue to produce `AIError` with `InvalidRequestError`. Consumers branching on `reason._tag` are unaffected: the tag is `InvalidRequest` (the class is `InvalidRequestError` — the names differ, and tests must assert the tag).
 
 ### 8.4 Upstream
 
