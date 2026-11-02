@@ -94,7 +94,8 @@ export function Home() {
             setLogoWidth(this.width)
           }}
         >
-          <Logo />
+          {/* Mirrors the container padding above; keep the two in step. */}
+          <Logo width={dimensions().width - (dimensions().width < 44 ? 2 : 4)} />
         </box>
         <box height={1} flexShrink={0} />
         <UpdateNotification width={logoWidth()} />

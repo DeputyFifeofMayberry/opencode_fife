@@ -81,10 +81,9 @@ describe("logoMode", () => {
     expect(logoMode(400, 11)).toBeNull()
   })
 
-  test("thresholds follow the artwork width plus the home screen's padding", () => {
-    expect(logoSize.full - logoWidth.full).toBe(4)
-    expect(logoSize.compact - logoWidth.compact).toBe(4)
-    expect(logoSize.minimal - logoWidth.minimal).toBe(2)
+  test("thresholds are the artwork widths, so one column less drops a tier", () => {
+    expect(logoMode(logoWidth.full - 1, 24)).toBe("compact")
+    expect(logoMode(logoWidth.compact - 1, 24)).toBe("minimal")
   })
 
   test("hides the mark when the window cannot hold even the plain wordmark", () => {

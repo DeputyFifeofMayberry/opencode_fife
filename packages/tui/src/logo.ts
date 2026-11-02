@@ -69,19 +69,13 @@ export const logoArt: Record<"full" | "compact", string[]> = {
 export const logoWidth = { full: 87, compact: 71, minimal: 8 } as const
 export const logoHeight = { full: 12, compact: 7, minimal: 1 } as const
 
-// The home screen pads 2 cells each side for the artwork tiers, and 1 each side
-// below 44 columns, where the plain wordmark is the only thing that fits.
-const ART_PADDING = 4
-const MINIMAL_PADDING = 2
-
-export const logoSize = {
-  full: logoWidth.full + ART_PADDING,
-  compact: logoWidth.compact + ART_PADDING,
-  minimal: logoWidth.minimal + MINIMAL_PADDING,
-} as const
+// Thresholds are the artwork widths themselves; callers pass available content
+// columns, so a padded container subtracts its padding before asking.
+export const logoSize = logoWidth
 
 // The full stack is 3 spacer + 12 logo + 1 + prompt (4) + footer (1); 20 rows lets
-// the spacer give one row back. Compact needs 16 for its 7 rows.
+// the spacer give one row back. Compact needs 16 for its 7 rows. Width is
+// available content columns, not terminal columns.
 export function logoMode(width: number, height: number): LogoTier | null {
   if (height < 12 || width < logoSize.minimal) return null
   if (height >= 20 && width >= logoSize.full) return "full"

@@ -23,7 +23,7 @@
 
 ## Review Focus
 
-- **A 70-column terminal** — the common case. The full mark is 87 cells and needs 91 columns once the home screen's padding is counted, so at 70 columns the compact tier is chosen and nothing may wrap.
+- **A 70-column terminal** — the common case. The home screen supplies 66 content columns there (terminal width − 4), below the compact tier's 71, so the plain wordmark is shown and nothing may wrap. The full mark is 87 content cells and needs 87 available columns once the home screen's padding is subtracted.
 - **A 24-row terminal** — the 12-row full mark must not push the prompt off the bottom. Tier height rule plus the manual check in Task 3.
 - **Monochrome or `faint`-equals-`muted` themes** — the mark must still read from structure alone.
 - **A mistyped art character** — must fail a test rather than render a stray glyph.
@@ -45,7 +45,7 @@
   - `const logoArt: Record<"full" | "compact", string[]>`
   - `const logoWidth: { full: 87; compact: 71; minimal: 8 }`
   - `const logoHeight: { full: 12; compact: 7; minimal: 1 }`
-  - `const logoSize: { full: 91; compact: 75; minimal: 10 }` — minimum terminal width per tier, art width + the home screen's padding (4 cells for `full` and `compact`, 2 for `minimal`)
+  - `const logoSize = logoWidth` — minimum available content width per tier (87 / 71 / 8); the home screen supplies terminal width − 4, or − 2 below 44 columns
   - `function logoMode(width: number, height: number): LogoTier | null`
   - `function logoColor(layer: LogoLayer): "base" | "muted" | "faint"`
   - `type LogoRun = { glyph: " " | "▀" | "▄"; top: LogoLayer | null; bottom: LogoLayer | null; text: string }`

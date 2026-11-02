@@ -3,11 +3,11 @@ import { useTerminalDimensions } from "@opentui/solid"
 import { useTheme } from "../context/theme"
 import { logoArt, logoColor, logoMode, logoRunColors, logoRuns, type LogoLayer } from "../logo"
 
-export function Logo() {
+export function Logo(props: { readonly width?: number }) {
   const theme = useTheme()
   const dimensions = useTerminalDimensions()
 
-  const tier = () => logoMode(dimensions().width, dimensions().height)
+  const tier = () => logoMode(props.width ?? dimensions().width, dimensions().height)
   const art = () => {
     const mode = tier()
     return mode === "full" || mode === "compact" ? logoArt[mode] : undefined

@@ -67,7 +67,7 @@ export function StatsPoster(props: { stats: SessionStatsInfo }) {
         <text fg={theme.text.muted}>{dates()}</text>
       </box>
       <Show when={!compact()}>
-        <Logo />
+        <Logo width={width()} />
       </Show>
       <box alignItems="center" gap={1}>
         <Show

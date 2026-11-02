@@ -127,22 +127,23 @@ so every row stays under 55 elements instead of 87 cells. This drops the `tint()
 `_ ^ ~ ,` shorthand: both existed to fake depth, and the design forbids shadows.
 The mark, not the letters, is now solid, so no per-character shadow is needed.
 
-### Tiers (measured cell width, after the home screen's 2-cell padding each side)
+### Tiers (available content width)
 
 | Tier | Needs | Content |
 |---|---|---|
-| full | width ≥ 91, height ≥ 20 | complete monument, 87 wide × 12 rows |
-| compact | width ≥ 75, height ≥ 16 | wordmark under a cornice lintel, no columns, no pediment, 71 wide × 7 rows |
+| full | width ≥ 87, height ≥ 20 | complete monument, 87 wide × 12 rows |
+| compact | width ≥ 71, height ≥ 16 | wordmark under a cornice lintel, no columns, no pediment, 71 wide × 7 rows |
 | minimal | otherwise | one line, `fife` muted + `code` bright, 8 wide × 1 row |
-| hidden | height < 12 or width < 10 | nothing (existing guard, plus a floor so the plain wordmark cannot wrap) |
+| hidden | height < 12 or width < 8 | nothing (existing guard, plus a floor so the plain wordmark cannot wrap) |
 
-Full and compact trade different things. At 91 columns and above the whole monument
-fits; between 75 and 90 the wordmark keeps its resolution and loses the columns and
-pediment, because shrinking the glyphs to keep the architecture is what produced the
-unreadable first draft. Short windows fall through to minimal instead of a squashed
-emblem. Breakpoints are computed in code from the art's declared width plus the home
-screen's padding, never from mockup pixels, and the tests assert the tier constants
-rather than the literals.
+Full and compact trade different things. At 87 available columns and above the whole
+monument fits; between 71 and 86 the wordmark keeps its resolution and loses the
+columns and pediment, because shrinking the glyphs to keep the architecture is what
+produced the unreadable first draft. Short windows fall through to minimal instead
+of a squashed emblem. Width is available content width, never terminal width: the
+home screen supplies terminal width − 4, or − 2 below 44 columns. Breakpoints are
+computed in code from the art's declared width, never from mockup pixels, and the
+tests assert the tier constants rather than the literals.
 
 `minimal` replaces the old `go` branch in the logo component. `go` stays exported and
 untouched for `go-upsell-art.ts` and `mini/splash.ts`, so the upsell art is unchanged.
@@ -225,5 +226,6 @@ literal text `fifecode`; at height 10 nothing renders.
 
 Exact pixel placement of the roofline steps, column flutes, and star points, and
 the final letter silhouettes inside the 8 × 10 x-height box, were settled in the
-drafted art. The tier thresholds are now fixed by it at 91 / 75 / 10 columns
-(87 / 71 / 8 cells plus padding).
+drafted art. The tier thresholds are now fixed by it at 87 / 71 / 8 available
+content columns; the home screen supplies terminal width − 4, or − 2 below 44
+columns.

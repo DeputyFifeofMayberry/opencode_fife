@@ -14,7 +14,7 @@ import { createTuiResolvedConfig } from "../fixture/tui-runtime"
 
 const root = mkdtempSync(path.join(os.tmpdir(), "fifecode-logo-"))
 
-async function render(width: number, height: number) {
+async function render(width: number, height: number, contentWidth?: number) {
   return testRender(
     () => (
       <TestTuiContexts directory={root} paths={{ home: root, state: root, worktree: root }}>
@@ -22,7 +22,7 @@ async function render(width: number, height: number) {
           <Keymap.Provider>
             <ThemeProvider mode="dark" source={emptyThemeSource}>
               <box width="100%" height="100%" flexDirection="column">
-                <Logo />
+                <Logo width={contentWidth} />
               </box>
             </ThemeProvider>
           </Keymap.Provider>
@@ -52,6 +52,19 @@ test("renders the full monument on a wide window", async () => {
 
 test("drops the columns at 80 columns", async () => {
   const app = await render(80, 24)
+  try {
+    await app.renderOnce()
+    await app.renderOnce()
+    const frame = app.captureCharFrame()
+    expect(rows(frame).length).toBe(7)
+    expect(widest(frame)).toBe(71)
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+test("picks the tier from an explicit width, not the terminal", async () => {
+  const app = await render(100, 24, 80)
   try {
     await app.renderOnce()
     await app.renderOnce()
