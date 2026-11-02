@@ -11,7 +11,6 @@ import { Config } from "../config.js"
 import { Model as ModelService } from "../model.js"
 import { EffortAdapter } from "./adapter.js"
 import { EffortStore } from "./store.js"
-import { operationFor, sessionSeed } from "./delegation.js"
 
 /**
  * Applies the effort policy at a prepared step and writes transitions through
@@ -48,36 +47,15 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
   if (!session) return false
   const row = yield* deps.efforts.get(input.sessionID)
   const policy = Config.effortPolicy(yield* deps.config.entries())
-  // "default" is the store's read representation of no explicit pick (session/info.ts); the policy treats it as unset.
-  const variant = session.model?.variant === "default" ? undefined : session.model?.variant
-  // The policy's own echo is not a user pick; anything else is exact and wins verbatim.
-  const exact = variant !== undefined && variant !== row?.lastAppliedVariant ? variant : undefined
-
   const info = yield* deps.models.get(input.resolved.ref.providerID, input.resolved.ref.id)
   if (!info) return false
-  // Adaptive sessions seed their level from the agent's operation ladder; static
-  // sessions seed from config. The row's base is the durable source; config only
-  // seeds sessions without a row.
-  const adaptive = policy?.mode === "adaptive"
-  const baseLevel = row?.baseLevel ?? (adaptive ? sessionSeed(operationFor(input.agent, policy?.agent_operations)) : (policy?.base_level ?? "standard"))
-  const decision = EffortAdapter.decideFor(info, {
-    variant: exact,
-    baseLevel,
-    agent: input.agent,
-    openFailure: row?.openFailure,
-    ...(adaptive
-      ? {
-          level: row?.level ?? baseLevel,
-          cleanPasses: row?.cleanPasses ?? 0,
-          cleanPassesNeeded: policy?.clean_passes ?? 2,
-        }
-      : {}),
-  })
+  const resolution = EffortAdapter.resolve({ policy, state: row, agent: input.agent, model: info, selection: session.model })
+  const decision = resolution.decision!
 
   if (decision.rule === "untouched" || decision.rule === "exact-base") {
     // A user pick replaces a policy write as the session's baseline; the echo
     // case already filtered out, so this write happens once per pick.
-    if (exact !== undefined && row?.lastAppliedVariant !== undefined)
+    if (resolution.exact !== undefined && row?.lastAppliedVariant !== undefined)
       yield* deps.efforts.recordSelection({
         sessionID: input.sessionID,
         baseLevel: row.baseLevel,
@@ -90,14 +68,14 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
   }
 
   const target = decision.effort
-  if (target === variant) {
+  if (target === resolution.selectedVariant) {
     // Even without a variant transition, evidence needs a durable row in both modes.
     if (row === undefined)
       yield* deps.efforts.recordSelection({
         sessionID: input.sessionID,
-        baseLevel,
+        baseLevel: resolution.baseLevel,
         revision: 0,
-        ...(adaptive ? { level: baseLevel, cleanPasses: 0 } : {}),
+        ...(resolution.mode === "adaptive" ? { level: resolution.baseLevel, cleanPasses: 0 } : {}),
       })
     return false
   }
@@ -119,11 +97,11 @@ export const apply = Effect.fn("EffortTransition.apply")(function* (deps: Deps, 
   )
   yield* deps.efforts.recordSelection({
     sessionID: input.sessionID,
-    baseLevel,
+    baseLevel: resolution.baseLevel,
     openFailure: row?.openFailure,
     revision: row?.revision ?? 0,
     lastAppliedVariant: target,
-    level: adaptive ? (row?.level ?? baseLevel) : undefined,
+    level: resolution.mode === "adaptive" ? (row?.level ?? resolution.baseLevel) : undefined,
     cleanPasses: row?.cleanPasses ?? 0,
   })
   yield* deps.bus.publish(SessionEvent.EffortTransitioned, {
