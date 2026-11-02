@@ -111,6 +111,14 @@ export function logoRuns(rows: string[]): LogoRun[][] {
   })
 }
 
+// Upper half is the foreground, lower half the background; a lone pixel is
+// always the foreground because the other half stays transparent.
+export const logoRunColors = (run: LogoRun): { readonly fg: LogoLayer | null; readonly bg: LogoLayer | null } => {
+  if (run.glyph === "▀") return { fg: run.top, bg: run.bottom }
+  if (run.glyph === "▄") return { fg: run.bottom, bg: null }
+  return { fg: null, bg: null }
+}
+
 function logoCell(top: string | undefined, bottom: string | undefined): Omit<LogoRun, "text"> {
   const above = isLayer(top) ? top : null
   const below = isLayer(bottom) ? bottom : null

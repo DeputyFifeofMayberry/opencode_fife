@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { go, logo, logoArt, logoColor, logoHeight, logoMode, logoRuns, logoSize, logoWidth } from "../../src/logo"
+import { go, logo, logoArt, logoColor, logoHeight, logoMode, logoRunColors, logoRuns, logoSize, logoWidth } from "../../src/logo"
 
 const allowed = new Set([".", "F", "C", "S", "o", "i"])
 
@@ -126,5 +126,23 @@ describe("logoRuns", () => {
     const runs = logoRuns(["F..", ".C.", "...", "..."])
     expect(runs[0][0]).toMatchObject({ glyph: "▀", top: "F", bottom: null })
     expect(runs[0][1]).toMatchObject({ glyph: "▄", top: null, bottom: "C" })
+  })
+})
+
+describe("logoRunColors", () => {
+  test("paints the upper half as foreground and the lower half as background", () => {
+    expect(logoRunColors({ glyph: "▀", top: "C", bottom: "F", text: "▀" })).toEqual({ fg: "C", bg: "F" })
+  })
+
+  test("keeps a lone upper pixel in the foreground", () => {
+    expect(logoRunColors({ glyph: "▀", top: "C", bottom: null, text: "▀" })).toEqual({ fg: "C", bg: null })
+  })
+
+  test("keeps a lone lower pixel in the foreground", () => {
+    expect(logoRunColors({ glyph: "▄", top: null, bottom: "S", text: "▄" })).toEqual({ fg: "S", bg: null })
+  })
+
+  test("leaves an empty cell unpainted", () => {
+    expect(logoRunColors({ glyph: " ", top: null, bottom: null, text: " " })).toEqual({ fg: null, bg: null })
   })
 })
