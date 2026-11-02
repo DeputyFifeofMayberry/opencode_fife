@@ -86,8 +86,8 @@ Router overrides, with placeholders:
   "presets": {
     "fife": {
       "fast":   { "model": "<fast-provider/model>",   "costRatio": 1 },
-      "medium": { "model": "<medium-provider/model>", "costRatio": 3 },
-      "heavy":  { "model": "<heavy-provider/model>",  "costRatio": 6 }
+      "medium": { "model": "<medium-provider/model>", "variant": "<variant>", "costRatio": 3 },
+      "heavy":  { "model": "<heavy-provider/model>",  "variant": "<variant>", "costRatio": 6 }
     }
   },
   "enforcement": {
@@ -131,6 +131,25 @@ Fork config, inside the existing `effort_policy` object:
 Keep `mode`, `base_level`, `verification_commands`, and `clean_passes` unchanged when adding the mapping.
 
 `costRatio` is an estimated token-spend multiplier for the engine's comparison, not a dollar price. The values `3` and `6` reflect high and max effort on the same model; adjust them if your tiers use different models. A subscription or free route can report zero dollars while still consuming tokens and limits.
+
+### Per-tier effort pins
+
+A tier may pin its reasoning variant. The pin is written to the agent's model
+selection and is an exact pick for the fork's effort policy: delegations to that
+tier are neither seeded nor escalated.
+
+- `deepseek/deepseek-flash` and `opencode/glm-5.3-flash-free` both advertise
+  `low`, `high`, and `max`. Neither advertises `medium`.
+- `fast` stays unpinned, so the adaptive policy can still step it down to `low`.
+- A caller can override one delegation with `model="provider/model#variant"`.
+  The router only fills the tier model when the caller leaves `model` out.
+- An unknown variant id fails at model resolution; it is never silently
+  corrected.
+- The pin depends on the fork folding an agent-level `variant` into
+  `model.variant`. A build without that fold drops the pin silently.
+- Rollback: delete the `variant` key from the tier entry and restart.
+
+Live values in the `fife` preset: `medium` → `high`, `heavy` → `max`.
 
 ## 5. Daily commands
 

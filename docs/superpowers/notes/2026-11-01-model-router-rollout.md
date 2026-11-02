@@ -282,6 +282,29 @@ No `enforcement` or `routing.engine` change was made. The router remains in `sha
 - `git diff --check` was run for Task 9 and produced no output, so the documentation diff has no whitespace errors.
 - Intervention rate: 0 switched dispatches in the advise window, the same as baseline. That part of the gate passed.
 
+## Per-tier effort pins
+
+The router already accepts `variant` on a tier entry, but this fork dropped the
+agent-level field before it reached `model.variant`. The fix folds it in
+(commit `520f1bb9a0`). Pins applied to the live overrides file:
+
+| Tier | Variant | Rationale |
+|------|---------|-----------|
+| `fast` | none | keeps the adaptive step-down to `low` |
+| `medium` | `high` | requested "medium, else high"; neither model has `medium` |
+| `heavy` | `max` | requested maximum effort |
+
+Catalog evidence for both tier models: `capabilities.reasoning.effort` is
+`["low", "high", "max"]` in `packages/core/src/models-dev/snapshot.txt`.
+`deepseek-flash` also declares `default: high`, so the `medium` pin matches its
+first-request default and mainly prevents escalation past it.
+
+Runtime verification is pending: the elected server runs the installed build,
+which predates this commit, so the pin is inert there until a build containing
+it is running. When that happens, check the agent list for
+`medium.model.variant = "high"` and `heavy.model.variant = "max"`, then read a
+child session's model after a plain `agent="medium"` delegation.
+
 
 
 

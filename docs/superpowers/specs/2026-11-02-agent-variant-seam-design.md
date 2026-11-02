@@ -1,8 +1,12 @@
 # Agent variant seam — design
 
 Date: 2026-11-02
-Status: Awaiting approval
+Status: Implemented
 Size: Small change
+
+Shipped: the fold is in `packages/core/src/config/plugin/agent.ts` with
+`variant` accepted on `ConfigAgent.Info`. Pins: `medium` → `high`,
+`heavy` → `max`, `fast` unpinned (commit `520f1bb9a0`).
 
 ## Intent
 
