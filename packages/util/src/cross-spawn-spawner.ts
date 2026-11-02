@@ -314,6 +314,11 @@ const makeCrossSpawnSpawner = Effect.gen(function* () {
     }
   })
 
+  // Effect's Encoding spells utf-16 with a hyphen; Node's BufferEncoding does not.
+  // The two labels denote the same encoding, so normalize at the Node boundary.
+  const toNodeEncoding = (encoding: ChildProcess.StdinConfig["encoding"]): BufferEncoding | undefined =>
+    encoding === "utf-16le" ? "utf16le" : encoding
+
   const setupStdin = (
     command: ChildProcess.StandardCommand,
     proc: NodeChildProcess.ChildProcess,
@@ -327,7 +332,7 @@ const makeCrossSpawnSpawner = Effect.gen(function* () {
           evaluate: () => proc.stdin!,
           onError: (err) => toPlatformError("fromWritable(stdin)", toError(err), command),
           endOnDone: cfg.endOnDone,
-          encoding: cfg.encoding,
+          encoding: toNodeEncoding(cfg.encoding),
         })
       }
       if (Stream.isStream(cfg.stream)) return Effect.as(Effect.forkScoped(Stream.run(cfg.stream, sink)), sink)
