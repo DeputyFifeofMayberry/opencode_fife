@@ -93,6 +93,8 @@ Call sites read `accepts(policy, role, part)` as the guard and `kindsOf(policy, 
 
 **Policy is acceptance only — placement stays in the protocol.** Bedrock hoists files for some model families and inlines them for others (`L442-456`); Gemini nests them for 3+ and defers them for 2.5 (`L415-418`). Those are assembly rules over the returned `files`, not a kit decision.
 
+**Ordering limitation, found in implementation.** `plan` returns texts and files as separate lists, so it cannot serve a protocol that emits per-item blocks in their original interleaved order (Anthropic, open-responses, Bedrock, Gemini, Mistral). It is adopted only by `openai-chat`, which already joins texts into one message and hoists files. The other protocols keep their per-item loops; this is a deliberate scope boundary, not an oversight.
+
 | Protocol | Policy | Today's behaviour |
 | --- | --- | --- |
 | `openai-chat` | `allow` | files detached by the protocol to a following user message (`L610-616`) |

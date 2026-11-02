@@ -7,6 +7,7 @@
 - **One canonical model.** The Schema classes in `src/schema/` are the data model. Do not add a parallel shape or a second construction path.
 - **Independent of Session.** Auth, permissions, plugins, and orchestration belong in Core. `ai.stream`/`ai.generate` run exactly one model call.
 - **Reuse protocols.** Providers compose existing protocols with `Route.make(...)` instead of cloning them.
+- **Protocol lowering keeps its loop.** Each protocol owns its message loop, merge rules and wire blocks. Shared lowering is limited to pure decisions under `src/protocols/lowering/`: part capability, tool-result material, tool-call ids, and presence flags. Do not add a cross-family traversal engine: Bedrock's cache-point budget, Gemini's conditional merge and the Interactions step model cannot be expressed behind one interface. Reuse across providers happens by composing an existing protocol.
 - **One API, two runtimes.** `ai` from `@opencode/ai` and `ai` from `@opencode/ai/effect` have the same namespaces and operations, with the same names, overloads, input and options (plus `signal` on the Promise side); keep `test/promise-parity.types.ts` passing.
 
 ## Code style
