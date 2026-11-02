@@ -28,6 +28,7 @@ import {
   withUntypedFrames,
 } from "./shared.js"
 import { accepts, kindsOf, type ContentPolicy } from "./lowering/content.js"
+import { parallelToolCalls } from "./lowering/fields.js"
 
 const contentPolicy = {
   system: ["text"],
@@ -850,12 +851,8 @@ export const lowerGeneration = (request: LLMRequest, options = OpenResponsesOpti
   }
 }
 
-export const resolveParallelToolCalls = (request: LLMRequest, options = OpenResponsesOptions.resolve(request)) => {
-  const configured = options.parallelToolCalls
-  if (configured !== undefined) return configured
-  const disabled = request.toolChoice?.disableParallelToolUse
-  return disabled === undefined ? undefined : !disabled
-}
+export const resolveParallelToolCalls = (request: LLMRequest, options = OpenResponsesOptions.resolve(request)) =>
+  parallelToolCalls(request, options.parallelToolCalls)
 
 export const allowedToolChoice = (
   options: OpenResponsesOptions.Resolved,

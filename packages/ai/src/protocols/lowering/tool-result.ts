@@ -1,5 +1,5 @@
 import { Effect } from "effect"
-import type { AIError, MediaPart, ToolResultPart } from "../../schema/index.js"
+import type { MediaPart, ToolResultPart } from "../../schema/index.js"
 import { invalidRequest, toolFileMedia, toolResultText } from "../shared.js"
 
 /** Whether a protocol can carry files that arrived inside a tool result. */
@@ -18,15 +18,15 @@ export type ToolResultPlan =
  * Text is not joined and files are not placed — both remain the protocol's choice,
  * because the wire shapes and ordering rules differ per provider.
  */
-export const plan = (
+export const plan = Effect.fnUntraced(function* (
   route: string,
   part: ToolResultPart,
   policy: ToolResultFilePolicy,
-): Effect.Effect<ToolResultPlan, AIError> => {
-  if (part.result.type !== "content") return Effect.succeed({ type: "text", text: toolResultText(part) })
+) {
+  if (part.result.type !== "content") return { type: "text" as const, text: toolResultText(part) }
   const texts = part.result.value.flatMap((item) => (item.type === "text" ? [item.text] : []))
   const files = part.result.value.flatMap((item) => (item.type === "file" ? [toolFileMedia(item)] : []))
   if (policy === "reject" && files.length > 0)
-    return Effect.fail(invalidRequest(`${route} does not support file content in tool results`))
-  return Effect.succeed({ type: "content", texts, files })
-}
+    return yield* invalidRequest(`${route} does not support file content in tool results`)
+  return { type: "content" as const, texts, files }
+})

@@ -25,6 +25,7 @@ import {
 import { classifyProviderFailure } from "../provider-error.js"
 import { isRecord, JsonObject, optionalArray, optionalNull, ProviderShared } from "./shared.js"
 import { accepts, kindsOf, type ContentPolicy } from "./lowering/content.js"
+import { hasToolHistory } from "./lowering/fields.js"
 import { placesMarkers, requestTTL } from "../cache-policy.js"
 import * as Cache from "./utils/cache.js"
 import { resolveParallelToolCalls } from "./open-responses.js"
@@ -754,13 +755,6 @@ const lowerMessages = Effect.fnUntraced(function* (
 // Anthropic via LiteLLM and Amazon Bedrock require `tools` to be present
 // whenever the conversation history contains tool calls/results. Send an
 // explicit empty array when we have history but no active tools.
-const hasToolHistory = (messages: ReadonlyArray<LLMRequest["messages"][number]>) => {
-  for (const message of messages) {
-    if (message.role === "tool") return true
-    if (message.role === "assistant" && message.content.some((part) => part.type === "tool-call")) return true
-  }
-  return false
-}
 
 // Derive `max_tokens` vs `max_completion_tokens` from provider/baseURL when
 // explicit `compatibility.maxTokensField` is not set. Aligned with
