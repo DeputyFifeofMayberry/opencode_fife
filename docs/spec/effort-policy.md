@@ -28,7 +28,13 @@ delegation minimums below apply on top of whichever base is configured.
 One decision per prepared step (`EffortTransition.apply`), resolved by the
 vendored core (`effort/policy`) and written through the same durable
 `ModelSelected` event as a manual switch, so cache-preserving markers,
-projections, and TUI reconciliation behave identically. Policy writes carry
+projections, and TUI reconciliation behave identically. Both the transition and
+the status report assemble the policy's inputs — the `"default"` sentinel
+unwrap, the policy-echo filter against `last_applied_variant`, base seeding,
+and the adaptive fields — through one shared pure function,
+`EffortAdapter.resolve` (`effort/adapter.ts`); the vendored core decides, and
+the two consumers act on or project the same resolution from their own
+snapshots. Policy writes carry
 `metadata.source: "effort-policy"` plus the deciding `rule` (`base`, `mode-pin`,
 `escalated`), and the session and terminal timelines use that marker to say why
 the variant moved — "Escalated to max · verification failed", "Plan mode · max
