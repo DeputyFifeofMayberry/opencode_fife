@@ -22,4 +22,17 @@ describe("effort status", () => {
   test("seeds adaptive explore and shows the provider default without inventing a variant", () => {
     expect(EffortStatus.describe({ policy: new ConfigEffort.Info({ mode: "adaptive" }), model, agent: "explore" })).toMatchObject({ baseLevel: "low", currentLevel: undefined, selectedVariant: undefined, next: { rule: "base", level: "low", effort: "low" } })
   })
+  test("treats a default-variant selection as Auto, not manual", () => {
+    expect(EffortStatus.describe({ model, selection: { ...selection, variant: Model.VariantID.make("default") }, agent: "build" })).toMatchObject({ control: "automatic", selectedVariant: undefined, next: { rule: "base", level: "standard" } })
+  })
+  test("separates static escalation from the adaptive controller on a supported route", () => {
+    const staticFailure = { sessionID: SessionID.make("ses_status"), baseLevel: "low" as const, revision: 1, openFailure: { verifier: "bun test", sequence: 1, revision: 1 } }
+    expect(EffortStatus.describe({ policy: new ConfigEffort.Info({ verification_commands: ["bun test"], base_level: "low" }), model, state: staticFailure, agent: "build" })).toMatchObject({ mode: "static", currentLevel: undefined, next: { rule: "escalated", level: "standard" } })
+    const adaptiveFailure = { ...staticFailure, level: "deep" as const, cleanPasses: 0 }
+    expect(EffortStatus.describe({ policy: new ConfigEffort.Info({ mode: "adaptive", verification_commands: ["bun test"] }), model, state: adaptiveFailure, agent: "build" })).toMatchObject({ mode: "adaptive", currentLevel: "deep", next: { rule: "escalated", level: "deep", effort: "max" } })
+  })
+  test("keeps the missing-model snapshot honest", () => {
+    expect(EffortStatus.describe({ agent: "build", state })).toMatchObject({ support: "unknown", initialized: true, next: undefined })
+    expect(EffortStatus.describe({ agent: "build" })).toMatchObject({ support: "unknown", initialized: false, next: undefined })
+  })
 })
