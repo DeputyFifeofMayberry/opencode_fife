@@ -531,6 +531,11 @@ Contents:
 
 None of these can invalidate the selection; the first three are small, bounded, and test-resolvable, and the design isolates them.
 
+**Decisions taken after implementation (2026-11-02):**
+
+- **Mistral's silent drop is accepted as-is.** Conformance found it drops assistant `tool-result`/`compaction`/`effort` messages before the capability guard. Mistral is not a target, so the behaviour is recorded and not fixed; the fix location is named in the test matrix if that changes.
+- **`ToolResult.plan` adoption is limited to `openai-chat`.** All other protocols preserve interleaved text/file order inside a tool result, which a texts-plus-files split cannot express. The module stays for the one call site that fits; broadening it would require an ordered variant, which nothing currently needs.
+
 ---
 
 ## 12. Supporting evidence

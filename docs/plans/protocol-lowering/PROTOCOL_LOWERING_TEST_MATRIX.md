@@ -179,7 +179,9 @@ Legend: **Pinned** = existing exact-body test · **Recorded** = cassette only ·
 | compaction | N/A | none | conformance row |
 | assistant media | N/A (throws) | none | conformance row |
 
-**Found by conformance (2026-11-02):** Mistral silently drops an assistant message whose only part is `tool-result`, `compaction` or `effort` — its outer loop's "no calls, no thinking, blank text → skip" predicate runs before the capability guard. Conformance reports those as *lowered* because a body comes back. This is the silent-drop class the evaluation's §3.2 E predicted, now with a concrete case; it is recorded, not fixed.
+**Found by conformance (2026-11-02):** Mistral silently drops an assistant message whose only part is `tool-result`, `compaction` or `effort` — its outer loop's "no calls, no thinking, blank text → skip" predicate runs before the capability guard. Conformance reports those as *lowered* because a body comes back. This is the silent-drop class the evaluation's §3.2 E predicted, now with a concrete case.
+
+**Decision (2026-11-02): accepted, not fixed.** Mistral is not a target for this fork, so the behaviour is recorded rather than corrected. If native Mistral support ever matters, the fix is in `mistral-chat.ts`: run the capability check before the whole-message drop predicate. No other protocol shares the defect — the conformance suite covers all nine.
 
 ### 3.7 `gemini.ts` — tests: `gemini.test.ts` (60), `gemini-cache.recorded.test.ts`, `gemini-openai-chat.recorded.test.ts`
 
