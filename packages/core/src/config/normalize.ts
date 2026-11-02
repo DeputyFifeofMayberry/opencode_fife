@@ -156,6 +156,7 @@ export function normalize(input: unknown): Result {
   const nativeAgents = decodeMap(input.agents, ConfigAgent.Info, ["agents"], diagnostics, decodeEncoded)
   diagnoseAgentUnsupported(input.agent, ["agent"], diagnostics)
   diagnoseAgentUnsupported(input.mode, ["mode"], diagnostics)
+  diagnoseOrphanVariant(input.agents, ["agents"], diagnostics)
   mergeMap(
     encoded,
     "agents",
@@ -626,8 +627,10 @@ function diagnoseSelectionMap(value: unknown, path: string[], diagnostics: Diagn
 }
 
 function diagnoseSelection(value: Record<string, unknown>, path: string[], diagnostics: Diagnostic[]) {
-  const modelValid = typeof value.model === "string" && /^[^/#]+\/[^#]+$/.test(value.model)
-  if (own(value, "model") && typeof value.model === "string" && !modelValid)
+  // A structured selection carries its own variant, so only an absent or malformed one is unusable.
+  const modelUsable =
+    typeof value.model === "string" ? /^[^/#]+\/[^#]+$/.test(value.model) : value.model !== undefined
+  if (own(value, "model") && typeof value.model === "string" && !modelUsable)
     diagnostics.push({
       kind: "unsupported",
       path: [...path, "model"],
@@ -636,13 +639,25 @@ function diagnoseSelection(value: Record<string, unknown>, path: string[], diagn
   if (
     own(value, "variant") &&
     typeof value.variant === "string" &&
-    (!modelValid || value.variant.length === 0 || value.variant.includes("#"))
+    (!modelUsable || value.variant.length === 0 || value.variant.includes("#"))
   )
     diagnostics.push({
       kind: "unsupported",
       path: [...path, "variant"],
-      message: "omitted unsupported legacy model variant",
+      message: "ignored unsupported model variant",
     })
+}
+
+function diagnoseOrphanVariant(value: unknown, path: string[], diagnostics: Diagnostic[]) {
+  if (!isRecord(value)) return
+  Object.entries(value).forEach(([name, agent]) => {
+    if (!isRecord(agent) || agent.model !== undefined || typeof agent.variant !== "string") return
+    diagnostics.push({
+      kind: "unsupported",
+      path: [...path, name, "variant"],
+      message: "ignored unsupported model variant",
+    })
+  })
 }
 
 function decodeProviderList(

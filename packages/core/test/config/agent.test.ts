@@ -442,7 +442,8 @@ permissions:
       expect(nested?.model?.variant).toBe(Model.VariantID.make("max"))
 
       const orphan = yield* agents.get(Agent.ID.make("orphan"))
-      expect(orphan?.model).toBeUndefined()
+      if (!orphan) throw new Error("expected configured orphan agent")
+      expect(orphan.model).toBeUndefined()
 
       const unknown = yield* agents.get(Agent.ID.make("unknown"))
       expect(unknown?.model?.variant).toBe(Model.VariantID.make("medium"))

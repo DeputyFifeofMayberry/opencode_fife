@@ -25,23 +25,24 @@ Upstream: [marco-jardim/opencode-model-router](https://github.com/marco-jardim/o
 
 Two systems own two different decisions:
 
-- **Router owns the model.** A tier entry names a provider/model. The router's routing engine may also log or change a dispatch when the engine leaves `static`.
-- **Fork effort policy owns the reasoning variant.** `effort_policy.agent_operations` maps each tier name to a delegation operation; that operation seeds the child's base level, and the fork writes the provider variant.
+- **Router owns the model and may declare a variant pin.** A tier entry names a provider/model and optionally a `variant`. The pin is a request, not a write: it reaches the fork as part of the agent's model selection, and the fork remains the only code that writes provider effort.
+- **Fork effort policy owns effort for unpinned tiers.** `effort_policy.agent_operations` maps each tier name to a delegation operation; that operation seeds the child's base level, and the fork writes the provider variant.
 
 The configuration keeps them separate:
 
-- Tier entries carry `model` and `costRatio` only. They never carry `variant`, `effort`, `thinking`, or `reasoning`.
-- `enforcement.escalate.variantSteps` is `"none"` and `enforcement.escalate.effortBump` is `false`, so the router never retries a higher variant on the same model or bumps effort.
+- Tier entries carry `model`, an optional `variant` pin, and `costRatio`. They never carry `effort`, `thinking`, or `reasoning`.
+- A pinned tier is an exact pick: the policy neither seeds nor escalates it. An unpinned tier keeps the operation seed and can be raised or stepped down.
+- `enforcement.escalate.variantSteps` is `"none"` and `enforcement.escalate.effortBump` is `false`, so the router never retries a higher variant on the same model or bumps effort. The tier pin is unrelated to those retry settings.
 
-The operation mapping used here:
+The live mapping:
 
-| Tier | Operation | Seed | Resolves to |
-|---|---|---|---|
-| `fast` | `explore` | `low` | `low` |
-| `medium` | `implement` | `standard` | the provider's default effort |
-| `heavy` | `review` | `deep` | `max` |
+| Tier | Pin | Operation seed when unpinned |
+|---|---|---|
+| `fast` | none | `explore` → `low` |
+| `medium` | `high` | `implement` → `standard` |
+| `heavy` | `max` | `review` → `deep` (`max`) |
 
-Because the fork has no explicit `high` level, `medium` runs at the provider's default effort. Confirm that default is acceptable for your provider. A guaranteed high variant would require giving the router a `variant`, which breaks the single-owner rule; do not do that without changing the design.
+`medium` and `heavy` pin `high` and `max` because neither tier model advertises `medium`. See "Per-tier effort pins" in section 4 for the rules and rollback.
 
 `fast` is read-only by default. Never dispatch an edit to it.
 
@@ -144,7 +145,8 @@ tier are neither seeded nor escalated.
 - A caller can override one delegation with `model="provider/model#variant"`.
   The router only fills the tier model when the caller leaves `model` out.
 - An unknown variant id fails at model resolution; it is never silently
-  corrected.
+  corrected. The one exception is `default`, which means the route's own
+  default and loads fine.
 - The pin depends on the fork folding an agent-level `variant` into
   `model.variant`. A build without that fold drops the pin silently.
 - Rollback: delete the `variant` key from the tier entry and restart.

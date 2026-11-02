@@ -701,6 +701,25 @@ describe("ConfigNormalize", () => {
     ])
   })
 
+  test("reports only agent variants that have no model to attach to", () => {
+    const result = normalized({
+      command: {
+        objectModel: {
+          template: "one",
+          model: { providerID: "anthropic", model: "model" },
+          variant: "high",
+        },
+      },
+      agents: {
+        folded: { model: "anthropic/model", variant: "high" },
+        orphan: { variant: "high" },
+      },
+    })
+    expect(result.diagnostics.filter((item) => item.kind === "unsupported").map((item) => item.path)).toEqual([
+      ["agents", "orphan", "variant"],
+    ])
+  })
+
   test("migrates the legacy thinking block-binding opt-out into model compatibility", () => {
     const result = normalized({
       provider: {
