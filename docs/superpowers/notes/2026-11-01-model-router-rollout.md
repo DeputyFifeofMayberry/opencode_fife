@@ -100,3 +100,14 @@ The router selects the model only. The fork effort policy owns the reasoning var
 
 `mechanical` would also seed `low`, but it misdescribes read-only search. Router variant escalation is disabled with `escalate.variantSteps: "none"` and `escalate.effortBump: false`, so the router never competes with the fork for the variant.
 
+## Task 3 — Install and load check
+
+- before install: `superpowers` only; router absent
+- installed: `opencode-model-router@2.9.1` (pinned), added to `~/.config/opencode/opencode.json`
+- resolved entrypoint: `server.ts` present under `~/.cache/opencode/npm/opencode-model-router@2.9.1/1793593559326/node_modules/opencode-model-router`
+- peer runtime: `@opencode-ai/plugin` present in the installed tree
+- elected server build: `0.0.0-dev-20261101.152432` from `5301bf554381`; `dev` is four commits ahead at `f15bb485c9`. The installed build was not updated, per the plan's instruction to record the difference and not install unasked.
+- private standalone probe: `opencode run --standalone` loaded the plugin and answered `ok` with no tool-schema or plugin-hook error. This is the compatibility gate for the v2 adapter.
+- elected-server restart and `/router` verification: pending
+
+
