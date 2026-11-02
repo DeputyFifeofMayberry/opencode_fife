@@ -1,0 +1,30 @@
+{
+  "logState": "absent",
+  "runWindow": null,
+  "dispatchingSessionIDs": [],
+  "byTier": {},
+  "nonTierChildren": {
+    "n": 6,
+    "cost": 0.047917,
+    "agents": [
+      "explore",
+      "general"
+    ]
+  },
+  "topLevel": {
+    "n": 65,
+    "cost": 3.210492,
+    "createdAfterRunStart": null
+  },
+  "totals": {
+    "sessionCount": 182,
+    "sessionCost": 4.146239
+  },
+  "checks": {
+    "cohortSize": 0,
+    "dispatchRowsForCohort": 0,
+    "cohortWithoutDispatchRow": 0,
+    "dispatchRowsOutsideCohort": 111,
+    "projectIDs": []
+  }
+}

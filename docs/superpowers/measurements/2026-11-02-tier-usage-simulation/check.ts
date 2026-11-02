@@ -101,6 +101,18 @@ if (mode === "step-sums") {
   process.exit(childDeltas.length === 0 ? 0 : 1)
 }
 
+if (mode === "classify-truth") {
+  const result = db()
+    .query(
+      `select agent, count(*) n, round(sum(cost),6) cost
+       from session_v2 where parent_id is not null
+       group by agent order by n desc`,
+    )
+    .all()
+  console.log(JSON.stringify(result, null, 2))
+  process.exit(0)
+}
+
 if (mode === "cost-sums") {
   const guard = db().query("select round(sum(cost),6) c from session_v2").get() as { c: number }
   const rows = readJsonlAbs(path.join(dataDir, "dispatches.jsonl")) as Array<{
