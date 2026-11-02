@@ -45,4 +45,48 @@ describe("Azure Messages", () => {
       expect(request.url).toBe("https://gateway.example/anthropic/v1/messages")
     }),
   )
+
+  it.effect("derives the Foundry host from an Azure OpenAI baseURL", () =>
+    Effect.gen(function* () {
+      const request = yield* send(
+        Azure.configure({
+          baseURL: "https://fixture.openai.azure.com/openai",
+          resourceName: "fixture",
+          apiKey: "key",
+        }).messages("claude"),
+      )
+
+      expect(request.url).toBe("https://fixture.services.ai.azure.com/anthropic/v1/messages")
+    }),
+  )
+
+  it.effect("derives the Anthropic path from a bare Foundry root", () =>
+    Effect.gen(function* () {
+      const request = yield* send(
+        Azure.configure({ baseURL: "https://fixture.services.ai.azure.com/", apiKey: "key" }).messages("claude"),
+      )
+
+      expect(request.url).toBe("https://fixture.services.ai.azure.com/anthropic/v1/messages")
+    }),
+  )
+
+  it.effect("keeps an already-correct Foundry baseURL", () =>
+    Effect.gen(function* () {
+      const request = yield* send(
+        Azure.configure({ baseURL: "https://fixture.services.ai.azure.com/anthropic/v1/", apiKey: "key" }).messages(
+          "claude",
+        ),
+      )
+
+      expect(request.url).toBe("https://fixture.services.ai.azure.com/anthropic/v1/messages")
+    }),
+  )
+
+  it.effect("rejects a baseURL that is neither Anthropic nor Azure", () =>
+    Effect.sync(() => {
+      expect(() =>
+        Azure.configure({ baseURL: "https://gateway.example/openai/v1", apiKey: "key" }).messages("claude"),
+      ).toThrow(/https:\/\/gateway\.example\/openai\/v1.*\/anthropic/)
+    }),
+  )
 })

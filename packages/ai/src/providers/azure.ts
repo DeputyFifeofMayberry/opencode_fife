@@ -48,6 +48,24 @@ export type MessagesSettings = Settings<AnthropicMessages.ProviderOptionsInput>
 
 const resourceBaseURL = (resourceName: string) => `https://${resourceName.trim()}.openai.azure.com/openai`
 
+// Claude on Foundry lives on the resource's `services.ai.azure.com` host, so an
+// OpenAI baseURL or a bare Foundry root must be rewritten; a custom Anthropic
+// gateway is already final.
+const messagesBaseURL = (input: Config) => {
+  const foundry = (hostname: string) => `https://${hostname}/anthropic/v1`
+  if (input.baseURL === undefined) return foundry(`${input.resourceName!.trim()}.services.ai.azure.com`)
+
+  const url = new URL(input.baseURL)
+  if (url.pathname.includes("/anthropic")) return Endpoint.trimBaseUrl(input.baseURL)
+  if (url.hostname.endsWith(".services.ai.azure.com")) return foundry(url.hostname)
+  if (url.hostname.endsWith(".openai.azure.com") && input.resourceName !== undefined)
+    return foundry(`${input.resourceName.trim()}.services.ai.azure.com`)
+  throw new ProviderConfigurationError({
+    provider: id,
+    message: `Azure Messages cannot use ${input.baseURL}: expected an Anthropic baseURL whose path contains /anthropic (for example https://<resource>.services.ai.azure.com/anthropic/v1) or an Azure OpenAI baseURL with resourceName`,
+  })
+}
+
 const responsesRoute = OpenAIResponses.route.with({
   compact: { endpoint: OpenAIResponses.route.compact.endpoint },
   id: "azure-openai-responses",
@@ -81,7 +99,8 @@ const chatRoute = OpenAIChat.route.with({
 })
 
 // Claude on Foundry serves Anthropic Messages under the resource's `services.ai.azure.com` host and accepts the
-// resource key as `x-api-key`; it rejects `api-key`.
+// resource key as `x-api-key`; it rejects `api-key`. `useDeploymentBasedUrls` and `apiVersion` do not apply here:
+// Anthropic has no deployments and no `api-version` query.
 const messagesRoute = AnthropicMessages.route.with({ id: "azure-anthropic-messages", provider: id })
 
 export const routes = [responsesRoute, chatRoute, messagesRoute]
@@ -148,9 +167,7 @@ export const configure = (input: Config) => {
         ...modelDefaults,
         auth: auth(input, "x-api-key"),
         endpoint: {
-          baseURL: Endpoint.trimBaseUrl(
-            input.baseURL ?? `https://${input.resourceName!.trim()}.services.ai.azure.com/anthropic/v1`,
-          ),
+          baseURL: messagesBaseURL(input),
           query: input.queryParams,
         },
       })
