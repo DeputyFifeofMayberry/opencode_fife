@@ -1,5 +1,4 @@
 import { Effect, Option, Schema } from "effect"
-import { Tool } from "@opencode/schema/tool"
 import { Route } from "../route/client.js"
 import { Auth } from "../route/auth.js"
 import { Endpoint } from "../route/endpoint.js"
@@ -26,6 +25,8 @@ import { classifyProviderFailure } from "../provider-error.js"
 import { isRecord, JsonObject, optionalArray, optionalNull, ProviderShared } from "./shared.js"
 import { accepts, kindsOf, type ContentPolicy } from "./lowering/content.js"
 import { hasToolHistory } from "./lowering/fields.js"
+import { forModel } from "./lowering/tool-id.js"
+import { ToolResult } from "./lowering/index.js"
 import { placesMarkers, requestTTL } from "../cache-policy.js"
 import * as Cache from "./utils/cache.js"
 import { resolveParallelToolCalls } from "./open-responses.js"
@@ -598,23 +599,19 @@ const lowerToolMessages = Effect.fnUntraced(function* (message: OpenAIChatReques
   for (const part of message.content) {
     if (!accepts(contentPolicy, "tool", part))
       return yield* ProviderShared.unsupportedContent("OpenAI Chat", "tool", kindsOf(contentPolicy, "tool"))
-    if (part.result.type !== "content") {
-      messages.push(
-        toolMessage(
-          options.toolCallID?.(part.id) ?? part.id,
-          ProviderShared.toolResultText(part),
-          options.cacheControl?.(part.cache),
-        ),
-      )
+    const result = yield* ToolResult.plan("OpenAI Chat", part, "allow")
+    if (result.type === "text") {
+      messages.push(toolMessage(options.toolCallID?.(part.id) ?? part.id, result.text, options.cacheControl?.(part.cache)))
       continue
     }
-    const content: ReadonlyArray<Tool.Content> = part.result.value
-    const text = content.filter((item) => item.type === "text").map((item) => item.text)
     messages.push(
-      toolMessage(options.toolCallID?.(part.id) ?? part.id, text.join("\n"), options.cacheControl?.(part.cache)),
+      toolMessage(
+        options.toolCallID?.(part.id) ?? part.id,
+        result.texts.join("\n"),
+        options.cacheControl?.(part.cache),
+      ),
     )
-    const files = content.filter((item) => item.type === "file")
-    attachments.push(...(yield* Effect.forEach(files, (item) => lowerMedia(ProviderShared.toolFileMedia(item)))))
+    attachments.push(...(yield* Effect.forEach(result.files, (item) => lowerMedia(item))))
   }
   return { messages, attachments }
 })
@@ -672,17 +669,7 @@ const lowerMessages = Effect.fnUntraced(function* (
   const lowering = {
     ...options,
     providerMetadataKey: request.model.route.providerMetadataKey ?? request.model.provider,
-    toolCallID: (id: string) => {
-      if (mistral)
-        return id
-          .replace(/[^a-zA-Z0-9]/g, "")
-          .slice(0, 9)
-          .padEnd(9, "0")
-      if (modelID.includes("claude")) return id.replace(/[^a-zA-Z0-9_-]/g, "_")
-      if (request.model.provider === "openai" || request.model.provider === "azure" || modelID.startsWith("openai/"))
-        return id.slice(0, 40)
-      return id
-    },
+    toolCallID: forModel({ provider: request.model.provider, modelID }),
   }
   const requireAssistantAfterTool = request.model.compatibility?.requireAssistantAfterTool ?? mistral
   const bridgeTools = () => {

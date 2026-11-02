@@ -28,6 +28,7 @@ import {
 } from "../schema/index.js"
 import { JsonObject, knownString, optionalArray, optionalNull, ProviderShared, withUntypedFrames } from "./shared.js"
 import { kindsOf, type ContentPolicy } from "./lowering/content.js"
+import { scrub } from "./lowering/tool-id.js"
 import { classifyProviderFailure } from "../provider-error.js"
 import { effortUpdate, resolveEffortUpdates } from "../effort-updates.js"
 import * as Cache from "./utils/cache.js"
@@ -590,7 +591,7 @@ const lowerToolChoice = (toolChoice: NonNullable<LLMRequest["toolChoice"]>) =>
     }),
   })
 
-const scrubToolCallID = (id: string) => id.replace(/[^a-zA-Z0-9_-]/g, "_")
+const scrubToolCallID = scrub(/[^a-zA-Z0-9_-]/g, "_")
 
 const lowerToolCall = (part: ToolCallPart): AnthropicToolUseBlock => ({
   type: "tool_use",

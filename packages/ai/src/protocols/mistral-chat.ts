@@ -23,6 +23,7 @@ import { JsonObject, optionalArray, optionalNull, ProviderShared } from "./share
 import { Lifecycle } from "./utils/lifecycle.js"
 import { MistralToolID } from "./utils/mistral-tool-id.js"
 import { kindsOf, type ContentPolicy } from "./lowering/content.js"
+import { collisions } from "./lowering/tool-id.js"
 import { ToolStream } from "./utils/tool-stream.js"
 
 const ADAPTER = "mistral-chat"
@@ -335,7 +336,7 @@ const lowerToolResults = Effect.fnUntraced(function* (
 })
 
 const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest) {
-  const normalizeID = MistralToolID.normalizer(request)
+  const normalizeID = collisions(request)
   const messages: MistralMessage[] =
     request.system.length === 0
       ? []

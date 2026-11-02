@@ -23,12 +23,12 @@ import { BedrockEventStream } from "./bedrock-event-stream.js"
 import { classifyProviderFailure } from "../provider-error.js"
 import { JsonObject, optionalArray, ProviderShared } from "./shared.js"
 import { accepts, kindsOf, type ContentPolicy } from "./lowering/content.js"
+import { collisions, identity } from "./lowering/tool-id.js"
 import { BedrockAuth } from "./utils/bedrock-auth.js"
 import { BedrockCache } from "./utils/bedrock-cache.js"
 import { BedrockMedia } from "./utils/bedrock-media.js"
 import { claudeVersion, supportsThinkingBlockBinding, THINKING_BINDING_BETA } from "./utils/claude-model.js"
 import { Lifecycle } from "./utils/lifecycle.js"
-import { MistralToolID } from "./utils/mistral-tool-id.js"
 import { ToolStream } from "./utils/tool-stream.js"
 import { concatBytes } from "../utils/bytes.js"
 
@@ -356,7 +356,7 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest, breakpoi
   const messages: BedrockMessage[] = []
   const documentNames = new Set<string>()
   // Mistral can reject replay IDs even when they satisfy Converse's broader ID syntax.
-  const normalizeID = request.model.id.includes("mistral.") ? MistralToolID.normalizer(request) : (id: string) => id
+  const normalizeID = request.model.id.includes("mistral.") ? collisions(request) : identity
   const providerMetadataKey = request.model.route.providerMetadataKey ?? request.model.provider
   const hoistImages = !keepToolImagesInline(request.model.id)
   // Bedrock expects parallel tool results before any images hoisted beside them.
