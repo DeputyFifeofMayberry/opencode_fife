@@ -1,6 +1,7 @@
 export * as ConfigAgent from "./agent.js"
 
 import { Effect, Schema } from "effect"
+import { Model } from "../model.js"
 import { Permission } from "../permission.js"
 import { optional, PositiveInt } from "../schema.js"
 import { ConfigModel } from "./model.js"
@@ -10,6 +11,8 @@ export const Color = Schema.String.check(Schema.isPattern(/^#[0-9a-fA-F]{6}$/u))
 
 export class Info extends Schema.Class<Info>("Config.Agent")({
   model: ConfigModel.Selection.pipe(optional),
+  // Compatibility alias for `model.variant`, written by plugins that register agents.
+  variant: Model.VariantID.pipe(optional),
   request: ConfigProvider.Request.pipe(optional),
   system: Schema.String.pipe(optional),
   description: Schema.String.pipe(optional),

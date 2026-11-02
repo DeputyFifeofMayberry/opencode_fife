@@ -79,6 +79,16 @@ export const Plugin = define({
       Effect.forkScoped({ startImmediately: true }),
     )
     loaded.documents = yield* load()
+    const orphanedVariants = loaded.documents.flatMap((document) =>
+      Object.entries(document.info.agents ?? {}).flatMap(([id, item]) =>
+        item.variant !== undefined && item.model === undefined ? [{ agent: id, variant: item.variant }] : [],
+      ),
+    )
+    yield* Effect.forEach(
+      orphanedVariants,
+      (orphan) => Effect.logWarning("ignored agent variant without a model", orphan),
+      { discard: true },
+    )
     yield* ctx.agent.transform((editor) => {
       const permissions = expandPermissions(
         loaded.documents.flatMap((document) => document.info.permissions ?? []),
@@ -101,12 +111,14 @@ export const Plugin = define({
           const exists = editor.get(agentID) !== undefined
           editor.update(agentID, (agent) => {
             if (!exists) agent.permissions.push(...permissions)
-            if (item.model !== undefined)
+            if (item.model !== undefined) {
+              const variant = item.model.variant ?? item.variant
               agent.model = {
                 id: item.model.model,
                 providerID: item.model.providerID,
-                ...(item.model.variant === undefined ? {} : { variant: item.model.variant }),
+                ...(variant === undefined ? {} : { variant }),
               }
+            }
             if (item.request !== undefined) {
               Object.assign(agent.request.headers, item.request.headers ?? {})
               Object.assign(agent.request.body, item.request.body ?? {})

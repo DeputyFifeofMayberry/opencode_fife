@@ -414,6 +414,41 @@ permissions:
     }),
   )
 
+  it.effect("folds a top-level agent variant into the model selection", () =>
+    Effect.gen(function* () {
+      const agents = yield* Agent.Service
+      const entries = [
+        new Document({
+          type: "document",
+          info: decode({
+            agents: {
+              folded: { model: "deepseek/deepseek-flash", variant: "high" },
+              nested: { model: "deepseek/deepseek-flash#max", variant: "low" },
+              orphan: { variant: "high" },
+              unknown: { model: "deepseek/deepseek-flash", variant: "medium" },
+            },
+          }),
+        }),
+      ]
+
+      yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
+        Effect.provide(Config.testLayer(entries)),
+      )
+
+      const folded = yield* agents.get(Agent.ID.make("folded"))
+      expect(folded?.model).toEqual(Model.Ref.parse("deepseek/deepseek-flash#high"))
+
+      const nested = yield* agents.get(Agent.ID.make("nested"))
+      expect(nested?.model?.variant).toBe(Model.VariantID.make("max"))
+
+      const orphan = yield* agents.get(Agent.ID.make("orphan"))
+      expect(orphan?.model).toBeUndefined()
+
+      const unknown = yield* agents.get(Agent.ID.make("unknown"))
+      expect(unknown?.model?.variant).toBe(Model.VariantID.make("medium"))
+    }),
+  )
+
   it.effect("removes a built-in agent disabled by configuration", () =>
     Effect.gen(function* () {
       const agents = yield* Agent.Service
