@@ -1,0 +1,3657 @@
+{
+  "scope": "all-dispatches (pre-run dry run)",
+  "cohortSize": 0,
+  "excludedUnmatched": 0,
+  "zeroCost": [
+    {
+      "sessionID": "ses_e657baed7ffeygXF3mFcqYCzLT",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e6578f8a3ffeFzd1qhJ1Gtz4xA",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e65789ce0ffeiygUAGC30GBjiG",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e65773e68ffernyGRUmG3k4ubG",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e6575fdb4ffekLd3BSrCPOABRF",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e65759940ffe2kqwTXZFJOGMcM",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e65736684ffei9uCYePAsPEh3m",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e65728fadffeia5ONp2vYRNzLO",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e65719d24ffeJIgcTYKtYjKRQX",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e6570ff9bffeALL4U0Ue9St70m",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e65704f10ffeaH5NxCdo9X5E9q",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e656f6ef5ffen5XH9sllvcSa1z",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e656a6910ffe3Fd6mNYV2IP9Lt",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e64200115ffeTZLAlJADwSYWlQ",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e641fffd8ffeVeuvaUMFVGj1N5",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e641c4a55ffeCY134dq6GZzudt",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e641c4b8cffep7qn11QeJ6c62f",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e641b8d15ffe4vRd5xDaEWQWb9",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e641ad12cffeuZ2o4JRaKsyClQ",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e64195e9effeEShEwXtNdwEsty",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e64158b87ffer7FMif4ScjLtlO",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e6412eea0ffexFCKyberJGybjJ",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e64120bfcffeq5LQl9cwDdnYVy",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e640b1a5effeSQBFmM0BBk3sYH",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e640a1490ffebCSrauPwMh03Lj",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e6409492cffePxZclCSupT0xSP",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e640934bfffezeCRcl8wEo342f",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e6408aa77ffe05JhH9AEoHnQf1",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e64079147ffeoqOnmzG6cEVP0g",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e64066e45ffedao4ltEIxfGqpG",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e63ef7b97ffeWY0aS9lnVj8n30",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e63cdd0c5ffeP3TnTNwj5LB0Ph",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e63b8c529ffdPj2tZE5L2IRKCx",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e63b8c529ffeWDiXhXPK5G3DkE",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e63b8c651ffes71xjiUQ3Nml7e",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e63b7f6afffeEMoUgeIYy2s7jk",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e63b71280ffeLzWfFGhgBe5WrE",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e63b6bbe6ffeSu73jA185s1J8w",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e63b60c5cffeSKB9aUfFNC8Eb3",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e6399cd70ffe6zUfKbtBcB6qa2",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e62168f9affe9Fg5K7IzovFhNx",
+      "provider": "zai-coding-plan",
+      "model": "glm-5.3-flash",
+      "variant": "low",
+      "classification": "unresolved_zero"
+    },
+    {
+      "sessionID": "ses_e621690c2ffeS7620btVVfjkTE",
+      "provider": "zai-coding-plan",
+      "model": "glm-5.3-flash",
+      "variant": "low",
+      "classification": "unresolved_zero"
+    },
+    {
+      "sessionID": "ses_e6210cb4effeC5mtLm4ES8nRFx",
+      "provider": "zai-coding-plan",
+      "model": "glm-5.3-flash",
+      "variant": "low",
+      "classification": "unresolved_zero"
+    },
+    {
+      "sessionID": "ses_e6210ca24ffeBS2JtymbQ4shzO",
+      "provider": "zai-coding-plan",
+      "model": "glm-5.3-flash",
+      "variant": "low",
+      "classification": "unresolved_zero"
+    },
+    {
+      "sessionID": "ses_e6210ca24ffdTKWk14PHo323BI",
+      "provider": "zai-coding-plan",
+      "model": "glm-5.3-flash",
+      "variant": "low",
+      "classification": "unresolved_zero"
+    },
+    {
+      "sessionID": "ses_e61966f54ffeyOQ1ChWLTP6ABy",
+      "provider": "zai-coding-plan",
+      "model": "glm-5.3-flash",
+      "variant": "low",
+      "classification": "unresolved_zero"
+    },
+    {
+      "sessionID": "ses_e6189ae61ffe6TZtaJVPs0rT1i",
+      "provider": "vercel",
+      "model": "reflection/beam-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e6399cc40ffeWb1Dt0Jc2Y6AJt",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e637ac470ffeGUsoQk54atk1pP",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e637ac340ffeqLNcwTBKsh0ryr",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e637ac340ffdGgJ4uL7qkjqNTA",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e637ac340ffcTKiUbotEVdXNsv",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e62aa3586ffebUZXO52UpOOVF6",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e627ce9dcffeYMV4Di8pAfi2F4",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e627ce8b7ffebefFd55xt1hc4H",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e627ce8b6ffe7o9CTnTnEKZTBV",
+      "provider": "opencode",
+      "model": "glm-5.3-flash-free",
+      "variant": "low",
+      "classification": "verified_free"
+    },
+    {
+      "sessionID": "ses_e627c6482ffeW0Zl7zSRM1tity",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "variant": "high",
+      "classification": "unresolved_zero"
+    },
+    {
+      "sessionID": "ses_e618a1206ffeO03FF3EkxHJmFf",
+      "provider": "opencode",
+      "model": "beam-free",
+      "variant": "low",
+      "classification": "verified_free"
+    }
+  ],
+  "p90Method": "nearest-rank",
+  "p90Note": "nearest-rank: at n=9 the p90 equals the maximum observation, not the 90th percentile",
+  "groups": [
+    {
+      "groupBy": "tier",
+      "group": "fast",
+      "n": 62,
+      "costedN": 5,
+      "metrics": {
+        "cost_usd": {
+          "n": 62,
+          "total": 0.029075482,
+          "mean": 0.0004689593870967742,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0.012481326000000001,
+          "meanCI95": [
+            0.00007922735483870966,
+            0.0010100387741935482
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 62,
+          "total": 248,
+          "mean": 4,
+          "median": 4,
+          "p90": 6,
+          "min": 1,
+          "max": 18,
+          "meanCI95": [
+            3.3225806451612905,
+            4.774193548387097
+          ]
+        },
+        "tokens_input": {
+          "n": 52,
+          "total": 965400,
+          "mean": 18565.384615384617,
+          "median": 17044,
+          "p90": 33372,
+          "min": 690,
+          "max": 62113,
+          "meanCI95": [
+            15454.807692307691,
+            21985.28846153846
+          ]
+        },
+        "tokens_output": {
+          "n": 52,
+          "total": 70225,
+          "mean": 1350.4807692307693,
+          "median": 1118,
+          "p90": 2581,
+          "min": 94,
+          "max": 6283,
+          "meanCI95": [
+            1041.8461538461538,
+            1713.326923076923
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 52,
+          "total": 20482,
+          "mean": 393.88461538461536,
+          "median": 183,
+          "p90": 1069,
+          "min": 0,
+          "max": 3907,
+          "meanCI95": [
+            250.1153846153846,
+            587.6730769230769
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 52,
+          "total": 2859842,
+          "mean": 54996.96153846154,
+          "median": 42432,
+          "p90": 77248,
+          "min": 0,
+          "max": 624064,
+          "meanCI95": [
+            36183.730769230766,
+            85221.23076923077
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 52,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 52,
+          "total": 1921490,
+          "mean": 36951.730769230766,
+          "median": 34291,
+          "p90": 67943,
+          "min": 2393,
+          "max": 141418,
+          "meanCI95": [
+            29747.115384615383,
+            45046.32692307692
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "tier",
+      "group": "heavy",
+      "n": 11,
+      "costedN": 11,
+      "metrics": {
+        "cost_usd": {
+          "n": 11,
+          "total": 0.309258238,
+          "mean": 0.028114385272727273,
+          "median": 0.037451622,
+          "p90": 0.051060100000000004,
+          "min": 0.0025644839999999997,
+          "max": 0.0554547,
+          "meanCI95": [
+            0.016275458545454546,
+            0.03991648236363637
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 11,
+          "total": 50,
+          "mean": 4.545454545454546,
+          "median": 4,
+          "p90": 6,
+          "min": 2,
+          "max": 13,
+          "meanCI95": [
+            3.272727272727273,
+            6.454545454545454
+          ]
+        },
+        "tokens_input": {
+          "n": 11,
+          "total": 217927,
+          "mean": 19811.545454545456,
+          "median": 10550,
+          "p90": 43588,
+          "min": 6,
+          "max": 48665,
+          "meanCI95": [
+            8981.181818181818,
+            30857.545454545456
+          ]
+        },
+        "tokens_output": {
+          "n": 11,
+          "total": 25112,
+          "mean": 2282.909090909091,
+          "median": 1543,
+          "p90": 4736,
+          "min": 213,
+          "max": 6340,
+          "meanCI95": [
+            1213.5454545454545,
+            3458.090909090909
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 11,
+          "total": 199507,
+          "mean": 18137,
+          "median": 5843,
+          "p90": 49140,
+          "min": 272,
+          "max": 62556,
+          "meanCI95": [
+            6579.090909090909,
+            31880.090909090908
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 11,
+          "total": 1484281,
+          "mean": 134934.63636363635,
+          "median": 59264,
+          "p90": 224768,
+          "min": 17456,
+          "max": 666624,
+          "meanCI95": [
+            57389.27272727273,
+            252858.18181818182
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 11,
+          "total": 56695,
+          "mean": 5154.090909090909,
+          "median": 0,
+          "p90": 18059,
+          "min": 0,
+          "max": 20855,
+          "meanCI95": [
+            0,
+            10562.363636363636
+          ]
+        },
+        "duration_ms": {
+          "n": 11,
+          "total": 1451895,
+          "mean": 131990.45454545456,
+          "median": 67958,
+          "p90": 323642,
+          "min": 6473,
+          "max": 370903,
+          "meanCI95": [
+            59500.90909090909,
+            214566.27272727274
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "tier",
+      "group": "medium",
+      "n": 38,
+      "costedN": 37,
+      "metrics": {
+        "cost_usd": {
+          "n": 38,
+          "total": 0.549496604,
+          "mean": 0.014460436947368422,
+          "median": 0.010632762,
+          "p90": 0.033709938,
+          "min": 0,
+          "max": 0.050480364,
+          "meanCI95": [
+            0.010799571736842104,
+            0.018456944263157898
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 38,
+          "total": 419,
+          "mean": 11.026315789473685,
+          "median": 8,
+          "p90": 25,
+          "min": 1,
+          "max": 49,
+          "meanCI95": [
+            8.394736842105264,
+            14.131578947368421
+          ]
+        },
+        "tokens_input": {
+          "n": 37,
+          "total": 1139115,
+          "mean": 30786.891891891893,
+          "median": 23943,
+          "p90": 66019,
+          "min": 913,
+          "max": 95607,
+          "meanCI95": [
+            23644.162162162163,
+            38511.40540540541
+          ]
+        },
+        "tokens_output": {
+          "n": 37,
+          "total": 207625,
+          "mean": 5611.486486486487,
+          "median": 3906,
+          "p90": 14777,
+          "min": 356,
+          "max": 19063,
+          "meanCI95": [
+            4106.945945945946,
+            7326.135135135135
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 37,
+          "total": 294041,
+          "mean": 7947.054054054054,
+          "median": 6767,
+          "p90": 16309,
+          "min": 0,
+          "max": 66491,
+          "meanCI95": [
+            4794,
+            12269.702702702703
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 37,
+          "total": 18577536,
+          "mean": 502095.5675675676,
+          "median": 284800,
+          "p90": 1609728,
+          "min": 35456,
+          "max": 2409856,
+          "meanCI95": [
+            326202.8108108108,
+            709645.8378378379
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 37,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 37,
+          "total": 3031807,
+          "mean": 81940.72972972973,
+          "median": 77022,
+          "p90": 168110,
+          "min": 6093,
+          "max": 420624,
+          "meanCI95": [
+            59716.43243243243,
+            108891.91891891892
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "deepseek/deepseek-flash#default",
+      "n": 8,
+      "costedN": 8,
+      "metrics": {
+        "cost_usd": {
+          "n": 8,
+          "total": 0.020644548,
+          "mean": 0.0025805685,
+          "median": 0.0020165039999999997,
+          "p90": 0.007174211999999999,
+          "min": 0.000576918,
+          "max": 0.007174211999999999,
+          "meanCI95": [
+            0.001354791,
+            0.004153319249999999
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 8,
+          "total": 40,
+          "mean": 5,
+          "median": 5,
+          "p90": 8,
+          "min": 3,
+          "max": 8,
+          "meanCI95": [
+            4.125,
+            6
+          ]
+        },
+        "tokens_input": {
+          "n": 8,
+          "total": 82534,
+          "mean": 10316.75,
+          "median": 10596,
+          "p90": 22506,
+          "min": 913,
+          "max": 22506,
+          "meanCI95": [
+            5103.625,
+            15748.25
+          ]
+        },
+        "tokens_output": {
+          "n": 8,
+          "total": 6284,
+          "mean": 785.5,
+          "median": 578,
+          "p90": 2417,
+          "min": 356,
+          "max": 2417,
+          "meanCI95": [
+            480.5,
+            1274.25
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 8,
+          "total": 4420,
+          "mean": 552.5,
+          "median": 117,
+          "p90": 2990,
+          "min": 10,
+          "max": 2990,
+          "meanCI95": [
+            94.75,
+            1289.75
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 8,
+          "total": 614016,
+          "mean": 76752,
+          "median": 60544,
+          "p90": 184704,
+          "min": 35456,
+          "max": 184704,
+          "meanCI95": [
+            53744,
+            110464
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 8,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 8,
+          "total": 130770,
+          "mean": 16346.25,
+          "median": 8740,
+          "p90": 65075,
+          "min": 6093,
+          "max": 65075,
+          "meanCI95": [
+            8072.125,
+            30699.875
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "deepseek/deepseek-flash#high",
+      "n": 28,
+      "costedN": 27,
+      "metrics": {
+        "cost_usd": {
+          "n": 28,
+          "total": 0.4942608420000001,
+          "mean": 0.017652172928571432,
+          "median": 0.01483752,
+          "p90": 0.033709938,
+          "min": 0,
+          "max": 0.050480364,
+          "meanCI95": [
+            0.013595176714285714,
+            0.02205285535714286
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 28,
+          "total": 376,
+          "mean": 13.428571428571429,
+          "median": 10,
+          "p90": 28,
+          "min": 1,
+          "max": 49,
+          "meanCI95": [
+            10.035714285714286,
+            17.392857142857142
+          ]
+        },
+        "tokens_input": {
+          "n": 27,
+          "total": 1027559,
+          "mean": 38057.74074074074,
+          "median": 30836,
+          "p90": 69188,
+          "min": 7136,
+          "max": 95607,
+          "meanCI95": [
+            29320.925925925927,
+            47212.03703703704
+          ]
+        },
+        "tokens_output": {
+          "n": 27,
+          "total": 191263,
+          "mean": 7083.814814814815,
+          "median": 6283,
+          "p90": 15819,
+          "min": 1873,
+          "max": 19063,
+          "meanCI95": [
+            5391.222222222223,
+            8912.74074074074
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 27,
+          "total": 292868,
+          "mean": 10846.962962962964,
+          "median": 7329,
+          "p90": 24986,
+          "min": 510,
+          "max": 66491,
+          "meanCI95": [
+            7040.888888888889,
+            16559.11111111111
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 27,
+          "total": 18156736,
+          "mean": 672471.7037037037,
+          "median": 412800,
+          "p90": 1810432,
+          "min": 105984,
+          "max": 2409856,
+          "meanCI95": [
+            445696,
+            915264
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 27,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 27,
+          "total": 2882754,
+          "mean": 106768.66666666667,
+          "median": 86498,
+          "p90": 191660,
+          "min": 21176,
+          "max": 420624,
+          "meanCI95": [
+            80964.77777777778,
+            139446.8148148148
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "deepseek/deepseek-flash#low",
+      "n": 1,
+      "costedN": 1,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0.0017176919999999998,
+          "mean": 0.0017176919999999998,
+          "median": 0.0017176919999999998,
+          "p90": 0.0017176919999999998,
+          "min": 0.0017176919999999998,
+          "max": 0.0017176919999999998,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 3,
+          "mean": 3,
+          "median": 3,
+          "p90": 3,
+          "min": 3,
+          "max": 3,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 9258,
+          "mean": 9258,
+          "median": 9258,
+          "p90": 9258,
+          "min": 9258,
+          "max": 9258,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 330,
+          "mean": 330,
+          "median": 330,
+          "p90": 330,
+          "min": 330,
+          "max": 330,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 130,
+          "mean": 130,
+          "median": 130,
+          "p90": 130,
+          "min": 130,
+          "max": 130,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 17664,
+          "mean": 17664,
+          "median": 17664,
+          "p90": 17664,
+          "min": 17664,
+          "max": 17664,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 5113,
+          "mean": 5113,
+          "median": 5113,
+          "p90": 5113,
+          "min": 5113,
+          "max": 5113,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "deepseek/deepseek-flash#max",
+      "n": 8,
+      "costedN": 8,
+      "metrics": {
+        "cost_usd": {
+          "n": 8,
+          "total": 0.161152812,
+          "mean": 0.0201441015,
+          "median": 0.007034687999999999,
+          "p90": 0.045999504000000004,
+          "min": 0.0025644839999999997,
+          "max": 0.045999504000000004,
+          "meanCI95": [
+            0.008436998999999999,
+            0.032168393999999996
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 8,
+          "total": 46,
+          "mean": 5.75,
+          "median": 4,
+          "p90": 13,
+          "min": 3,
+          "max": 13,
+          "meanCI95": [
+            3.75,
+            8.25
+          ]
+        },
+        "tokens_input": {
+          "n": 8,
+          "total": 184146,
+          "mean": 23018.25,
+          "median": 14908,
+          "p90": 43588,
+          "min": 4589,
+          "max": 43588,
+          "meanCI95": [
+            12852.625,
+            33480
+          ]
+        },
+        "tokens_output": {
+          "n": 8,
+          "total": 23556,
+          "mean": 2944.5,
+          "median": 1826,
+          "p90": 6340,
+          "min": 597,
+          "max": 6340,
+          "meanCI95": [
+            1699.625,
+            4308.875
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 8,
+          "total": 191880,
+          "mean": 23985,
+          "median": 8662,
+          "p90": 62556,
+          "min": 660,
+          "max": 62556,
+          "meanCI95": [
+            8599.125,
+            40135.75
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 8,
+          "total": 1423104,
+          "mean": 177888,
+          "median": 97024,
+          "p90": 666624,
+          "min": 38528,
+          "max": 666624,
+          "meanCI95": [
+            78592,
+            334976
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 8,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 8,
+          "total": 1313084,
+          "mean": 164135.5,
+          "median": 67958,
+          "p90": 370903,
+          "min": 11507,
+          "max": 370903,
+          "meanCI95": [
+            64760.375,
+            263758.875
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "opencode/beam-free#low",
+      "n": 1,
+      "costedN": 0,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 1,
+          "mean": 1,
+          "median": 1,
+          "p90": 1,
+          "min": 1,
+          "max": 1,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "opencode/glm-5.3-flash-free#low",
+      "n": 49,
+      "costedN": 0,
+      "metrics": {
+        "cost_usd": {
+          "n": 49,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 49,
+          "total": 187,
+          "mean": 3.816326530612245,
+          "median": 4,
+          "p90": 7,
+          "min": 1,
+          "max": 14,
+          "meanCI95": [
+            3.142857142857143,
+            4.571428571428571
+          ]
+        },
+        "tokens_input": {
+          "n": 40,
+          "total": 731074,
+          "mean": 18276.85,
+          "median": 17992,
+          "p90": 27655,
+          "min": 690,
+          "max": 52851,
+          "meanCI95": [
+            15218.05,
+            21594.7
+          ]
+        },
+        "tokens_output": {
+          "n": 40,
+          "total": 50922,
+          "mean": 1273.05,
+          "median": 1179,
+          "p90": 2318,
+          "min": 94,
+          "max": 3405,
+          "meanCI95": [
+            1021.575,
+            1512.45
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 40,
+          "total": 15541,
+          "mean": 388.525,
+          "median": 284,
+          "p90": 1069,
+          "min": 0,
+          "max": 1740,
+          "meanCI95": [
+            270.05,
+            524.625
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 40,
+          "total": 1831104,
+          "mean": 45777.6,
+          "median": 42432,
+          "p90": 77248,
+          "min": 0,
+          "max": 251328,
+          "meanCI95": [
+            34489.6,
+            60275.2
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 40,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 40,
+          "total": 1570983,
+          "mean": 39274.575,
+          "median": 36816,
+          "p90": 67943,
+          "min": 2998,
+          "max": 141418,
+          "meanCI95": [
+            31085.875,
+            48393.175
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "opencode/glm-5.3-flash-free#max",
+      "n": 1,
+      "costedN": 1,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0.003827298,
+          "mean": 0.003827298,
+          "median": 0.003827298,
+          "p90": 0.003827298,
+          "min": 0.003827298,
+          "max": 0.003827298,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 5,
+          "mean": 5,
+          "median": 5,
+          "p90": 5,
+          "min": 5,
+          "max": 5,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 48665,
+          "mean": 48665,
+          "median": 48665,
+          "p90": 48665,
+          "min": 48665,
+          "max": 48665,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 1326,
+          "mean": 1326,
+          "median": 1326,
+          "p90": 1326,
+          "min": 1326,
+          "max": 1326,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 5843,
+          "mean": 5843,
+          "median": 5843,
+          "p90": 5843,
+          "min": 5843,
+          "max": 5843,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 65600,
+          "mean": 65600,
+          "median": 65600,
+          "p90": 65600,
+          "min": 65600,
+          "max": 65600,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 89798,
+          "mean": 89798,
+          "median": 89798,
+          "p90": 89798,
+          "min": 89798,
+          "max": 89798,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "vercel/deepseek/deepseek-v4.1-flash-1017#max",
+      "n": 2,
+      "costedN": 2,
+      "metrics": {
+        "cost_usd": {
+          "n": 2,
+          "total": 0.043460467999999995,
+          "mean": 0.021730233999999998,
+          "median": 0.007382003999999999,
+          "p90": 0.036078464,
+          "min": 0.007382003999999999,
+          "max": 0.036078464,
+          "meanCI95": [
+            0.007382003999999999,
+            0.036078464
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 2,
+          "total": 12,
+          "mean": 6,
+          "median": 5,
+          "p90": 7,
+          "min": 5,
+          "max": 7,
+          "meanCI95": [
+            5,
+            7
+          ]
+        },
+        "tokens_input": {
+          "n": 2,
+          "total": 76227,
+          "mean": 38113.5,
+          "median": 20999,
+          "p90": 55228,
+          "min": 20999,
+          "max": 55228,
+          "meanCI95": [
+            20999,
+            55228
+          ]
+        },
+        "tokens_output": {
+          "n": 2,
+          "total": 15213,
+          "mean": 7606.5,
+          "median": 436,
+          "p90": 14777,
+          "min": 436,
+          "max": 14777,
+          "meanCI95": [
+            436,
+            14777
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 2,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 2,
+          "total": 333824,
+          "mean": 166912,
+          "median": 79872,
+          "p90": 253952,
+          "min": 79872,
+          "max": 253952,
+          "meanCI95": [
+            79872,
+            253952
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 2,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 2,
+          "total": 107570,
+          "mean": 53785,
+          "median": 8019,
+          "p90": 99551,
+          "min": 8019,
+          "max": 99551,
+          "meanCI95": [
+            8019,
+            99551
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "vercel/deepseek/deepseek-v4.1-flash-1017#none",
+      "n": 1,
+      "costedN": 1,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0.003194404,
+          "mean": 0.003194404,
+          "median": 0.003194404,
+          "p90": 0.003194404,
+          "min": 0.003194404,
+          "max": 0.003194404,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 2,
+          "mean": 2,
+          "median": 2,
+          "p90": 2,
+          "min": 2,
+          "max": 2,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 9783,
+          "mean": 9783,
+          "median": 9783,
+          "p90": 9783,
+          "min": 9783,
+          "max": 9783,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 161,
+          "mean": 161,
+          "median": 161,
+          "p90": 161,
+          "min": 161,
+          "max": 161,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 9472,
+          "mean": 9472,
+          "median": 9472,
+          "p90": 9472,
+          "min": 9472,
+          "max": 9472,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 2393,
+          "mean": 2393,
+          "median": 2393,
+          "p90": 2393,
+          "min": 2393,
+          "max": 2393,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "vercel/minimax/minimax-m3.1-flash#medium",
+      "n": 2,
+      "costedN": 2,
+      "metrics": {
+        "cost_usd": {
+          "n": 2,
+          "total": 0.01168206,
+          "mean": 0.00584103,
+          "median": 0.00447144,
+          "p90": 0.007210619999999999,
+          "min": 0.00447144,
+          "max": 0.007210619999999999,
+          "meanCI95": [
+            0.00447144,
+            0.007210619999999999
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 2,
+          "total": 11,
+          "mean": 5.5,
+          "median": 5,
+          "p90": 6,
+          "min": 5,
+          "max": 6,
+          "meanCI95": [
+            5,
+            6
+          ]
+        },
+        "tokens_input": {
+          "n": 2,
+          "total": 32449,
+          "mean": 16224.5,
+          "median": 12640,
+          "p90": 19809,
+          "min": 12640,
+          "max": 19809,
+          "meanCI95": [
+            12640,
+            19809
+          ]
+        },
+        "tokens_output": {
+          "n": 2,
+          "total": 7873,
+          "mean": 3936.5,
+          "median": 2581,
+          "p90": 5292,
+          "min": 2581,
+          "max": 5292,
+          "meanCI95": [
+            2581,
+            5292
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 2,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 2,
+          "total": 139394,
+          "mean": 69697,
+          "median": 68456,
+          "p90": 70938,
+          "min": 68456,
+          "max": 70938,
+          "meanCI95": [
+            68456,
+            70938
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 2,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 2,
+          "total": 56368,
+          "mean": 28184,
+          "median": 19561,
+          "p90": 36807,
+          "min": 19561,
+          "max": 36807,
+          "meanCI95": [
+            19561,
+            36807
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "vercel/openai/gpt-6.1-terra#xhigh",
+      "n": 1,
+      "costedN": 1,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0.0413754,
+          "mean": 0.0413754,
+          "median": 0.0413754,
+          "p90": 0.0413754,
+          "min": 0.0413754,
+          "max": 0.0413754,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 4,
+          "mean": 4,
+          "median": 4,
+          "p90": 4,
+          "min": 4,
+          "max": 4,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 12,
+          "mean": 12,
+          "median": 12,
+          "p90": 12,
+          "min": 12,
+          "max": 12,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 819,
+          "mean": 819,
+          "median": 819,
+          "p90": 819,
+          "min": 819,
+          "max": 819,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 1664,
+          "mean": 1664,
+          "median": 1664,
+          "p90": 1664,
+          "min": 1664,
+          "max": 1664,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 57593,
+          "mean": 57593,
+          "median": 57593,
+          "p90": 57593,
+          "min": 57593,
+          "max": 57593,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 20855,
+          "mean": 20855,
+          "median": 20855,
+          "p90": 20855,
+          "min": 20855,
+          "max": 20855,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 38545,
+          "mean": 38545,
+          "median": 38545,
+          "p90": 38545,
+          "min": 38545,
+          "max": 38545,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "vercel/openai/gpt-6.1-terra-fast#xhigh",
+      "n": 2,
+      "costedN": 2,
+      "metrics": {
+        "cost_usd": {
+          "n": 2,
+          "total": 0.1065148,
+          "mean": 0.0532574,
+          "median": 0.051060100000000004,
+          "p90": 0.0554547,
+          "min": 0.051060100000000004,
+          "max": 0.0554547,
+          "meanCI95": [
+            0.051060100000000004,
+            0.0554547
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 2,
+          "total": 4,
+          "mean": 2,
+          "median": 2,
+          "p90": 2,
+          "min": 2,
+          "max": 2,
+          "meanCI95": [
+            2,
+            2
+          ]
+        },
+        "tokens_input": {
+          "n": 2,
+          "total": 12,
+          "mean": 6,
+          "median": 6,
+          "p90": 6,
+          "min": 6,
+          "max": 6,
+          "meanCI95": [
+            6,
+            6
+          ]
+        },
+        "tokens_output": {
+          "n": 2,
+          "total": 559,
+          "mean": 279.5,
+          "median": 213,
+          "p90": 346,
+          "min": 213,
+          "max": 346,
+          "meanCI95": [
+            213,
+            346
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 2,
+          "total": 780,
+          "mean": 390,
+          "median": 272,
+          "p90": 508,
+          "min": 272,
+          "max": 508,
+          "meanCI95": [
+            272,
+            508
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 2,
+          "total": 35008,
+          "mean": 17504,
+          "median": 17456,
+          "p90": 17552,
+          "min": 17456,
+          "max": 17552,
+          "meanCI95": [
+            17456,
+            17552
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 2,
+          "total": 35840,
+          "mean": 17920,
+          "median": 17781,
+          "p90": 18059,
+          "min": 17781,
+          "max": 18059,
+          "meanCI95": [
+            17781,
+            18059
+          ]
+        },
+        "duration_ms": {
+          "n": 2,
+          "total": 21975,
+          "mean": 10987.5,
+          "median": 6473,
+          "p90": 15502,
+          "min": 6473,
+          "max": 15502,
+          "meanCI95": [
+            6473,
+            15502
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "vercel/reflection/beam-free#low",
+      "n": 1,
+      "costedN": 0,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 3,
+          "mean": 3,
+          "median": 3,
+          "p90": 3,
+          "min": 3,
+          "max": 3,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 8894,
+          "mean": 8894,
+          "median": 8894,
+          "p90": 8894,
+          "min": 8894,
+          "max": 8894,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 295,
+          "mean": 295,
+          "median": 295,
+          "p90": 295,
+          "min": 295,
+          "max": 295,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 16448,
+          "mean": 16448,
+          "median": 16448,
+          "p90": 16448,
+          "min": 16448,
+          "max": 16448,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 3181,
+          "mean": 3181,
+          "median": 3181,
+          "p90": 3181,
+          "min": 3181,
+          "max": 3181,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "identity",
+      "group": "zai-coding-plan/glm-5.3-flash#low",
+      "n": 6,
+      "costedN": 0,
+      "metrics": {
+        "cost_usd": {
+          "n": 6,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 6,
+          "total": 23,
+          "mean": 3.8333333333333335,
+          "median": 2,
+          "p90": 6,
+          "min": 1,
+          "max": 6,
+          "meanCI95": [
+            2,
+            5.333333333333333
+          ]
+        },
+        "tokens_input": {
+          "n": 6,
+          "total": 111829,
+          "mean": 18638.166666666668,
+          "median": 9039,
+          "p90": 36497,
+          "min": 8816,
+          "max": 36497,
+          "meanCI95": [
+            9924.333333333334,
+            27835.666666666668
+          ]
+        },
+        "tokens_output": {
+          "n": 6,
+          "total": 4361,
+          "mean": 726.8333333333334,
+          "median": 601,
+          "p90": 1411,
+          "min": 126,
+          "max": 1411,
+          "meanCI95": [
+            347.3333333333333,
+            1107.1666666666667
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 6,
+          "total": 904,
+          "mean": 150.66666666666666,
+          "median": 78,
+          "p90": 505,
+          "min": 0,
+          "max": 505,
+          "meanCI95": [
+            45,
+            304.3333333333333
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 6,
+          "total": 221696,
+          "mean": 36949.333333333336,
+          "median": 10048,
+          "p90": 70592,
+          "min": 0,
+          "max": 70592,
+          "meanCI95": [
+            12672,
+            58965.333333333336
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 6,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 6,
+          "total": 182658,
+          "mean": 30443,
+          "median": 21065,
+          "p90": 55931,
+          "min": 5243,
+          "max": 55931,
+          "meanCI95": [
+            13733.666666666666,
+            46479
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "fast | deepseek/deepseek-flash#high",
+      "n": 1,
+      "costedN": 1,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0.012481326000000001,
+          "mean": 0.012481326000000001,
+          "median": 0.012481326000000001,
+          "p90": 0.012481326000000001,
+          "min": 0.012481326000000001,
+          "max": 0.012481326000000001,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 18,
+          "mean": 18,
+          "median": 18,
+          "p90": 18,
+          "min": 18,
+          "max": 18,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 62113,
+          "mean": 62113,
+          "median": 62113,
+          "p90": 62113,
+          "min": 62113,
+          "max": 62113,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 6283,
+          "mean": 6283,
+          "median": 6283,
+          "p90": 6283,
+          "min": 6283,
+          "max": 6283,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 3907,
+          "mean": 3907,
+          "median": 3907,
+          "p90": 3907,
+          "min": 3907,
+          "max": 3907,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 624064,
+          "mean": 624064,
+          "median": 624064,
+          "p90": 624064,
+          "min": 624064,
+          "max": 624064,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 100794,
+          "mean": 100794,
+          "median": 100794,
+          "p90": 100794,
+          "min": 100794,
+          "max": 100794,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "fast | deepseek/deepseek-flash#low",
+      "n": 1,
+      "costedN": 1,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0.0017176919999999998,
+          "mean": 0.0017176919999999998,
+          "median": 0.0017176919999999998,
+          "p90": 0.0017176919999999998,
+          "min": 0.0017176919999999998,
+          "max": 0.0017176919999999998,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 3,
+          "mean": 3,
+          "median": 3,
+          "p90": 3,
+          "min": 3,
+          "max": 3,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 9258,
+          "mean": 9258,
+          "median": 9258,
+          "p90": 9258,
+          "min": 9258,
+          "max": 9258,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 330,
+          "mean": 330,
+          "median": 330,
+          "p90": 330,
+          "min": 330,
+          "max": 330,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 130,
+          "mean": 130,
+          "median": 130,
+          "p90": 130,
+          "min": 130,
+          "max": 130,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 17664,
+          "mean": 17664,
+          "median": 17664,
+          "p90": 17664,
+          "min": 17664,
+          "max": 17664,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 5113,
+          "mean": 5113,
+          "median": 5113,
+          "p90": 5113,
+          "min": 5113,
+          "max": 5113,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "fast | opencode/beam-free#low",
+      "n": 1,
+      "costedN": 0,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 1,
+          "mean": 1,
+          "median": 1,
+          "p90": 1,
+          "min": 1,
+          "max": 1,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "fast | opencode/glm-5.3-flash-free#low",
+      "n": 49,
+      "costedN": 0,
+      "metrics": {
+        "cost_usd": {
+          "n": 49,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 49,
+          "total": 187,
+          "mean": 3.816326530612245,
+          "median": 4,
+          "p90": 7,
+          "min": 1,
+          "max": 14,
+          "meanCI95": [
+            3.142857142857143,
+            4.571428571428571
+          ]
+        },
+        "tokens_input": {
+          "n": 40,
+          "total": 731074,
+          "mean": 18276.85,
+          "median": 17992,
+          "p90": 27655,
+          "min": 690,
+          "max": 52851,
+          "meanCI95": [
+            15218.05,
+            21594.7
+          ]
+        },
+        "tokens_output": {
+          "n": 40,
+          "total": 50922,
+          "mean": 1273.05,
+          "median": 1179,
+          "p90": 2318,
+          "min": 94,
+          "max": 3405,
+          "meanCI95": [
+            1021.575,
+            1512.45
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 40,
+          "total": 15541,
+          "mean": 388.525,
+          "median": 284,
+          "p90": 1069,
+          "min": 0,
+          "max": 1740,
+          "meanCI95": [
+            270.05,
+            524.625
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 40,
+          "total": 1831104,
+          "mean": 45777.6,
+          "median": 42432,
+          "p90": 77248,
+          "min": 0,
+          "max": 251328,
+          "meanCI95": [
+            34489.6,
+            60275.2
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 40,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 40,
+          "total": 1570983,
+          "mean": 39274.575,
+          "median": 36816,
+          "p90": 67943,
+          "min": 2998,
+          "max": 141418,
+          "meanCI95": [
+            31085.875,
+            48393.175
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "fast | vercel/deepseek/deepseek-v4.1-flash-1017#none",
+      "n": 1,
+      "costedN": 1,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0.003194404,
+          "mean": 0.003194404,
+          "median": 0.003194404,
+          "p90": 0.003194404,
+          "min": 0.003194404,
+          "max": 0.003194404,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 2,
+          "mean": 2,
+          "median": 2,
+          "p90": 2,
+          "min": 2,
+          "max": 2,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 9783,
+          "mean": 9783,
+          "median": 9783,
+          "p90": 9783,
+          "min": 9783,
+          "max": 9783,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 161,
+          "mean": 161,
+          "median": 161,
+          "p90": 161,
+          "min": 161,
+          "max": 161,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 9472,
+          "mean": 9472,
+          "median": 9472,
+          "p90": 9472,
+          "min": 9472,
+          "max": 9472,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 2393,
+          "mean": 2393,
+          "median": 2393,
+          "p90": 2393,
+          "min": 2393,
+          "max": 2393,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "fast | vercel/minimax/minimax-m3.1-flash#medium",
+      "n": 2,
+      "costedN": 2,
+      "metrics": {
+        "cost_usd": {
+          "n": 2,
+          "total": 0.01168206,
+          "mean": 0.00584103,
+          "median": 0.00447144,
+          "p90": 0.007210619999999999,
+          "min": 0.00447144,
+          "max": 0.007210619999999999,
+          "meanCI95": [
+            0.00447144,
+            0.007210619999999999
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 2,
+          "total": 11,
+          "mean": 5.5,
+          "median": 5,
+          "p90": 6,
+          "min": 5,
+          "max": 6,
+          "meanCI95": [
+            5,
+            6
+          ]
+        },
+        "tokens_input": {
+          "n": 2,
+          "total": 32449,
+          "mean": 16224.5,
+          "median": 12640,
+          "p90": 19809,
+          "min": 12640,
+          "max": 19809,
+          "meanCI95": [
+            12640,
+            19809
+          ]
+        },
+        "tokens_output": {
+          "n": 2,
+          "total": 7873,
+          "mean": 3936.5,
+          "median": 2581,
+          "p90": 5292,
+          "min": 2581,
+          "max": 5292,
+          "meanCI95": [
+            2581,
+            5292
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 2,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 2,
+          "total": 139394,
+          "mean": 69697,
+          "median": 68456,
+          "p90": 70938,
+          "min": 68456,
+          "max": 70938,
+          "meanCI95": [
+            68456,
+            70938
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 2,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 2,
+          "total": 56368,
+          "mean": 28184,
+          "median": 19561,
+          "p90": 36807,
+          "min": 19561,
+          "max": 36807,
+          "meanCI95": [
+            19561,
+            36807
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "fast | vercel/reflection/beam-free#low",
+      "n": 1,
+      "costedN": 0,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 3,
+          "mean": 3,
+          "median": 3,
+          "p90": 3,
+          "min": 3,
+          "max": 3,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 8894,
+          "mean": 8894,
+          "median": 8894,
+          "p90": 8894,
+          "min": 8894,
+          "max": 8894,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 295,
+          "mean": 295,
+          "median": 295,
+          "p90": 295,
+          "min": 295,
+          "max": 295,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 16448,
+          "mean": 16448,
+          "median": 16448,
+          "p90": 16448,
+          "min": 16448,
+          "max": 16448,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 3181,
+          "mean": 3181,
+          "median": 3181,
+          "p90": 3181,
+          "min": 3181,
+          "max": 3181,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "fast | zai-coding-plan/glm-5.3-flash#low",
+      "n": 6,
+      "costedN": 0,
+      "metrics": {
+        "cost_usd": {
+          "n": 6,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 6,
+          "total": 23,
+          "mean": 3.8333333333333335,
+          "median": 2,
+          "p90": 6,
+          "min": 1,
+          "max": 6,
+          "meanCI95": [
+            2,
+            5.333333333333333
+          ]
+        },
+        "tokens_input": {
+          "n": 6,
+          "total": 111829,
+          "mean": 18638.166666666668,
+          "median": 9039,
+          "p90": 36497,
+          "min": 8816,
+          "max": 36497,
+          "meanCI95": [
+            9924.333333333334,
+            27835.666666666668
+          ]
+        },
+        "tokens_output": {
+          "n": 6,
+          "total": 4361,
+          "mean": 726.8333333333334,
+          "median": 601,
+          "p90": 1411,
+          "min": 126,
+          "max": 1411,
+          "meanCI95": [
+            347.3333333333333,
+            1107.1666666666667
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 6,
+          "total": 904,
+          "mean": 150.66666666666666,
+          "median": 78,
+          "p90": 505,
+          "min": 0,
+          "max": 505,
+          "meanCI95": [
+            45,
+            304.3333333333333
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 6,
+          "total": 221696,
+          "mean": 36949.333333333336,
+          "median": 10048,
+          "p90": 70592,
+          "min": 0,
+          "max": 70592,
+          "meanCI95": [
+            12672,
+            58965.333333333336
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 6,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 6,
+          "total": 182658,
+          "mean": 30443,
+          "median": 21065,
+          "p90": 55931,
+          "min": 5243,
+          "max": 55931,
+          "meanCI95": [
+            13733.666666666666,
+            46479
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "heavy | deepseek/deepseek-flash#max",
+      "n": 7,
+      "costedN": 7,
+      "metrics": {
+        "cost_usd": {
+          "n": 7,
+          "total": 0.15754073999999998,
+          "mean": 0.02250582,
+          "median": 0.020889228,
+          "p90": 0.045999504000000004,
+          "min": 0.0025644839999999997,
+          "max": 0.045999504000000004,
+          "meanCI95": [
+            0.009708332571428571,
+            0.035422155428571425
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 7,
+          "total": 37,
+          "mean": 5.285714285714286,
+          "median": 4,
+          "p90": 13,
+          "min": 3,
+          "max": 13,
+          "meanCI95": [
+            3.4285714285714284,
+            8
+          ]
+        },
+        "tokens_input": {
+          "n": 7,
+          "total": 169238,
+          "mean": 24176.85714285714,
+          "median": 31273,
+          "p90": 43588,
+          "min": 4589,
+          "max": 43588,
+          "meanCI95": [
+            12760.57142857143,
+            35825
+          ]
+        },
+        "tokens_output": {
+          "n": 7,
+          "total": 22408,
+          "mean": 3201.1428571428573,
+          "median": 3030,
+          "p90": 6340,
+          "min": 597,
+          "max": 6340,
+          "meanCI95": [
+            1850.142857142857,
+            4623.857142857143
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 7,
+          "total": 191220,
+          "mean": 27317.14285714286,
+          "median": 21186,
+          "p90": 62556,
+          "min": 847,
+          "max": 62556,
+          "meanCI95": [
+            10779,
+            45113.71428571428
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 7,
+          "total": 1326080,
+          "mean": 189440,
+          "median": 133376,
+          "p90": 666624,
+          "min": 38528,
+          "max": 666624,
+          "meanCI95": [
+            74660.57142857143,
+            355346.28571428574
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 7,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 7,
+          "total": 1301577,
+          "mean": 185939.57142857142,
+          "median": 174616,
+          "p90": 370903,
+          "min": 13046,
+          "max": 370903,
+          "meanCI95": [
+            82373,
+            293043.28571428574
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "heavy | opencode/glm-5.3-flash-free#max",
+      "n": 1,
+      "costedN": 1,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0.003827298,
+          "mean": 0.003827298,
+          "median": 0.003827298,
+          "p90": 0.003827298,
+          "min": 0.003827298,
+          "max": 0.003827298,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 5,
+          "mean": 5,
+          "median": 5,
+          "p90": 5,
+          "min": 5,
+          "max": 5,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 48665,
+          "mean": 48665,
+          "median": 48665,
+          "p90": 48665,
+          "min": 48665,
+          "max": 48665,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 1326,
+          "mean": 1326,
+          "median": 1326,
+          "p90": 1326,
+          "min": 1326,
+          "max": 1326,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 5843,
+          "mean": 5843,
+          "median": 5843,
+          "p90": 5843,
+          "min": 5843,
+          "max": 5843,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 65600,
+          "mean": 65600,
+          "median": 65600,
+          "p90": 65600,
+          "min": 65600,
+          "max": 65600,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 89798,
+          "mean": 89798,
+          "median": 89798,
+          "p90": 89798,
+          "min": 89798,
+          "max": 89798,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "heavy | vercel/openai/gpt-6.1-terra#xhigh",
+      "n": 1,
+      "costedN": 1,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0.0413754,
+          "mean": 0.0413754,
+          "median": 0.0413754,
+          "p90": 0.0413754,
+          "min": 0.0413754,
+          "max": 0.0413754,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 4,
+          "mean": 4,
+          "median": 4,
+          "p90": 4,
+          "min": 4,
+          "max": 4,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 12,
+          "mean": 12,
+          "median": 12,
+          "p90": 12,
+          "min": 12,
+          "max": 12,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 819,
+          "mean": 819,
+          "median": 819,
+          "p90": 819,
+          "min": 819,
+          "max": 819,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 1664,
+          "mean": 1664,
+          "median": 1664,
+          "p90": 1664,
+          "min": 1664,
+          "max": 1664,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 57593,
+          "mean": 57593,
+          "median": 57593,
+          "p90": 57593,
+          "min": 57593,
+          "max": 57593,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 20855,
+          "mean": 20855,
+          "median": 20855,
+          "p90": 20855,
+          "min": 20855,
+          "max": 20855,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 38545,
+          "mean": 38545,
+          "median": 38545,
+          "p90": 38545,
+          "min": 38545,
+          "max": 38545,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "heavy | vercel/openai/gpt-6.1-terra-fast#xhigh",
+      "n": 2,
+      "costedN": 2,
+      "metrics": {
+        "cost_usd": {
+          "n": 2,
+          "total": 0.1065148,
+          "mean": 0.0532574,
+          "median": 0.051060100000000004,
+          "p90": 0.0554547,
+          "min": 0.051060100000000004,
+          "max": 0.0554547,
+          "meanCI95": [
+            0.051060100000000004,
+            0.0554547
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 2,
+          "total": 4,
+          "mean": 2,
+          "median": 2,
+          "p90": 2,
+          "min": 2,
+          "max": 2,
+          "meanCI95": [
+            2,
+            2
+          ]
+        },
+        "tokens_input": {
+          "n": 2,
+          "total": 12,
+          "mean": 6,
+          "median": 6,
+          "p90": 6,
+          "min": 6,
+          "max": 6,
+          "meanCI95": [
+            6,
+            6
+          ]
+        },
+        "tokens_output": {
+          "n": 2,
+          "total": 559,
+          "mean": 279.5,
+          "median": 213,
+          "p90": 346,
+          "min": 213,
+          "max": 346,
+          "meanCI95": [
+            213,
+            346
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 2,
+          "total": 780,
+          "mean": 390,
+          "median": 272,
+          "p90": 508,
+          "min": 272,
+          "max": 508,
+          "meanCI95": [
+            272,
+            508
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 2,
+          "total": 35008,
+          "mean": 17504,
+          "median": 17456,
+          "p90": 17552,
+          "min": 17456,
+          "max": 17552,
+          "meanCI95": [
+            17456,
+            17552
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 2,
+          "total": 35840,
+          "mean": 17920,
+          "median": 17781,
+          "p90": 18059,
+          "min": 17781,
+          "max": 18059,
+          "meanCI95": [
+            17781,
+            18059
+          ]
+        },
+        "duration_ms": {
+          "n": 2,
+          "total": 21975,
+          "mean": 10987.5,
+          "median": 6473,
+          "p90": 15502,
+          "min": 6473,
+          "max": 15502,
+          "meanCI95": [
+            6473,
+            15502
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "medium | deepseek/deepseek-flash#default",
+      "n": 8,
+      "costedN": 8,
+      "metrics": {
+        "cost_usd": {
+          "n": 8,
+          "total": 0.020644548,
+          "mean": 0.0025805685,
+          "median": 0.0020165039999999997,
+          "p90": 0.007174211999999999,
+          "min": 0.000576918,
+          "max": 0.007174211999999999,
+          "meanCI95": [
+            0.001354791,
+            0.004153319249999999
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 8,
+          "total": 40,
+          "mean": 5,
+          "median": 5,
+          "p90": 8,
+          "min": 3,
+          "max": 8,
+          "meanCI95": [
+            4.125,
+            6
+          ]
+        },
+        "tokens_input": {
+          "n": 8,
+          "total": 82534,
+          "mean": 10316.75,
+          "median": 10596,
+          "p90": 22506,
+          "min": 913,
+          "max": 22506,
+          "meanCI95": [
+            5103.625,
+            15748.25
+          ]
+        },
+        "tokens_output": {
+          "n": 8,
+          "total": 6284,
+          "mean": 785.5,
+          "median": 578,
+          "p90": 2417,
+          "min": 356,
+          "max": 2417,
+          "meanCI95": [
+            480.5,
+            1274.25
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 8,
+          "total": 4420,
+          "mean": 552.5,
+          "median": 117,
+          "p90": 2990,
+          "min": 10,
+          "max": 2990,
+          "meanCI95": [
+            94.75,
+            1289.75
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 8,
+          "total": 614016,
+          "mean": 76752,
+          "median": 60544,
+          "p90": 184704,
+          "min": 35456,
+          "max": 184704,
+          "meanCI95": [
+            53744,
+            110464
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 8,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 8,
+          "total": 130770,
+          "mean": 16346.25,
+          "median": 8740,
+          "p90": 65075,
+          "min": 6093,
+          "max": 65075,
+          "meanCI95": [
+            8072.125,
+            30699.875
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "medium | deepseek/deepseek-flash#high",
+      "n": 27,
+      "costedN": 26,
+      "metrics": {
+        "cost_usd": {
+          "n": 27,
+          "total": 0.48177951600000013,
+          "mean": 0.01784368577777778,
+          "median": 0.015539669999999998,
+          "p90": 0.033709938,
+          "min": 0,
+          "max": 0.050480364,
+          "meanCI95": [
+            0.013611077333333332,
+            0.022285906444444437
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 27,
+          "total": 358,
+          "mean": 13.25925925925926,
+          "median": 10,
+          "p90": 28,
+          "min": 1,
+          "max": 49,
+          "meanCI95": [
+            9.814814814814815,
+            17.51851851851852
+          ]
+        },
+        "tokens_input": {
+          "n": 26,
+          "total": 965446,
+          "mean": 37132.53846153846,
+          "median": 26856,
+          "p90": 69188,
+          "min": 7136,
+          "max": 95607,
+          "meanCI95": [
+            28631.80769230769,
+            46612.230769230766
+          ]
+        },
+        "tokens_output": {
+          "n": 26,
+          "total": 184980,
+          "mean": 7114.615384615385,
+          "median": 5941,
+          "p90": 15819,
+          "min": 1873,
+          "max": 19063,
+          "meanCI95": [
+            5300.884615384615,
+            8965.653846153846
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 26,
+          "total": 288961,
+          "mean": 11113.884615384615,
+          "median": 7329,
+          "p90": 24986,
+          "min": 510,
+          "max": 66491,
+          "meanCI95": [
+            7218.615384615385,
+            16811.80769230769
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 26,
+          "total": 17532672,
+          "mean": 674333.5384615385,
+          "median": 406656,
+          "p90": 1810432,
+          "min": 105984,
+          "max": 2409856,
+          "meanCI95": [
+            446921.8461538461,
+            931495.3846153846
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 26,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 26,
+          "total": 2781960,
+          "mean": 106998.46153846153,
+          "median": 81676,
+          "p90": 191660,
+          "min": 21176,
+          "max": 420624,
+          "meanCI95": [
+            81193.96153846153,
+            141230.8076923077
+          ]
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "medium | deepseek/deepseek-flash#max",
+      "n": 1,
+      "costedN": 1,
+      "metrics": {
+        "cost_usd": {
+          "n": 1,
+          "total": 0.003612072,
+          "mean": 0.003612072,
+          "median": 0.003612072,
+          "p90": 0.003612072,
+          "min": 0.003612072,
+          "max": 0.003612072,
+          "meanCI95": null
+        },
+        "steps_per_dispatch": {
+          "n": 1,
+          "total": 9,
+          "mean": 9,
+          "median": 9,
+          "p90": 9,
+          "min": 9,
+          "max": 9,
+          "meanCI95": null
+        },
+        "tokens_input": {
+          "n": 1,
+          "total": 14908,
+          "mean": 14908,
+          "median": 14908,
+          "p90": 14908,
+          "min": 14908,
+          "max": 14908,
+          "meanCI95": null
+        },
+        "tokens_output": {
+          "n": 1,
+          "total": 1148,
+          "mean": 1148,
+          "median": 1148,
+          "p90": 1148,
+          "min": 1148,
+          "max": 1148,
+          "meanCI95": null
+        },
+        "tokens_reasoning": {
+          "n": 1,
+          "total": 660,
+          "mean": 660,
+          "median": 660,
+          "p90": 660,
+          "min": 660,
+          "max": 660,
+          "meanCI95": null
+        },
+        "tokens_cache_read": {
+          "n": 1,
+          "total": 97024,
+          "mean": 97024,
+          "median": 97024,
+          "p90": 97024,
+          "min": 97024,
+          "max": 97024,
+          "meanCI95": null
+        },
+        "tokens_cache_write": {
+          "n": 1,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": null
+        },
+        "duration_ms": {
+          "n": 1,
+          "total": 11507,
+          "mean": 11507,
+          "median": 11507,
+          "p90": 11507,
+          "min": 11507,
+          "max": 11507,
+          "meanCI95": null
+        }
+      }
+    },
+    {
+      "groupBy": "tierIdentity",
+      "group": "medium | vercel/deepseek/deepseek-v4.1-flash-1017#max",
+      "n": 2,
+      "costedN": 2,
+      "metrics": {
+        "cost_usd": {
+          "n": 2,
+          "total": 0.043460467999999995,
+          "mean": 0.021730233999999998,
+          "median": 0.007382003999999999,
+          "p90": 0.036078464,
+          "min": 0.007382003999999999,
+          "max": 0.036078464,
+          "meanCI95": [
+            0.007382003999999999,
+            0.036078464
+          ]
+        },
+        "steps_per_dispatch": {
+          "n": 2,
+          "total": 12,
+          "mean": 6,
+          "median": 5,
+          "p90": 7,
+          "min": 5,
+          "max": 7,
+          "meanCI95": [
+            5,
+            7
+          ]
+        },
+        "tokens_input": {
+          "n": 2,
+          "total": 76227,
+          "mean": 38113.5,
+          "median": 20999,
+          "p90": 55228,
+          "min": 20999,
+          "max": 55228,
+          "meanCI95": [
+            20999,
+            55228
+          ]
+        },
+        "tokens_output": {
+          "n": 2,
+          "total": 15213,
+          "mean": 7606.5,
+          "median": 436,
+          "p90": 14777,
+          "min": 436,
+          "max": 14777,
+          "meanCI95": [
+            436,
+            14777
+          ]
+        },
+        "tokens_reasoning": {
+          "n": 2,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "tokens_cache_read": {
+          "n": 2,
+          "total": 333824,
+          "mean": 166912,
+          "median": 79872,
+          "p90": 253952,
+          "min": 79872,
+          "max": 253952,
+          "meanCI95": [
+            79872,
+            253952
+          ]
+        },
+        "tokens_cache_write": {
+          "n": 2,
+          "total": 0,
+          "mean": 0,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0,
+          "meanCI95": [
+            0,
+            0
+          ]
+        },
+        "duration_ms": {
+          "n": 2,
+          "total": 107570,
+          "mean": 53785,
+          "median": 8019,
+          "p90": 99551,
+          "min": 8019,
+          "max": 99551,
+          "meanCI95": [
+            8019,
+            99551
+          ]
+        }
+      }
+    }
+  ]
+}
