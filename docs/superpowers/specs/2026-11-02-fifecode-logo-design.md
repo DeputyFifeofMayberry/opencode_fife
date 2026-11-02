@@ -31,7 +31,7 @@ the `i`. It carries none of the approved proportions or the monument.
 - Not matching the reference pixel-for-pixel: a terminal cannot express its
   anti-aliased strokes. Fidelity is proportional and structural.
 - Failing if the mark becomes a heavy silhouette that competes with the wordmark,
-  or if it needs more than ~9 rows.
+  or if the full tier needs more than 12 rows.
 
 ## Constraints found in the codebase
 
@@ -79,7 +79,7 @@ Terminal canvas: **87 cells wide × 24 pixels tall = 12 text rows.**
 |---|---|---|---|
 | Pediment | 9 | 4.5 | stepped roofline, 7×5 star centred, cornice bar with end tabs |
 | Gap | 1 | 0.5 | breathing space between cornice and letters |
-| Wordmark | 12 | 6 | `fifecode`, x-height 10 px, ascenders to the top, baseline at 21 |
+| Wordmark | 13 | 6.5 | `fifecode`, x-height 10 px (rows 12-21), ascenders and dot from row 10, baseline at 21, letter pixels continue through row 22 |
 | Foundations | 1 | 0.5 | horizontal lines under each column, stepping outward |
 
 Horizontal, left to right: foundation overhang 3 · fluted column 5 · gap 2 ·
@@ -123,7 +123,7 @@ Cell from two stacked pixels:
 | colour | colour | `▀` | top | bottom |
 
 Consecutive cells with the same glyph+fg+bg are grouped into one `<text>` element,
-so the densest row is 48 elements instead of 87. This drops the `tint()` shadow and the
+so every row stays under 55 elements instead of 87 cells. This drops the `tint()` shadow and the
 `_ ^ ~ ,` shorthand: both existed to fake depth, and the design forbids shadows.
 The mark, not the letters, is now solid, so no per-character shadow is needed.
 
@@ -174,9 +174,9 @@ Pure-function tests (no renderer):
 - only the allowed layer codes appear;
 - tier widths strictly ordered full > compact > minimal;
 - the wordmark band decodes to exactly eight letters, `fifecode`, all sharing
-  baseline row 16;
-- `logoCells` maps the four top/bottom combinations correctly and never emits the
-  `★` character;
+  baseline row 21;
+- the cell converter behind `logoRuns` maps the four top/bottom combinations
+  correctly and never emits the `★` character;
 - run-length grouping keeps every row under 55 `<text>` elements;
 - the wordmark decodes to `f, i, f, e, c, o, d, e` — `c` open on the right, `o`
   closed, `d` carrying an ascender stem, `e` carrying a middle bar;
@@ -223,7 +223,7 @@ literal text `fifecode`; at height 10 nothing renders.
 
 ## Left to the builder
 
-Exact pixel placement of the roofline steps, column flutes, and star points; the
-final letter silhouettes inside the 5×7 x-height box; and the exact values of the
-declared tier widths once the art is drafted, as long as the tier contract above
-holds.
+Exact pixel placement of the roofline steps, column flutes, and star points, and
+the final letter silhouettes inside the 8 × 10 x-height box, were settled in the
+drafted art. The tier thresholds are now fixed by it at 91 / 75 / 10 columns
+(87 / 71 / 8 cells plus padding).

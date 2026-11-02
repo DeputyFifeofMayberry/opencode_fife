@@ -23,8 +23,8 @@
 
 ## Review Focus
 
-- **A 70-column terminal** — the common case. The full mark is 65 cells, so it must not wrap and must not be chosen when the content area is narrower.
-- **A 24-row terminal** — the 9-row mark must not push the prompt off the bottom. Tier height rule plus the manual check in Task 3.
+- **A 70-column terminal** — the common case. The full mark is 87 cells and needs 91 columns once the home screen's padding is counted, so at 70 columns the compact tier is chosen and nothing may wrap.
+- **A 24-row terminal** — the 12-row full mark must not push the prompt off the bottom. Tier height rule plus the manual check in Task 3.
 - **Monochrome or `faint`-equals-`muted` themes** — the mark must still read from structure alone.
 - **A mistyped art character** — must fail a test rather than render a stray glyph.
 - **The frozen plain-text logo** — `util/presentation.ts` output must stay byte-identical.
@@ -42,11 +42,12 @@
 - Produces, all from `packages/tui/src/logo.ts`:
   - `type LogoLayer = "F" | "C" | "S" | "o" | "i"`
   - `type LogoTier = "full" | "compact" | "minimal"`
-  - `const logoArt: { full: string[]; compact: string[] }`
-  - `const logoWidth: { full: 65; compact: 51; minimal: 8 }`
-  - `const logoHeight: { full: 9; compact: 9; minimal: 1 }`
-  - `const logoSize: { full: 69; compact: 55 }` — minimum terminal width per tier, art width + the home screen's 4 cells of padding
+  - `const logoArt: Record<"full" | "compact", string[]>`
+  - `const logoWidth: { full: 87; compact: 71; minimal: 8 }`
+  - `const logoHeight: { full: 12; compact: 7; minimal: 1 }`
+  - `const logoSize: { full: 91; compact: 75; minimal: 10 }` — minimum terminal width per tier, art width + the home screen's padding (4 cells for `full` and `compact`, 2 for `minimal`)
   - `function logoMode(width: number, height: number): LogoTier | null`
+  - `function logoColor(layer: LogoLayer): "base" | "muted" | "faint"`
   - `type LogoRun = { glyph: " " | "▀" | "▄"; top: LogoLayer | null; bottom: LogoLayer | null; text: string }`
   - `function logoRuns(rows: string[]): LogoRun[][]`
 
@@ -56,7 +57,7 @@ Create `packages/tui/test/component/logo-art.test.ts`:
 
 ```ts
 import { describe, expect, test } from "bun:test"
-import { go, logo, logoArt, logoHeight, logoMode, logoRuns, logoSize, logoWidth } from "../../src/logo"
+import { go, logo, logoArt, logoColor, logoHeight, logoMode, logoRuns, logoSize, logoWidth } from "../../src/logo"
 
 const allowed = new Set([".", "F", "C", "S", "o", "i"])
 
@@ -75,51 +76,98 @@ describe("logo art", () => {
   })
 
   test("fife and code both occupy every x-height row", () => {
-    for (const row of logoArt.full.slice(10, 17)) {
-      expect(row.slice(10, 31)).toContain("F")
-      expect(row.slice(32, 55)).toContain("C")
+    for (const row of logoArt.full.slice(12, 22)) {
+      expect(row.slice(10, 41)).toContain("F")
+      expect(row.slice(42, 77)).toContain("C")
     }
   })
 
-  test("all eight letters sit on row 16", () => {
-    const baseline = logoArt.full[16]
-    for (const column of [12, 17, 22, 27]) expect(baseline[column]).toBe("F")
-    for (const column of [33, 39, 45, 51]) expect(baseline[column]).toBe("C")
+  test("all eight letters sit on row 21", () => {
+    const baseline = logoArt.full[21]
+    for (const column of [12, 20, 26, 35]) expect(baseline[column]).toBe("F")
+    for (const column of [44, 53, 62, 71]) expect(baseline[column]).toBe("C")
   })
 
   test("the star is drawn from pixels, not characters", () => {
-    for (const rows of [logoArt.full, logoArt.compact]) {
-      expect(rows.join("")).not.toContain("★")
-      expect(rows.join("")).toContain("S")
-    }
+    for (const rows of [logoArt.full, logoArt.compact]) expect(rows.join("")).not.toContain("★")
+    expect(logoArt.full.join("")).toContain("S")
+    expect(logoArt.compact.join("")).not.toContain("S")
   })
 
   test("the pre-existing exports are untouched", () => {
-    expect(logo.left.length).toBe(4)
-    expect(logo.right.length).toBe(4)
+    expect(logo.left).toEqual([
+      " ▄▄   ★    ▄▄      ",
+      "█     █   █    █▀▀█",
+      "█^^^  █   █^^^ █^^^",
+      "█     █   █    ▀▀▀▀",
+    ])
+    expect(logo.right).toEqual([
+      "             ▄     ",
+      "█▀▀▀ █▀▀█ █▀▀█ █▀▀█",
+      "█___ █__█ █__█ █^^^",
+      "▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀",
+    ])
     expect(go.left.length).toBe(4)
+  })
+
+  test("the wordmark decodes to f, i, f, e, c, o, d, e", () => {
+    const art = logoArt.full
+    // f and d rise above the x-height; i keeps its dot with a gap beneath.
+    expect(art[10].slice(13, 18)).toBe("FFFFF")
+    expect(art[10][20]).toBe("F")
+    expect(art[12][20]).toBe(".")
+    expect(art[10].slice(27, 32)).toBe("FFFFF")
+    expect(art[10][66]).toBe("C")
+    expect(art[11][66]).toBe("C")
+    // c is open on the right, o is closed — the only difference between them.
+    expect(art[16][47]).toBe(".")
+    expect(art[16][57]).toBe("C")
+    // e carries a full-width crossbar; d leaves its bowl open.
+    expect(art[16].slice(33, 41)).toBe("FFFFFFFF")
+    expect(art[16].slice(60, 68)).toBe("CC....CC")
   })
 })
 
 describe("logoMode", () => {
   test("picks the tier from measured cells", () => {
-    expect(logoMode(80, 24)).toBe("full")
-    expect(logoMode(logoSize.full, 16)).toBe("full")
+    expect(logoMode(100, 24)).toBe("full")
+    expect(logoMode(logoSize.full, 20)).toBe("full")
     expect(logoMode(logoSize.full - 1, 24)).toBe("compact")
     expect(logoMode(logoSize.compact, 16)).toBe("compact")
     expect(logoMode(logoSize.compact - 1, 24)).toBe("minimal")
     expect(logoMode(400, 15)).toBe("minimal")
     expect(logoMode(400, 11)).toBeNull()
   })
+
+  test("thresholds follow the artwork width plus the home screen's padding", () => {
+    expect(logoSize.full - logoWidth.full).toBe(4)
+    expect(logoSize.compact - logoWidth.compact).toBe(4)
+    expect(logoSize.minimal - logoWidth.minimal).toBe(2)
+  })
+
+  test("hides the mark when the window cannot hold even the plain wordmark", () => {
+    expect(logoMode(logoSize.minimal, 24)).toBe("minimal")
+    expect(logoMode(logoSize.minimal - 1, 24)).toBeNull()
+  })
+})
+
+describe("logoColor", () => {
+  test("maps each layer to its semantic theme slot", () => {
+    expect(logoColor("F")).toBe("muted")
+    expect(logoColor("C")).toBe("base")
+    expect(logoColor("S")).toBe("base")
+    expect(logoColor("o")).toBe("faint")
+    expect(logoColor("i")).toBe("muted")
+  })
 })
 
 describe("logoRuns", () => {
-  test("emits half blocks and never more than one run per 4 cells", () => {
+  test("groups cells into far fewer runs than the grid is wide", () => {
     const runs = logoRuns(logoArt.full)
     expect(runs.length).toBe(logoHeight.full)
     for (const row of runs) {
       expect(row.map((run) => run.text).join("").length).toBe(logoWidth.full)
-      expect(row.length).toBeLessThan(25)
+      expect(row.length).toBeLessThan(55)
       for (const run of row) expect([" ", "▀", "▄"]).toContain(run.glyph)
     }
   })
@@ -133,10 +181,9 @@ describe("logoRuns", () => {
   })
 
   test("renders the top and bottom pixel as foreground and background", () => {
-    const runs = logoRuns(["F..", "...", ".C.", "..."])
+    const runs = logoRuns(["F..", ".C.", "...", "..."])
     expect(runs[0][0]).toMatchObject({ glyph: "▀", top: "F", bottom: null })
-    expect(runs[0][1]).toMatchObject({ glyph: " ", top: null, bottom: null })
-    expect(runs[1][1]).toMatchObject({ glyph: "▄", top: null, bottom: "C" })
+    expect(runs[0][1]).toMatchObject({ glyph: "▄", top: null, bottom: "C" })
   })
 })
 ```
@@ -144,7 +191,7 @@ describe("logoRuns", () => {
 - [ ] **Step 2: Run it and confirm it fails**
 
 Run from `packages/tui`: `bun test test/component/logo-art.test.ts`
-Expected: FAIL — `logoArt` / `logoMode` / `logoRuns` are not exported.
+Expected: FAIL — `logoArt` / `logoColor` / `logoMode` / `logoRuns` are not exported.
 
 - [ ] **Step 3: Add the art and helpers to `packages/tui/src/logo.ts`**
 
@@ -154,67 +201,90 @@ Append below the existing `logo` and `go` exports, leaving both untouched:
 export type LogoLayer = "F" | "C" | "S" | "o" | "i"
 export type LogoTier = "full" | "compact" | "minimal"
 
+export function logoColor(layer: LogoLayer): "base" | "muted" | "faint" {
+  if (layer === "C" || layer === "S") return "base"
+  if (layer === "o") return "faint"
+  return "muted"
+}
+
+// Two pixel rows per terminal row, one pixel per cell. `.` empty, `F`/`C` the two
+// wordmark tones, `S` the star, `o`/`i` the outer and inner monument tones.
+// Glyphs are 8 cells wide with 2-pixel strokes over a 10-pixel x-height.
 export const logoArt: Record<"full" | "compact", string[]> = {
   // (paste the validated grids, below)
 }
 ```
 
-Use exactly these rows. `full` (65 × 18):
+Use exactly these rows, as shipped. `full` (87 cells × 24 pixel rows):
 
 ```
-"................................o................................",
-"...........................ooooo.ooooo...........................",
-"......................ooooo.....S.....ooooo......................",
-".................ooooo.........SSS.........ooooo.................",
-"............ooooo.............SSSSS.............ooooo............",
-".......ooooo...................S.S...................ooooo.......",
-"..ooooo.......................S...S.......................ooooo..",
-"ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo",
-"...iiii.....FFF..F....FFF.......................C.........iiii...",
-"...i..i.....F.........F.........................C.........i..i...",
-"...i..i...FFFFF..F..FFFFF..FFF...CCC...CCC...CCCC..CCC....i..i...",
-"...i..i.....F....F....F...F.....C...C.C...C.C...C.C.......i..i...",
-"...i..i.....F....F....F...F.....C.....C...C.C...C.C.......i..i...",
-"...i..i.....F....F....F...FFFF..C.....C...C.C...C.CCCC....i..i...",
-"...i..i.....F....F....F...F.....C.....C...C.C...C.C.......i..i...",
-"...iiii.....F....F....F...F.....C...C.C...C.C...C.C.......iiii...",
-"...iiii.....F....F....F....FFF...CCC...CCC...CCCC..CCC....iiii...",
-".oooooooooo...........................................oooooooooo.",
+"...........................................o...........................................",
+"......................................ooooo.ooooo......................................",
+".................................ooooo...........ooooo.................................",
+"............................ooooo..........S..........ooooo............................",
+".......................ooooo..............SSS..............ooooo.......................",
+"..................ooooo.................SSSSSSS.................ooooo..................",
+".............ooooo.......................SSSSS.......................ooooo.............",
+"........ooooo.............................S.S.............................ooooo........",
+"...ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo...",
+".......................................................................................",
+"...iiiii.....FFFFF..FF.....FFFFF..................................CC...........iiiii...",
+"...i.i.i....FF......FF....FF......................................CC...........i.i.i...",
+"...i.i.i....FF............FF.......FFFF.....CCCC.....CCCC.....CCCCCC...CCCC....i.i.i...",
+"...i.i.i....FF......FF....FF......FF..FF...CC..CC...CC..CC...CC...CC..CC..CC...i.i.i...",
+"...i.i.i..FFFFFFFF..FF..FFFFFFFF.FF....FF.CC....CC.CC....CC.CC....CC.CC....CC..i.i.i...",
+"...i.i.i....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........i.i.i...",
+"...i.i.i....FF......FF....FF.....FFFFFFFF.CC.......CC....CC.CC....CC.CCCCCCCC..i.i.i...",
+"...i.i.i....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........i.i.i...",
+"...i.i.i....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........i.i.i...",
+"...i.i.i....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........i.i.i...",
+"...i.i.i....FF......FF....FF......FF..FF...CC..CC...CC..CC...CC...CC..CC..CC...i.i.i...",
+"...iiiii....FF......FF....FF.......FFFF.....CCCC.....CCCC.....CCCCCC...CCCC....iiiii...",
+".......................................................................................",
+"ooooooooooo.................................................................ooooooooooo",
 ```
 
-`compact` (51 × 18):
+`compact` (71 cells × 14 pixel rows):
 
 ```
-".........................o.........................",
-".....................oooo.oooo.....................",
-".................oooo....S....oooo.................",
-".............oooo.......SSS.......oooo.............",
-".........oooo..........SSSSS..........oooo.........",
-".....oooo...............S.S...............oooo.....",
-".oooo..................S...S..................oooo.",
-"ooooooooooooooooooooooooooooooooooooooooooooooooooo",
-".....FFF..F....FFF.......................C.........",
-".....F.........F.........................C.........",
-"...FFFFF..F..FFFFF..FFF...CCC...CCC...CCCC..CCC....",
-".....F....F....F...F.....C...C.C...C.C...C.C.......",
-".....F....F....F...F.....C.....C...C.C...C.C.......",
-".....F....F....F...FFFF..C.....C...C.C...C.CCCC....",
-".....F....F....F...F.....C.....C...C.C...C.C.......",
-".....F....F....F...F.....C...C.C...C.C...C.C.......",
-".....F....F....F....FFF...CCC...CCC...CCCC..CCC....",
-"...................................................",
+"ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo",
+".......................................................................",
+".....FFFFF..FF.....FFFFF..................................CC...........",
+"....FF......FF....FF......................................CC...........",
+"....FF............FF.......FFFF.....CCCC.....CCCC.....CCCCCC...CCCC....",
+"....FF......FF....FF......FF..FF...CC..CC...CC..CC...CC...CC..CC..CC...",
+"..FFFFFFFF..FF..FFFFFFFF.FF....FF.CC....CC.CC....CC.CC....CC.CC....CC..",
+"....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........",
+"....FF......FF....FF.....FFFFFFFF.CC.......CC....CC.CC....CC.CCCCCCCC..",
+"....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........",
+"....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........",
+"....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........",
+"....FF......FF....FF......FF..FF...CC..CC...CC..CC...CC...CC..CC..CC...",
+"....FF......FF....FF.......FFFF.....CCCC.....CCCC.....CCCCCC...CCCC....",
 ```
 
 Then:
 
 ```ts
-export const logoWidth = { full: 65, compact: 51, minimal: 8 } as const
-export const logoHeight = { full: 9, compact: 9, minimal: 1 } as const
-export const logoSize = { full: 69, compact: 55 } as const
+export const logoWidth = { full: 87, compact: 71, minimal: 8 } as const
+export const logoHeight = { full: 12, compact: 7, minimal: 1 } as const
 
+// The home screen pads 2 cells each side for the artwork tiers, and 1 each side
+// below 44 columns, where the plain wordmark is the only thing that fits.
+const ART_PADDING = 4
+const MINIMAL_PADDING = 2
+
+export const logoSize = {
+  full: logoWidth.full + ART_PADDING,
+  compact: logoWidth.compact + ART_PADDING,
+  minimal: logoWidth.minimal + MINIMAL_PADDING,
+} as const
+
+// The full stack is 3 spacer + 12 logo + 1 + prompt (4) + footer (1); 20 rows lets
+// the spacer give one row back. Compact needs 16 for its 7 rows.
 export function logoMode(width: number, height: number): LogoTier | null {
-  if (height < 12) return null
-  if (height >= 16 && width >= logoSize.full) return "full"
+  if (height < 12 || width < logoSize.minimal) return null
+  if (height >= 20 && width >= logoSize.full) return "full"
   if (height >= 16 && width >= logoSize.compact) return "compact"
   return "minimal"
 }
@@ -260,7 +330,7 @@ Width comes from `top.length`, so the same function serves both grids.
 - [ ] **Step 4: Run the test and make it pass**
 
 Run from `packages/tui`: `bun test test/component/logo-art.test.ts`
-Expected: PASS, 10 tests.
+Expected: PASS, 14 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -286,9 +356,9 @@ git commit -m "feat(tui): add fifecode monument logo art"
 Create `packages/tui/test/component/logo.test.tsx`, mirroring the mount pattern in `packages/tui/test/component/go-upsell-art.test.tsx` (read it first; it shows the `@jsxImportSource` pragma and the `testRender` call to copy). Assert:
 
 ```tsx
-// at width 80 / height 24 the mark renders 9 text rows
-// at width 60 / height 24 it renders 9 rows and no column pixels
-// at width 40 / height 24 it renders the literal string "fifecode"
+// at width 100 / height 24 the mark renders 12 text rows of 87 cells
+// at width 80 / height 24 it renders 7 rows of 71 cells (compact: no pediment, no columns)
+// at width 60 / height 24 it renders the literal string "fifecode"
 // at width 80 / height 10 it renders nothing
 ```
 
@@ -301,10 +371,10 @@ Expected: FAIL — the component still renders the old art.
 
 Structure:
 - `const tier = () => logoMode(dimensions().width, dimensions().height)`
-- `const colors = () => ({ F: theme.text.muted, C: theme.text.base, S: theme.text.base, o: theme.text.faint, i: theme.text.muted })`
+- `const color = (layer: LogoLayer) => theme.text[logoColor(layer)]`, mapping `F` → `text.muted`, `C` and `S` → `text.base`, `o` → `text.faint`, `i` → `text.muted`
 - When `tier()` is `null`, return nothing.
 - When `tier()` is `"minimal"`, return one `<box flexDirection="row">` with `<text fg={theme.text.muted}>fife</text>` and `<text fg={theme.text.base}>code</text>`.
-- Otherwise map `logoRuns(logoArt[tier()])` to rows of `<box flexDirection="row">`, each run a `<text>` with `fg` from `run.top`, `bg` from `run.bottom`, `selectable={false}`.
+- Otherwise map `logoRuns(logoArt[tier()])` to rows of `<box flexDirection="row">`, each run a `<text>` with `fg` from `run.top` for `▀` and `run.bottom` for `▄`, `bg` from `run.bottom` only when the glyph is `▀`, and `selectable={false}`.
 
 Delete the `tint` import, the `renderLine` shadow logic, the `_ ^ ~ ,` shorthand handling, and the `go` import if it becomes unused. The file keeps exporting `Logo` as a named export, with the same (empty) props signature.
 
@@ -347,7 +417,7 @@ Launch the home screen from the development worktree (`bun run dev:live`, or the
 
 - [ ] **Step 3: Check the failure modes from Review Focus**
 
-- confirm the full mark does not wrap at 80 columns and the prompt stays visible at 24 rows;
+- confirm the compact mark does not wrap at 80 columns and the prompt stays visible at 24 rows, and that the full mark appears at 100 columns;
 - re-run with a monochrome or 16-colour `TERM` and confirm the mark still reads;
 - confirm the minimal tier shows `fifecode` at 40 columns.
 
