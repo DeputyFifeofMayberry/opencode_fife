@@ -1,86 +1,53 @@
-import { RGBA, TextAttributes } from "@opentui/core"
-import { For, type JSX } from "solid-js"
+import { For, Show } from "solid-js"
 import { useTerminalDimensions } from "@opentui/solid"
 import { useTheme } from "../context/theme"
-import { tint } from "../theme/color"
-import { go, logo } from "../logo"
+import { logoArt, logoMode, logoRuns, type LogoLayer, type LogoRun } from "../logo"
 
 export function Logo() {
   const theme = useTheme()
   const dimensions = useTerminalDimensions()
 
-  const renderLine = (line: string, fg: RGBA, bold: boolean): JSX.Element[] => {
-    const shadow = tint(theme.background.base, fg, 0.25)
-    const attrs = bold ? TextAttributes.BOLD : undefined
-    return Array.from(line).map((char) => {
-      if (char === "_") {
-        return (
-          <text fg={fg} bg={shadow} attributes={attrs} selectable={false}>
-            {" "}
-          </text>
-        )
-      }
-      if (char === "^") {
-        return (
-          <text fg={fg} bg={shadow} attributes={attrs} selectable={false}>
-            ▀
-          </text>
-        )
-      }
-      if (char === "~") {
-        return (
-          <text fg={shadow} attributes={attrs} selectable={false}>
-            ▀
-          </text>
-        )
-      }
-      if (char === ",") {
-        return (
-          <text fg={shadow} attributes={attrs} selectable={false}>
-            ▄
-          </text>
-        )
-      }
-      if (char === "★") {
-        return (
-          <text fg={theme.text.base} attributes={TextAttributes.BOLD} selectable={false}>
-            {char}
-          </text>
-        )
-      }
-      return (
-        <text fg={fg} attributes={attrs} selectable={false}>
-          {char}
-        </text>
-      )
-    })
+  const tier = () => logoMode(dimensions().width, dimensions().height)
+  const art = () => {
+    const mode = tier()
+    return mode === "full" || mode === "compact" ? logoArt[mode] : undefined
   }
+  const color = (layer: LogoLayer) =>
+    layer === "F" || layer === "i" ? theme.text.muted : layer === "o" ? theme.text.faint : theme.text.base
+  const foreground = (run: LogoRun) => (run.glyph === "▄" ? color(run.bottom!) : run.glyph === "▀" ? color(run.top!) : undefined)
+  const background = (run: LogoRun) => (run.glyph === "▀" && run.bottom ? color(run.bottom) : undefined)
 
   return (
-    <box>
-      {dimensions().height < 12 ? null : dimensions().width < 22 ? (
-        <For each={go.right.slice(1)}>
-          {(line) => <box flexDirection="row">{renderLine(line, theme.text.base, true)}</box>}
-        </For>
-      ) : dimensions().width < 44 ? (
-        <>
-          <For each={logo.left}>
-            {(line) => <box flexDirection="row">{renderLine(line, theme.text.muted, false)}</box>}
-          </For>
-          <For each={logo.right}>
-            {(line) => <box flexDirection="row">{renderLine(line, theme.text.base, true)}</box>}
-          </For>
-        </>
-      ) : (
-        <For each={logo.left}>
-          {(line, index) => (
-            <box flexDirection="row" gap={1}>
-              <box flexDirection="row">{renderLine(line, theme.text.muted, false)}</box>
-              <box flexDirection="row">{renderLine(logo.right[index()], theme.text.base, true)}</box>
-            </box>
-          )}
-        </For>
-      )}
-    </box>
+    <>
+      <Show when={tier() === "minimal"}>
+        <box flexDirection="row">
+          <text fg={theme.text.muted} selectable={false}>
+            fife
+          </text>
+          <text fg={theme.text.base} selectable={false}>
+            code
+          </text>
+        </box>
+      </Show>
+      <Show when={art()}>
+        {(rows) => (
+          <box flexDirection="column">
+            <For each={logoRuns(rows())}>
+              {(row) => (
+                <box flexDirection="row">
+                  <For each={row}>
+                    {(run) => (
+                      <text fg={foreground(run)} bg={background(run)} selectable={false}>
+                        {run.text}
+                      </text>
+                    )}
+                  </For>
+                </box>
+              )}
+            </For>
+          </box>
+        )}
+      </Show>
+    </>
   )
 }
