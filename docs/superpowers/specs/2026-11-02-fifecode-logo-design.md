@@ -77,7 +77,7 @@ Terminal canvas: **65 cells wide × 18 pixels tall = 9 text rows.**
 
 | Band | Pixels | Rows | Contents |
 |---|---|---|---|
-| Pediment | 8 | 4 | nested stepped rooflines, 6×5 star centred, cornice bar with end tabs |
+| Pediment | 8 | 4 | stepped roofline, 7×5 star centred, cornice bar with end tabs |
 | Wordmark | 9 | 4.5 | `fifecode`, x-height 7 px, ascenders to row 8, baseline 16 |
 | Foundations | 1 | 0.5 | thin lines under each column, stepping outward |
 
@@ -190,9 +190,13 @@ the compact tier is 5 rows; at width 40 the minimal tier renders the literal tex
 ## Differences from the reference (deliberate)
 
 1. **Stroke anti-aliasing** is absent; edges are hard 1-px steps. Unavoidable.
-2. **Star is proportionally larger** (5×5 px in an 8-px pediment, ~63% of pediment
-   height, against 53% in the reference). Below 5 px a five-point star degrades into
-   a blob.
+2. **Star is proportionally larger, and the roof is a single stepped chevron.**
+   The star is 7×5 px against the reference's 53%-of-pediment height; a five-point
+   star below about 7 px wide collapses into a diamond or a blob (5×5 was tried and
+   read as noise). A 4:1 staircase cannot hold a parallel inner line — shifting one
+   row down and 4 px inward lands on the same staircase — and nested chevrons at
+   different slopes cross near the apex at this size. The cornice bar supplies the
+   depth the reference gets from its extra outlines.
 3. **Foundations are shorter** than the reference's long outward lines, to keep the
    full tier at 65 cells instead of ~79 so it fits an 80-column terminal with margin.
 4. **No gradient/shading on `fife`.** The reference shows a soft vertical shade; the

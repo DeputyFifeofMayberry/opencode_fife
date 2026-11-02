@@ -1,7 +1,7 @@
 import { For, Show } from "solid-js"
 import { useTerminalDimensions } from "@opentui/solid"
 import { useTheme } from "../context/theme"
-import { logoArt, logoMode, logoRuns, type LogoLayer, type LogoRun } from "../logo"
+import { logoArt, logoColor, logoMode, logoRuns, type LogoLayer, type LogoRun } from "../logo"
 
 export function Logo() {
   const theme = useTheme()
@@ -12,8 +12,7 @@ export function Logo() {
     const mode = tier()
     return mode === "full" || mode === "compact" ? logoArt[mode] : undefined
   }
-  const color = (layer: LogoLayer) =>
-    layer === "F" || layer === "i" ? theme.text.muted : layer === "o" ? theme.text.faint : theme.text.base
+  const color = (layer: LogoLayer) => theme.text[logoColor(layer)]
   const foreground = (run: LogoRun) => (run.glyph === "▄" ? color(run.bottom!) : run.glyph === "▀" ? color(run.top!) : undefined)
   const background = (run: LogoRun) => (run.glyph === "▀" && run.bottom ? color(run.bottom) : undefined)
 

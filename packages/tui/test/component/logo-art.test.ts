@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { go, logo, logoArt, logoHeight, logoMode, logoRuns, logoSize, logoWidth } from "../../src/logo"
+import { go, logo, logoArt, logoColor, logoHeight, logoMode, logoRuns, logoSize, logoWidth } from "../../src/logo"
 
 const allowed = new Set([".", "F", "C", "S", "o", "i"])
 
@@ -53,6 +53,16 @@ describe("logoMode", () => {
     expect(logoMode(logoSize.compact - 1, 24)).toBe("minimal")
     expect(logoMode(400, 15)).toBe("minimal")
     expect(logoMode(400, 11)).toBeNull()
+  })
+})
+
+describe("logoColor", () => {
+  test("maps each layer to its semantic theme slot", () => {
+    expect(logoColor("F")).toBe("muted")
+    expect(logoColor("C")).toBe("base")
+    expect(logoColor("S")).toBe("base")
+    expect(logoColor("o")).toBe("faint")
+    expect(logoColor("i")).toBe("muted")
   })
 })
 

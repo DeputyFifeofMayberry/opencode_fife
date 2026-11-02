@@ -12,6 +12,12 @@ export const go = {
 export type LogoLayer = "F" | "C" | "S" | "o" | "i"
 export type LogoTier = "full" | "compact" | "minimal"
 
+export function logoColor(layer: LogoLayer): "base" | "muted" | "faint" {
+  if (layer === "C" || layer === "S") return "base"
+  if (layer === "o") return "faint"
+  return "muted"
+}
+
 // Two pixel rows per terminal row, one pixel per cell. `.` empty, `F`/`C` the two
 // wordmark tones, `S` the star, `o`/`i` the outer and inner monument tones.
 export const logoArt: Record<"full" | "compact", string[]> = {
@@ -20,9 +26,9 @@ export const logoArt: Record<"full" | "compact", string[]> = {
     "...........................ooooo.ooooo...........................",
     "......................ooooo.....S.....ooooo......................",
     ".................ooooo.........SSS.........ooooo.................",
-    "............ooooo.............SSSSS.............ooooo............",
-    ".......ooooo...................S.S...................ooooo.......",
-    "..ooooo.......................S...S.......................ooooo..",
+    "............ooooo............SSSSSSS............ooooo............",
+    ".......ooooo..................SSSSS..................ooooo.......",
+    "..ooooo........................S.S........................ooooo..",
     "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo",
     "...iiii.....FFF..F....FFF.......................C.........iiii...",
     "...i..i.....F.........F.........................C.........i..i...",
@@ -40,9 +46,9 @@ export const logoArt: Record<"full" | "compact", string[]> = {
     ".....................oooo.oooo.....................",
     ".................oooo....S....oooo.................",
     ".............oooo.......SSS.......oooo.............",
-    ".........oooo..........SSSSS..........oooo.........",
-    ".....oooo...............S.S...............oooo.....",
-    ".oooo..................S...S..................oooo.",
+    ".........oooo.........SSSSSSS.........oooo.........",
+    ".....oooo..............SSSSS..............oooo.....",
+    ".oooo...................S.S...................oooo.",
     "ooooooooooooooooooooooooooooooooooooooooooooooooooo",
     ".....FFF..F....FFF.......................C.........",
     ".....F.........F.........................C.........",
