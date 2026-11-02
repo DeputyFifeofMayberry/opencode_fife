@@ -65,7 +65,7 @@ function command(session: Session, method: "Profiler.enable" | "Profiler.start")
   return Effect.tryPromise(
     () =>
       new Promise<void>((resolve, reject) => {
-        session.post(method, (error) => (error ? reject(error) : resolve()))
+        session.post(method, (error: unknown) => (error ? reject(error) : resolve()))
       }),
   )
 }
