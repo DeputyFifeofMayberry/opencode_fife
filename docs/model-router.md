@@ -10,6 +10,17 @@ This document describes the local `opencode-model-router` integration. It is an 
 
 Why no source change: the plugin registers three subagents (`fast`, `medium`, `heavy`) and a set of commands through its host `config` hook. The fork's existing `subagent` tool, effort policy, and permissions already provide everything those agents need. The integration is configuration plus the plugin package.
 
+### Fresh install
+
+1. `opencode plugin add opencode-model-router@2.9.1`
+2. Create `~/.config/opencode/opencode-model-router.overrides.jsonc` from the snippet in section 4, with your own tier models.
+3. Add the `effort_policy.agent_operations` block from section 4 to `~/.config/opencode/opencode.json`.
+4. `opencode service restart`
+5. Check `opencode debug agents` for `fast`, `medium`, and `heavy`, then `/tiers` for the preset and `/router` for the engine.
+6. Run the tier and effort checks in section 8 before trusting routing.
+
+Upstream: [marco-jardim/opencode-model-router](https://github.com/marco-jardim/opencode-model-router). Read its changelog before any upgrade.
+
 ## 2. Decision ownership
 
 Two systems own two different decisions:
@@ -30,6 +41,8 @@ The operation mapping used here:
 | `medium` | `implement` | `standard` | the provider's default effort |
 | `heavy` | `review` | `deep` | `max` |
 
+Because the fork has no explicit `high` level, `medium` runs at the provider's default effort. Confirm that default is acceptable for your provider. A guaranteed high variant would require giving the router a `variant`, which breaks the single-owner rule; do not do that without changing the design.
+
 `fast` is read-only by default. Never dispatch an edit to it.
 
 ## 3. Configuration paths and precedence
@@ -46,10 +59,14 @@ Scratch/project files (not used by this integration):
 
 Precedence, highest first:
 
-1. Runtime state file for the active preset and mode.
-2. Global override file.
-3. Bundled `tiers.json` from the package.
-4. Project override, where the key is allowed at project scope.
+1. Runtime state file for the active preset and mode (`/preset`, `/budget`).
+2. Project override (`.opencode/opencode-model-router.overrides.jsonc`), for keys allowed at project scope. It is deep-merged after the global file and wins for those keys.
+3. Global override file.
+4. Bundled `tiers.json` from the package.
+
+Some keys are global-only: a project file cannot set them, and the router drops them with a notice. Do not rely on a project file for `outcomes.path`, plugin agents, or role agents.
+
+A project override is untrusted input, because cloning a repository brings its `.opencode/` directory with it. Global-only keys are stripped, but routing keys a project layer is allowed to set still apply. Do not clone-and-run an untrusted repository with routing enabled; prefer `routing.engine: "static"` or `/bypass on` for that session.
 
 If a change in the overrides file appears to have no effect, run `/router` and read the active preset/mode; a stale state file wins. Delete `opencode-model-router.state.json` only when the state is wrong, then restart or run `/router-reload`.
 
@@ -113,7 +130,7 @@ Fork config, inside the existing `effort_policy` object:
 
 Keep `mode`, `base_level`, `verification_commands`, and `clean_passes` unchanged when adding the mapping.
 
-`costRatio` is an estimated token-spend multiplier for the engine's comparison, not a dollar price. A subscription or free route can report zero dollars while still consuming tokens and limits.
+`costRatio` is an estimated token-spend multiplier for the engine's comparison, not a dollar price. The values `3` and `6` reflect high and max effort on the same model; adjust them if your tiers use different models. A subscription or free route can report zero dollars while still consuming tokens and limits.
 
 ## 5. Daily commands
 
@@ -165,7 +182,7 @@ The report joins descendants through `parentID`. An unexported child silently un
 4. Re-run the tier and effort checks:
    - `opencode debug agents` shows the three tiers with the expected models.
    - `/tiers` shows the active preset and no variant fields.
-   - `/router` shows the expected engine and no unexpected config notice.
+   - `/router` shows the expected engine and preset. Do not rely on a `config notice` line: this build dropped an invalid `engine` value without printing one.
    - A `fast` dispatch refuses an edit.
    - A `medium`/`heavy` dispatch reports the expected base level and next rule.
 5. Re-run the twelve-task comparison before changing the engine from `shadow`.
@@ -190,10 +207,14 @@ Do not upgrade while a long session is running; the restart interrupts it.
    opencode service restart
    ```
 
-Removing the overrides file while the plugin remains installed falls back to the bundled presets; set `activePreset` to a bundled name or remove the plugin instead.
+Plugin removal alone leaves the overrides file and the `agent_operations` block in place. They are inert without the plugin, but a later reinstall adopts them. For a true full rollback, also delete `~/.config/opencode/opencode-model-router.overrides.jsonc`, remove the `agent_operations` block from `opencode.json`, and restart. Removing the overrides file while the plugin remains installed falls back to the bundled presets; set `activePreset` to a bundled name or remove the plugin instead.
 
 ## 10. Known interactions
 
+- **Global verification commands are repository-specific.** The global `~/.config/opencode/opencode.json` lists `bun typecheck`, `bun run typecheck`, `bun check`, and `bun test test/effort`. The last exists only under `packages/core`; a child in another project can run it from that project's root, fail, and trigger the fork's effort escalation. This repository masks the problem with a project override in `.opencode/opencode.jsonc` (`verification_commands: ["bun run check"]`). For any other project, set a project-local list of commands that exist there, or remove the global list. Verify each command from that project's root before enabling routing.
+- **Resume from the original parent.** The fork's subagent tool only resumes a child from the conversation that spawned it. A new root session is rejected with `Session ... is not a child of the current session`.
+- **A malformed override value can drop silently.** This build ignored `"engine": "banana"`, kept the last valid engine, and printed no `config notice` line. Trust the `/router` engine and preset lines, not the absence of a notice.
+- **The TUI status entry is unverified.** `/router` and `/tiers` were validated through the server command API, not a rendered TUI. If the status entry errors, disable it in `~/.config/opencode/cli.json` with the selector `"-opencode-model-router.status"`; routing is unaffected.
 - **Resume can clear a variant.** A router-driven model switch may leave the child with the provider default variant. The fork re-applies the durable level on the next step. This was observed: a `heavy` child moved to another model and still reported variant `max`.
 - **Two command runners.** Router verification and the fork's effort harness can both run commands. Keep router verification deferred and `background: false`; do not let both run the same suite concurrently.
 - **Enforce can rewrite an unpinned explicit model.** In `enforce`, an explicit `model` is authoritative only when the dispatch carries a `[route ... pin]`. Keep `shadow` for now; pin high-risk work before considering enforce.

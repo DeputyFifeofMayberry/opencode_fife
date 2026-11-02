@@ -95,7 +95,7 @@ Every prompt carried: "If you delegate, call the subagent tool with `background:
 The router selects the model only. The fork effort policy owns the reasoning variant:
 
 - `agent_operations.fast = explore` seeds `low`
-- `agent_operations.medium = implement` seeds `standard`, which resolves to `high`
+- `agent_operations.medium = implement` seeds `standard`, which leaves the request at the route's default effort unless the route advertises a default. DeepSeek's route writes no explicit variant (`selectedVariant: null`, provider variant `default`). The operator's "medium high" is therefore satisfied only if that provider default is high-equivalent; that was not independently verified. The fork's level vocabulary has no `high` level, so forcing an explicit high would require giving the router a variant and breaking single ownership.
 - `agent_operations.heavy = review` seeds `deep`, which resolves to `max`
 
 `mechanical` would also seed `low`, but it misdescribes read-only search. Router variant escalation is disabled with `escalate.variantSteps: "none"` and `escalate.effortBump: false`, so the router never competes with the fork for the variant.
@@ -138,7 +138,9 @@ The child attempted the create/delete request and made no `write`, `edit`, `patc
 | medium | `medium` | `deepseek/deepseek-flash` | none (`default`) | `standard` | `base` | none | supported |
 | heavy | `heavy` | `deepseek/deepseek-flash` | `max` | `deep` | `base` | `max` | supported |
 
-`standard` resolves to the provider's default effort. DeepSeek reports that default as variant `default`; the fork writes no explicit variant because the request already uses the route default. This is the designed `standard` behavior, not an escalation.
+`standard` resolves to the provider's default effort. DeepSeek reports that default as variant `default`; the fork writes no explicit variant because the request already uses the route default. This is the designed `standard` behavior, not an escalation. The provider's default is not exposed as a concrete effort by this route, so "medium high" is not explicitly guaranteed.
+
+Tool capability: the `fast` child made 5 `read`, 3 `grep`, and 1 `glob` call in task 01, so the free model can call tools.
 
 ### Explicit model wins
 
@@ -172,6 +174,7 @@ Heavy decision rows appear about ten seconds after the dispatch because the pers
 - engine switched from `shadow` to `advise`; a smoke dispatch recorded `"mode":"advise"` with `switched: false`.
 - twelve matched runs used the same root model and prompts as the baseline. Twenty-four report rows were produced.
 - routing did happen: 7 of 12 tasks created child sessions (task 01: one `fast`; 04, 05: one `medium` each; 08, 10: one `fast` each; 11: three `fast`; 12: one `medium` and one `fast`). The other five roots did the work themselves; the router still logged a proposed dispatch for most of them.
+- task 11's `answer.md` was written by the root: `fast` has no write tool. The three `fast` children supplied analysis only, so the pass is attributable to the root, not to `fast`.
 - task 01 failed: the `fast` child answered `column: base_level`, while the checker requires the adaptive `level` column. The answer is plausible but does not meet the check. This is a real correctness loss on that task, not a scoring bug.
 - router statistics for the advise window: 11 decision rows, 11 chosen == best, 0 switched, 0 pinned. Classes: `search` 1, `recon` 2, `implement` 2, `debug` 1, `design` 5.
 
@@ -187,6 +190,25 @@ Heavy decision rows appear about ten seconds after the dispatch because the pers
 | `cost_complete` | 0/12 | 0/12 | unknown attempt counts in both arms |
 
 The predeclared gate required cost per success at least 15% lower and the pass rate within 5 points. The advise arm is 15.9% more expensive per success and 8.3 points less accurate. Both conditions fail.
+
+### Per-task ledger
+
+Costs are estimated; `cost_complete` is 0/12 in both arms.
+
+| Task | Baseline | Advise |
+|---|---|---|
+| 01 exploration | pass, $0.005379, 230,417 | fail, $0.003924, 202,376 |
+| 02 count | pass, $0.003035, 75,901 | pass, $0.002691, 65,822 |
+| 03 extract | pass, $0.002415, 77,269 | pass, $0.002714, 87,033 |
+| 04 slug | pass, $0.006397, 198,399 | pass, $0.005504, 164,830 |
+| 05 roman | pass, $0.002387, 76,619 | pass, $0.006072, 195,046 |
+| 06 debounce | pass, $0.004460, 175,130 | pass, $0.002944, 88,040 |
+| 07 wrap | pass, $0.003787, 145,916 | pass, $0.003291, 89,398 |
+| 08 diagnose | pass, $0.005602, 221,561 | pass, $0.005224, 263,952 |
+| 09 legacy | pass, $0.003206, 145,276 | pass, $0.003049, 109,765 |
+| 10 architecture | pass, $0.006350, 240,027 | pass, $0.003802, 152,596 |
+| 11 security | pass, $0.008369, 394,539 | pass, $0.010688, 507,131 |
+| 12 composite | pass, $0.009297, 458,837 | pass, $0.014602, 519,351 |
 
 The likely cause is the fixed cost of the delegation protocol and the duplicated context in each child; the free `fast` tier does not offset that on this workload. The `medium` and `heavy` tiers use the same paid model as the root, so a switch adds a second context rather than a cheaper one.
 
@@ -248,6 +270,17 @@ Gate result: **stay in shadow**. Enforce was not enabled.
 The security routing is the most important failure: a high-risk audit reached a read-only, free model. It passed the keyword check, but the gate exists to prevent exactly that dispatch class.
 
 No `enforcement` or `routing.engine` change was made. The router remains in `shadow`, observing without rewriting. Enforce remains untested by design; it should not be considered until the advise arm clears cost, correctness, and risk-floor conditions.
+
+## Not measured
+
+- Protocol overhead in characters or tokens for this configuration. Upstream measures its prompt addition; this run did not isolate it.
+- Classification p95 latency. The local rules backend ran in-process and was not timed.
+- TUI rendering of `/router` and `/tiers`. Registration and output were verified through the server command API instead.
+- Provider attempt reconciliation. `cost_complete` is 0/12 in both arms, so every dollar figure is estimated.
+- Scratch-directory retention. The benchmark manifest and CSV live under `%TEMP%` and are not committed; the per-task table above is the durable record.
+- Full `opencode models` listing at selection time: the catalog had `deepseek/deepseek-flash`, `deepseek/deepseek-v4-pro`, and the free `opencode/*` models (`glm-5.3-flash-free`, `deepseek-v4.1-flash-free`, `nemotron-3.5-super-vl-free`, `flint-40b-free`, `beam-free`, `big-pickle`, `mimo-v2.6-flash-free`). The chosen ids came from that listing.
+- `git diff --check` was run for Task 9 and produced no output, so the documentation diff has no whitespace errors.
+- Intervention rate: 0 switched dispatches in the advise window, the same as baseline. That part of the gate passed.
 
 
 

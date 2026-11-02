@@ -1,6 +1,6 @@
 # Spec: OpenCode Model Router Integration
 
-Status: Proposed
+Status: Implemented in `shadow`; `advise` rejected by the matched comparison; enforce not enabled.
 Date: 2026-11-01
 Baseline revision: `dev` at `385df1511406d00c7e7bdc5164bcf6da01bd1732`
 Plan: `docs/superpowers/plans/2026-11-01-model-router-integration.md`
@@ -186,7 +186,7 @@ Because enforce can rewrite a model the orchestrator named, the initial release 
 - The plugin is installed at runtime, not vendored; its GPL-3.0-only licence must not be copied into this MIT repository.
 - Tier `fast` is read-only by default (read, glob, grep, git inspection, optional Context7). Mechanical edits belong to `medium`.
 - Routing never broadens a child's permissions; the router's read-only policy and the fork's `Permission.evaluate` both apply.
-- No project override is created, so a cloned repository cannot choose routing modes, presets, or agent permissions.
+- No project override is created for this integration. A repository that supplies its own project override is untrusted input: global-only keys (outcomes path, plugin agents, role agents) are stripped, but routing keys it is allowed to set still apply. Do not clone-and-run an untrusted repository with routing enabled; use `routing.engine: "static"` or `/bypass on` for that session.
 - The router's verification executes commands from the dispatch's acceptance block. Only run it in repositories whose prompts and tooling are trusted; it is not an OS sandbox.
 
 ## Failure and rollback behavior
@@ -194,7 +194,7 @@ Because enforce can rewrite a model the orchestrator named, the initial release 
 | Failure | Behavior | Recovery |
 |---|---|---|
 | Plugin fails to load | Fork continues; plugin absent | Remove the `plugins` entry, restart |
-| Invalid overrides file | Plugin logs a warning and drops that layer | Fix or delete the file; `/router` lists notices |
+| Invalid overrides file | Plugin drops the invalid layer and keeps the last valid config. The observed malformed-engine test printed no `config notice` line on this build. | Fix or delete the file; confirm `/router` shows the expected engine and preset, not the absence of a notice |
 | Tier model unavailable | Subagent call fails with the model id | Correct the preset; no silent fallback |
 | Router gate times out | Verdict `unverifiable`; no fabricated pass | Inspect `/router`; adjust timeouts or DoD |
 | Router misroutes | Only in enforce; decision log records why | `/bypass on`, set `engine: "static"`, report upstream |
@@ -212,10 +212,10 @@ Proposed thresholds, not confirmed requirements:
 | Tier registration | `fast`, `medium`, `heavy` listed as subagents with the configured models |
 | Routing correctness | ≥ 90% of the 10 sampled shadow dispatches land on the tier the taxonomy predicts; 0 unknown-agent errors |
 | Explicit control | An explicit session variant remains exact; an explicit subagent model is unchanged in shadow/advise |
-| Effort compatibility | `packages/core` effort tests pass; fast/medium/heavy children report base levels low/standard/deep; plan root reports `mode-pin` |
+| Effort compatibility | `packages/core` effort tests pass; fast/medium/heavy children report base levels low/standard/deep; a standard session resumed as `plan` reports `mode-pin` deep (a fresh plan-agent session seeds base deep) |
 | Permission safety | 0 permission broadenings; `fast` cannot edit or run shell |
 | Retry safety | No ladder run exceeds 3 attempts or 4× the start tier's cost |
-| Overhead | Local classification p95 < 5 ms; no provider call for classification; protocol overhead within upstream's measured range (3,249–6,357 characters, ≈0.8–1.8k tokens) |
+| Overhead | Local classification p95 < 5 ms; no provider call for classification; protocol overhead within upstream's measured range (3,249–6,357 characters, ≈0.8–1.8k tokens). Not separately measured in this screening run. |
 | Cost | Median cost per successful task at least 15% lower than baseline over ≥ 12 matched tasks, with no increase in intervention rate |
 | Speed | Median wall-clock per successful task not worse by more than 10% |
 | Reliability | Successful-task rate not lower than baseline by more than 5 percentage points |

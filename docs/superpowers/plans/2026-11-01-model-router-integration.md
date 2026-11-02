@@ -922,3 +922,16 @@ Completion criterion: the runbook matches the files and commands actually used; 
 - Final tier model ids: operator input in Task 2.
 - Billing mix per tier: operator input in Task 2; decides dollars vs limits/time.
 - Enforce adoption: Task 8's gate, not decided in advance.
+
+## Execution notes (2026-11-01)
+
+These corrections reflect what the execution actually found; the task text above is left as planned.
+
+- Task 1: `cost_complete` is 0/12 for priced providers because exports do not carry provider attempt counts. The dollar figures are estimated; token counts are complete.
+- Task 3: the installed package path includes a version-hash directory: `.../npm/opencode-model-router@2.9.1/<hash>/node_modules/opencode-model-router`, not the shorter path in Step 3.
+- Task 4: `support: supported` does not imply a written `next.effort`. `medium` seeds `standard`, which leaves the route's default effort untouched; only `low` and `deep` write explicit variants on this route.
+- Tasks 4–8: `/router`, `/tiers`, and `/bypass` were exercised through the server command API (`POST /api/session/<id>/command`) because `termctrl` is not installed. The TUI status entry remains unrendered.
+- Task 5/6: engine changes hot-reload; no server restart is needed. The decision log's rows can lag a few seconds because the persister coalesces writes.
+- Task 6: sanitized root exports redact child IDs. Extract children from an unsanitized export or from the child's `parentID`; a sanitized-only extraction reports zero children.
+- Task 8: because Task 6 returned the engine to `shadow`, the failed gate is recorded as `stay in shadow`, not `stay in advise`.
+- Task 9: `git diff --check` produced no output, so the documentation diff has no whitespace errors.
