@@ -1,24 +1,45 @@
+## Repository Invariants
+
 - After changing public Protocol/Server `HttpApi`: run `bun run generate` from repo root; never edit generated client files directly.
 - Dependency direction: Schema → Core and Protocol → Server. Client runtime may depend on Schema and Protocol only, never Core or Server; `sdk` composes Client, Core, Server.
 - No Changesets: never add `.changeset` files; use the existing release workflow.
 - Daily integration branch `dev`: base new tasks on the current local `dev`; use `origin/dev` when no unpushed local work exists. Preserve `main` for future release work. GitHub's default branch may remain `main`.
 
-## Agent Skills
+## Skills
 
-- Project skills: `.opencode/skills/<name>/SKILL.md`.
-- Definition of Done (`.opencode/references/definition-of-done.md`): project completion criteria. Shared checklists remain in `.opencode/references/`.
+Skills load from three sources. On OpenCode V2 the precedence is project `.opencode/skills/` → personal `~/.config/opencode/skills/` → Superpowers (registered by its plugin). Five names exist in both the project and personal directories — `construction-humanizer`, `craft-prompting`, `eli5-skill`, `find-skills`, `walk-me-through` — and the project copy is the one that runs, so edit that copy or the change is invisible.
+
+- **Superpowers** supplies the process: brainstorming, written plans, plan execution, TDD, debugging, code review, git worktrees, and the completion gate. Its skills use bare names (`brainstorming`, `writing-plans`), not the `superpowers:` prefix used inside plan documents.
+- **Project skills** supply repo knowledge and tooling: `unit-tests`, `tui-tests`, `app-e2e-tests`, `component-tests`, `effect`, `opencode-dev`, `rtl-aware-development`, and the writing and prompting skills.
+- **Personal skills** supply technique. Where one covers the same ground as a Superpowers process skill (`idea-refine`, `interview-me`, `spec-driven-development`, `planning-and-task-breakdown`, `incremental-implementation`, `debugging-and-error-recovery`, `code-review-and-quality`, `doubt-driven-development`, `using-agent-skills`), it is opt-in: use it when the user names it, or when the Superpowers skill genuinely does not fit.
+
+When a task could use either system:
+
+| Task | Skill |
+| --- | --- |
+| Design a feature, resolve ambiguity | `brainstorming` |
+| Write the plan | `writing-plans`, saved under `docs/superpowers/plans/` |
+| Execute an approved plan | `subagent-driven-development` for independent tasks, otherwise `executing-plans` |
+| Write the test first | `test-driven-development`; `test-design` for test size and structure |
+| Defect with an unknown cause | `systematic-debugging` |
+| Review a change | `requesting-code-review` or `receiving-code-review`; `code-review-and-quality` for a deeper multi-axis pass |
+| Claim a task complete | `verification-before-completion` plus `definition-of-done.md` |
+| Isolated worktree, or merge a finished branch | `using-git-worktrees`, `finishing-a-development-branch`; the branch and integration rules below still apply |
+
+A question, a read-only inspection, or a one-line fix skips the process skills. Plans already in `docs/superpowers/plans/` carry their own `REQUIRED SUB-SKILL` header; follow it.
+
+`.opencode/references/` holds the standing checklists: `definition-of-done.md` (completion bar), `testing-patterns.md`, `orchestration-patterns.md` (slash-command and persona patterns), and the `security-`, `performance-`, `observability-`, and `accessibility-checklist.md` files. Read the matching one when a change touches that dimension.
 
 ## Delegation
 
+- Tier choice, dispatch caps, and the routing protocol belong to the active model-router plugin's system-prompt contract. Follow that contract; do not restate or second-guess it here.
 - The primary agent, Build by default, owns the task, the final diff, verification, and the final report. Delegate bounded work, not accountability.
-- Do simple work directly. Delegate only when a specialist adds a distinct perspective, bounded research, or genuine parallelism.
-- Good delegation cases: broad read-only exploration, independent review, security review, strict test-first work, large mechanical refactors, E2E authoring, documentation updates, and written planning.
-- Do not delegate final verification, small context-heavy edits, sequential work that depends on the parent conversation, or multiple write-capable agents on overlapping files.
-- When delegating, state the goal, scope and allowed paths, constraints, relevant context, output contract, and what to verify. Subagents start with fresh context, so restate anything they need.
-- One writer per file. Do not run parallel write-capable specialists on the same files.
+- One writer per file. Never run parallel write-capable agents over the same files.
+- Do not delegate final verification, small context-heavy edits, or sequential work that depends on this conversation.
+- A dispatch states the goal, allowed paths, constraints, relevant context, output contract, and what to verify. Subagents start with fresh context, so restate anything they need.
 - Report what was delegated, why, and what came back. Do not hide child-session cost or failures.
-- Use native Plan for high-risk or ambiguous work. Do not silently implement after planning.
-- Prefer existing slash commands for deterministic specialist workflows.
+- Prefer existing slash commands for deterministic specialist workflows. `orchestration-patterns.md` covers slash-command and persona patterns.
+- High-risk or ambiguous work: plan first (`brainstorming` → `writing-plans`) and get approval before implementing.
 
 ## Workflow
 
@@ -230,6 +251,7 @@ const table = sqliteTable("session", {
 - Test the actual implementation; never duplicate logic into tests.
 - Tests never run from repo root (guard: `do-not-run-tests-from-root`); run from package directories (e.g. `packages/core`).
 - Before writing or changing tests, read the matching `.opencode/skills` skill: `unit-tests` (bun test), `tui-tests` (OpenTUI renderer tests), `app-e2e-tests` (Playwright, `packages/app/e2e`), `component-tests` (Playwright on stories, `packages/stories`) — they cover known CI slowness/flakiness causes.
+- Write the failing test first (`test-driven-development`); use `test-design` when the question is test size, structure, or flakiness rather than the red-green loop.
 
 ## Checks
 
