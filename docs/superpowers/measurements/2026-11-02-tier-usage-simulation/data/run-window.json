@@ -1,0 +1,13 @@
+{
+  "runID": "tier-sim-2026-11-02",
+  "runStartMs": 1793663082059,
+  "runEndMs": null,
+  "planned": { "fast": 45, "medium": 39, "heavy": 9 },
+  "executed": { "fast": 11, "medium": 0, "heavy": 0 },
+  "concurrency": 3,
+  "perDispatchCeilingUSD": 0.9,
+  "stoppedEarly": "pending-scope-decision",
+  "state": "paused",
+  "billing": "unavailable - no dashboard access; reconciliation will be inconclusive",
+  "note": "Fast block partially dispatched. Remaining 82 dispatches paused pending a decision on full vs reduced sample."
+}
