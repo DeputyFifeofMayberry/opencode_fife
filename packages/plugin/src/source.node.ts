@@ -1,9 +1,21 @@
-import { registerHooks } from "node:module"
+import * as NodeModule from "node:module"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { localSource } from "./source.js"
 import { missingPackageTarget } from "./source.package.js"
 import { Host } from "./host.js"
+
+// module.registerHooks ships in Node >= 23.5 and Bun >= 1.2, but the ambient node:module
+// types predate it, so the hook carries its own minimal shape.
+const registerHooks = (NodeModule as unknown as {
+  registerHooks: (hooks: {
+    resolve: (
+      specifier: string,
+      context: { parentURL?: string },
+      nextResolve: (specifier: string, context?: { parentURL?: string }) => { url: string },
+    ) => { url: string }
+  }) => { deregister: () => void }
+}).registerHooks
 
 let generation = Date.now()
 
