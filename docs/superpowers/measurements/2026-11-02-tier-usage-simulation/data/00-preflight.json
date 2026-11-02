@@ -1,0 +1,33 @@
+{
+  "probeMethod": "existing dispatches from this session, read from session_message",
+  "probeSessions": {
+    "fast": {
+      "sessionID": "ses_e6164d91fffeIyEYjUI3kcVWqJ",
+      "provider": "vercel",
+      "model": "minimax/minimax-m3.1-flash",
+      "variant": "medium",
+      "provenance": "estimated"
+    },
+    "medium": {
+      "sessionID": "ses_e617779e4ffePIniz3fUXqCn2U",
+      "provider": "vercel",
+      "model": "deepseek/deepseek-v4.1-flash-1017",
+      "variant": "max",
+      "provenance": "estimated"
+    },
+    "heavy": {
+      "sessionID": "ses_e61792c18ffegBkkWh78h300uf",
+      "provider": "vercel",
+      "model": "openai/gpt-6.1-terra",
+      "variant": "xhigh",
+      "provenance": "estimated"
+    }
+  },
+  "expected": {
+    "fast": "vercel/minimax/minimax-m3.1-flash#medium",
+    "medium": "vercel/deepseek/deepseek-v4.1-flash-1017#max",
+    "heavy": "vercel/openai/gpt-6.1-terra#xhigh"
+  },
+  "match": true,
+  "note": "All three tiers resolve as configured. Heavy runs plain openai/gpt-6.1-terra, not the -fast variant that earlier sessions used."
+}

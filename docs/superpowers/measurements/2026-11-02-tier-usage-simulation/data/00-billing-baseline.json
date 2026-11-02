@@ -1,0 +1,12 @@
+{
+  "readAt": "2026-11-02T23:41:31.108Z",
+  "periodLabel": "unavailable",
+  "periodGrain": "unknown",
+  "budgetLimitUSD": null,
+  "billedToDateUSD": null,
+  "availableHeadroomUSD": null,
+  "source": "no dashboard access from the executing session; the plan requires a manual read",
+  "consequence": "reconcile.ts returns verdict=inconclusive and the decision uses unadjusted local cost",
+  "localBaselineUSD": 4.133709,
+  "note": "localBaselineUSD is session_v2.cost summed across all sessions at snapshot time. It is a local estimate, not an invoice figure."
+}
