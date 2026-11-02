@@ -114,4 +114,43 @@ The router selects the model only. The fork effort policy owns the reasoning var
 - registered commands: the server command API lists `router`, `tiers`, `preset`, `budget`, `bypass`, `annotate-plan`, `router-reload`.
 - `/router` and `/tiers` rendering: command registration is confirmed; an interactive TUI capture was not taken because the command API and the load log already establish registration. No plugin-render error appears in the server log.
 
+## Task 4 — Tier and effort verification
+
+Tier agents registered (`opencode debug agents`):
+
+| Tier | Model | Mode | Steps |
+|---|---|---|---|
+| `fast` | `opencode/glm-5.3-flash-free` | subagent | 30 |
+| `medium` | `deepseek/deepseek-flash` | subagent | 50 |
+| `heavy` | `deepseek/deepseek-flash` | subagent | 120 |
+
+`general` and `explore` remain unchanged.
+
+### `fast` is read-only
+
+The child attempted the create/delete request and made no `write`, `edit`, `patch`, or `shell` call. `router-probe.txt` was never created (`Test-Path` false). Fork effort on the child: base `low`, selected variant `low`, next effort `low`.
+
+### Effort ownership
+
+| Tier | Agent | Model | Selected variant | Base level | Next rule | Next effort | Support |
+|---|---|---|---|---|---|---|---|
+| fast | `fast` | `opencode/glm-5.3-flash-free` | `low` | `low` | `base` | `low` | supported |
+| medium | `medium` | `deepseek/deepseek-flash` | none (`default`) | `standard` | `base` | none | supported |
+| heavy | `heavy` | `deepseek/deepseek-flash` | `max` | `deep` | `base` | `max` | supported |
+
+`standard` resolves to the provider's default effort. DeepSeek reports that default as variant `default`; the fork writes no explicit variant because the request already uses the route default. This is the designed `standard` behavior, not an escalation.
+
+### Explicit model wins
+
+A `fast` dispatch with `model: deepseek/deepseek-flash` ran on `deepseek/deepseek-flash`, not the fast tier model `opencode/glm-5.3-flash-free`. The effort policy still applied the fast operation base: base `low`, variant `low`.
+
+### Plan mode pins deep
+
+A standard session resumed with agent `plan` reported base `standard`, `next.rule: mode-pin`, `next.level: deep`, `next.effort: max`, selected variant `max`. A fresh session started directly as `plan` reported base `deep` and rule `base`, because the plan operation already seeds deep and the pin adds nothing.
+
+### Resume
+
+Resumed the medium child from its original parent session with the same `sessionID` and no `model` override. The child stayed `ses_e657b4c12ffe3YLXTELBHixUH4`, agent `medium`, model `deepseek/deepseek-flash`, base `standard`, selected variant none. A new root session cannot resume it: the subagent tool rejects a session that is not a child of the current conversation (`Session ... is not a child of the current session`), so resume must be issued from the original parent.
+
+
 
