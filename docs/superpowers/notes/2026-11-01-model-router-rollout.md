@@ -233,6 +233,23 @@ With `"engine": "banana"`, `/router` still reported `router: engine=shadow` and 
 
 Both commands were executed through the server command API on a live session. `/tiers` showed preset `fife` with `fast` = `opencode/glm-5.3-flash-free`, `medium` and `heavy` = `deepseek/deepseek-flash`, and no variant or effort fields. This satisfies the Task 3 rendering check without a TUI screenshot.
 
+## Task 8 — Enforce gate
+
+Gate result: **stay in shadow**. Enforce was not enabled.
+
+| Condition | Result |
+|---|---|
+| 12 matched tasks with complete cost data for both policies | Not met: 12 runs exist, but `cost_complete` is 0/12 in both arms because exports do not carry provider attempt counts. Dollar costs are estimated. |
+| Cost per success ≥15% lower | Not met: advise was 15.9% more expensive per success. |
+| Pass rate within 5 points | Not met: advise was 8.3 points lower. |
+| Zero switched dispatches in the advise window | Met: 0 switched. |
+| No high-risk task routed below `medium` | Not met: the security review (task 11) was routed to `fast`, below medium. |
+
+The security routing is the most important failure: a high-risk audit reached a read-only, free model. It passed the keyword check, but the gate exists to prevent exactly that dispatch class.
+
+No `enforcement` or `routing.engine` change was made. The router remains in `shadow`, observing without rewriting. Enforce remains untested by design; it should not be considered until the advise arm clears cost, correctness, and risk-floor conditions.
+
+
 
 
 
