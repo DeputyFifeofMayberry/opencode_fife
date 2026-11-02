@@ -81,3 +81,22 @@ Every prompt carried: "If you delegate, call the subagent tool with `background:
 | 10 | pass | 26,484 | 0 |
 | 11 | pass | 40,867 | 0 |
 | 12 | pass | 55,110 | 0 |
+
+## Task 2 — Tier selection
+
+- fast: `opencode/glm-5.3-flash-free` — free, coding-oriented flash model; the tier is read-only by default and is used for search, reading, and summarization. Risk: the free tier may rate-limit.
+- medium: `deepseek/deepseek-flash` — $0.15 input / $0.60 output per million tokens; tool-capable in the baseline probe; everyday implementation.
+- heavy: `deepseek/deepseek-flash` — the operator chose maximum effort on the same model over the stronger paid `deepseek/deepseek-v4-pro`. The fork's `review` operation seeds `deep`, which resolves to `max` on this model.
+- billing: mixed (free fast tier plus metered DeepSeek medium and heavy)
+- costRatio: 1 / 3 / 6, estimated token-spend multipliers. Upstream uses 3 and 6 for the same model at high and max effort; the plan's 1 / 5 / 20 example assumes different models, so it would overstate the multiplier here.
+
+### Decision ownership
+
+The router selects the model only. The fork effort policy owns the reasoning variant:
+
+- `agent_operations.fast = explore` seeds `low`
+- `agent_operations.medium = implement` seeds `standard`, which resolves to `high`
+- `agent_operations.heavy = review` seeds `deep`, which resolves to `max`
+
+`mechanical` would also seed `low`, but it misdescribes read-only search. Router variant escalation is disabled with `escalate.variantSteps: "none"` and `escalate.effortBump: false`, so the router never competes with the fork for the variant.
+
