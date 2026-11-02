@@ -444,7 +444,13 @@ function compressBody(text: string, encoding: RequestEncoding | undefined) {
   if (encoding === undefined || encoding === "none") return undefined
   // Looked up at call time instead of imported: a runtime without node:zlib or its zstd export
   // (browsers, older Node, some workerd setups) sends plain JSON rather than failing to load this module.
-  const zlib = globalThis.process?.getBuiltinModule?.("node:zlib")
+  // Ambient Process declarations disagree on getBuiltinModule (bun-types@1.4.4 has none; some graphs
+  // resolve @types/node's), so the runtime-detected lookup carries its own minimal type.
+  const zlib = (
+    globalThis.process as unknown as
+      { getBuiltinModule?: (id: string) => { zstdCompressSync?: (text: string) => Buffer; gzipSync: (text: string) => Buffer } | undefined }
+    | undefined
+  )?.getBuiltinModule?.("node:zlib")
   try {
     const body = encoding === "zstd" ? zlib?.zstdCompressSync?.(text) : zlib?.gzipSync(text)
     return body && { encoding, body }
