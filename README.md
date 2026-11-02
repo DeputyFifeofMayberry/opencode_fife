@@ -101,6 +101,8 @@ Learn more about [agents](https://opencode.ai/v2/docs/agents).
 
 For more info on how to configure OpenCode, [**head over to our docs**](https://opencode.ai/v2/docs).
 
+- [Model router integration](./docs/model-router.md) — local operator runbook for tier models, effort ownership, and rollback.
+
 ### Contributing
 
 If you're interested in contributing to OpenCode, please read our [contributing docs](./CONTRIBUTING.md) before submitting a pull request.
