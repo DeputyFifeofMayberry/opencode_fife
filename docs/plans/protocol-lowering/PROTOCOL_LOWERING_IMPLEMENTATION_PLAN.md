@@ -40,6 +40,17 @@ Five input classes the design does not normalise and that a careless consolidati
 
 ---
 
+## As-built deviations (recorded during execution)
+
+These are the places where the implemented code differs from the steps below, and why. A future implementer should follow the code and the spec, not the superseded snippets.
+
+1. **`Content.assert` was removed.** An Effect-returning guard loses TypeScript's type predicate, breaking every downstream `part.result` / `part.media` access. The shipped primitives are `accepts` (a const-generic predicate) and `kindsOf` (canonical diagnostic list). See spec §5.
+2. **`ContentPolicy.route` was removed.** `open-responses` derives its route name from a provider adapter, so a route baked into the policy labels the wrong protocol. The route stays a call-site argument to `unsupportedContent`.
+3. **Policies are declared `as const satisfies ContentPolicy`**, which is what makes `accepts` narrow. A widened annotation compiles but loses narrowing.
+4. **Characterization is four files, not one** (`lowering-ordering-chat`, `-responses`, `-structured`, `lowering-ids`): one writer per file, no index contention. Coverage is unchanged.
+5. **`ToolResultFilePolicy` is `allow | reject` only.** Bedrock and Gemini place tool-result files differently per model; placement is assembly and stays in the protocol.
+6. **`ToolID` has five policies, not four.** `MistralToolID.normalizer` hashes with collision probing, while `openai-chat` uses a naive slice-and-pad for the same family; both are preserved and the collision in the latter is pinned by a test.
+
 ## Prerequisites
 
 - Worktree or branch `lowering-kit` based on current local `dev`. Do not work on another session's branch.

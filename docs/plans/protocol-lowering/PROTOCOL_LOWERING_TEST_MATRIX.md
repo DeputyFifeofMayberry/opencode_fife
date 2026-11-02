@@ -234,9 +234,9 @@ Legend: **Pinned** = existing exact-body test · **Recorded** = cassette only ·
 | --- | --- |
 | canonical list | `PartKinds` lists every `ContentPart` member (compile tripwire, verified once in plan Task 3 Step 5) |
 | acceptance | `accepts` true exactly for declared kinds, per role |
-| failure shape | `assert` yields `AIError` → `InvalidRequestError`, message `"<route> <role> messages only support <list> content for now"` |
+| failure shape | `accepts` is false and `kindsOf` yields the list used in `"<route> <role> messages only support <list> content for now"` |
 | canonical order | the list is ordered by `PartKinds`, not by declaration order |
-| no mutation | `assert` succeeds without changing the part object |
+| narrowing | after `accepts(policy, role, part)` returns true, the part type is the declared union (a test fails to compile otherwise) |
 
 ### 4.2 `packages/ai/test/lowering/tool-result.test.ts`
 

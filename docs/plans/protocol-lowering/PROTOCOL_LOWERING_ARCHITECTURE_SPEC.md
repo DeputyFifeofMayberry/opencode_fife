@@ -63,7 +63,7 @@ export * as ToolID from "./tool-id.js"
 export * as Fields from "./fields.js"
 ```
 
-Call sites read `Content.assert(policy, role, part)`, matching the existing `ProviderShared.*` namespace style.
+Call sites read `accepts(policy, role, part)` as the guard and `kindsOf(policy, role)` in the diagnostic, mirroring the existing `ProviderShared.unsupportedContent` signature.
 
 **No package export is added.** `packages/ai/package.json` lists explicit subpaths, so an internal folder is invisible to consumers. `protocols/index.ts` is not modified.
 
@@ -144,7 +144,7 @@ LLMRequest
    │
    ├─ protocol-specific: schema decode of providerOptions
    │
-   ├─ ContentPolicy (module constant)  ──►  Content.assert(policy, role, part)
+   ├─ ContentPolicy (module constant)  ──►  Content.accepts(policy, role, part)
    │                                            │
    │                                            ├─ supported  → protocol maps the part
    │                                            └─ unsupported → AIError(InvalidRequest)
@@ -179,27 +179,27 @@ type Unlisted = Exclude<PartKind, (typeof PartKinds)[number]>
 type _AllKindsListed = [Unlisted] extends [never] ? true : ["part kind missing from PartKinds", Unlisted]
 
 export interface ContentPolicy {
-  /** Protocol name used in error text, e.g. "OpenAI Chat". */
-  readonly route: string
   readonly system: ReadonlyArray<PartKind>
   readonly user: ReadonlyArray<PartKind>
   readonly assistant: ReadonlyArray<PartKind>
   readonly tool: ReadonlyArray<PartKind>
 }
 
-export const accepts: (policy: ContentPolicy, role: MessageRole, part: ContentPart) => boolean
-
-export const assert: (
-  policy: ContentPolicy,
-  role: MessageRole,
+export const accepts: <const Policy extends ContentPolicy, const Role extends MessageRole>(
+  policy: Policy,
+  role: Role,
   part: ContentPart,
-) => Effect.Effect<void, AIError>
+) => part is Extract<ContentPart, { readonly type: Policy[Role][number] }>
 
 /** The accepted kinds for a role, in canonical order — used for the diagnostic message. */
 export const kindsOf: (policy: ContentPolicy, role: MessageRole) => ReadonlyArray<PartKind>
 ```
 
-`assert` returns `void`, deliberately. The existing guard is a type predicate (`part is Extract<ContentPart, { type: T }>`), and returning the part through an `Effect` would lose that narrowing at call sites that rely on it. Call sites already discriminate `part.type` inside their own branches; the shared function only decides whether the branch is reachable.
+There are exactly two primitives, and both are used by the protocol at the point it already branches. `accepts` is a **type predicate**: policies are declared `as const satisfies ContentPolicy`, so after `if (!accepts(policy, "user", part)) return …` TypeScript narrows `part` to the declared kinds and the existing `part.type` branches keep compiling. `kindsOf` returns the accepted kinds in canonical order for the diagnostic.
+
+No `assert` helper exists. An implementation experiment showed why: an Effect-returning guard loses the type predicate, so every downstream `part.result` / `part.media` access breaks, and passing the route through a policy labels adapter-derived protocols (`open-responses`) with the wrong name. The guard stays a predicate; the route stays a call-site argument.
+
+*Verified in code:* the const-generic predicate with `as const satisfies` typechecks across all six adopted protocols, and narrowing is proven by a unit test that fails to compile without it.
 
 Declarations stay readable — one array per role — and `kindsOf` sorts them into canonical order so the diagnostic does not depend on declaration order. The completeness assertion is the only machinery; there is no mapped record to fill in per protocol.
 
@@ -302,7 +302,7 @@ The kit is a new directory plus guard-line changes. `shared.ts` is not modified.
 
 | Layer | What it proves | Location |
 | --- | --- | --- |
-| Unit: content | `accepts` is exact per role; `kindsOf` returns canonical order; `assert` fails with the existing message format and does not mutate the part | `packages/ai/test/lowering/content.test.ts` |
+| Unit: content | `accepts` is exact per role and narrows the part type; `kindsOf` returns canonical order; the canonical list is complete | `packages/ai/test/lowering/content.test.ts` |
 | Unit: tool-result | four `result` shapes × three file policies; text joining stays with the caller; `reject` fails typed | `packages/ai/test/lowering/tool-result.test.ts` |
 | Unit: tool-id | each policy's rule; symmetry of call/result application; `forModel` family selection | `packages/ai/test/lowering/tool-id.test.ts` |
 | Unit: fields | tool history detection; `parallel_tool_calls` gating | `packages/ai/test/lowering/fields.test.ts` |
