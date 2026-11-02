@@ -122,7 +122,7 @@ Cell from two stacked pixels:
 | colour | colour | `▀` | top | bottom |
 
 Consecutive cells with the same glyph+fg+bg are grouped into one `<text>` element,
-so a row is ~10–20 elements instead of 65. This drops the `tint()` shadow and the
+so the densest row is 37 elements instead of 65. This drops the `tint()` shadow and the
 `_ ^ ~ ,` shorthand: both existed to fake depth, and the design forbids shadows.
 The mark, not the letters, is now solid, so no per-character shadow is needed.
 
