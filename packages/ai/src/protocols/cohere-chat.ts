@@ -5,6 +5,7 @@ import { Framing } from "../route/framing.js"
 import { Protocol } from "../route/protocol.js"
 import { LLMEvent, Usage, type FinishReasonDetails, type LLMRequest } from "../schema/index.js"
 import { JsonObject, ProviderShared } from "./shared.js"
+import { kindsOf, type ContentPolicy } from "./lowering/content.js"
 import { Lifecycle } from "./utils/lifecycle.js"
 import { ToolStream } from "./utils/tool-stream.js"
 
@@ -143,6 +144,14 @@ type State = {
 
 const TOOL_CHOICE = { auto: undefined, none: "NONE", required: "REQUIRED", tool: "REQUIRED" } as const
 
+const contentPolicy: ContentPolicy = {
+  route: "Cohere Chat",
+  system: ["text"],
+  user: ["text", "media"],
+  assistant: ["text", "reasoning", "tool-call"],
+  tool: ["tool-result"],
+}
+
 const fromRequest = Effect.fn("CohereChat.fromRequest")(function* (request: LLMRequest) {
   const options = yield* ProviderShared.validateWith(Schema.decodeUnknownEffect(Options))(request.providerOptions ?? {})
   const flattened = ProviderShared.flattenToolRequest(request)
@@ -165,7 +174,7 @@ const fromRequest = Effect.fn("CohereChat.fromRequest")(function* (request: LLMR
     if (message.role === "tool") {
       for (const part of message.content) {
         if (part.type !== "tool-result")
-          return yield* ProviderShared.unsupportedContent("Cohere Chat", "tool", ["tool-result"])
+          return yield* ProviderShared.unsupportedContent("Cohere Chat", "tool", kindsOf(contentPolicy, "tool"))
         if (part.result.type === "content" && part.result.value.some((item) => item.type === "file"))
           return yield* ProviderShared.invalidRequest("Cohere Chat does not support file content in tool results")
         messages.push({ role: "tool", tool_call_id: part.id, content: ProviderShared.toolResultText(part) })
@@ -190,18 +199,16 @@ const fromRequest = Effect.fn("CohereChat.fromRequest")(function* (request: LLMR
         calls.push({ id: part.id, type: "function", function: { name: part.name, arguments: args } })
         continue
       }
-      if (message.role === "user" && part.type === "media" && part.media.mediaType.startsWith("image/")) {
+      if (message.role === "user" && part.type === "media") {
+        if (!part.media.mediaType.startsWith("image/"))
+          return yield* ProviderShared.unsupportedContent("Cohere Chat", "user", kindsOf(contentPolicy, "user"))
         const url =
           ProviderShared.mediaUrl(part.media) ??
           (yield* ProviderShared.requireInlineMedia("Cohere Chat", part.media)).dataUrl
         content.push({ type: "image_url", image_url: { url } })
         continue
       }
-      return yield* ProviderShared.unsupportedContent(
-        "Cohere Chat",
-        message.role,
-        message.role === "user" ? ["text", "media"] : ["text", "reasoning", "tool-call"],
-      )
+      return yield* ProviderShared.unsupportedContent("Cohere Chat", message.role, kindsOf(contentPolicy, message.role))
     }
     messages.push({
       role: message.role,

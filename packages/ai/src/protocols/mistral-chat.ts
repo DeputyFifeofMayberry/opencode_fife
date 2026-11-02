@@ -22,6 +22,7 @@ import { classifyProviderFailure } from "../provider-error.js"
 import { JsonObject, optionalArray, optionalNull, ProviderShared } from "./shared.js"
 import { Lifecycle } from "./utils/lifecycle.js"
 import { MistralToolID } from "./utils/mistral-tool-id.js"
+import { kindsOf, type ContentPolicy } from "./lowering/content.js"
 import { ToolStream } from "./utils/tool-stream.js"
 
 const ADAPTER = "mistral-chat"
@@ -227,6 +228,14 @@ const lowerMedia = Effect.fnUntraced(function* (part: MediaPart) {
   return yield* ProviderShared.invalidRequest(`Mistral Chat does not support media type ${part.media.mediaType}`)
 })
 
+const contentPolicy: ContentPolicy = {
+  route: "Mistral Chat",
+  system: ["text"],
+  user: ["text", "media"],
+  assistant: ["text", "reasoning", "tool-call"],
+  tool: ["tool-result"],
+}
+
 const lowerUser = Effect.fnUntraced(function* (message: LLMRequest["messages"][number]) {
   const content: MistralUserContent[] = []
   for (const part of message.content) {
@@ -238,7 +247,7 @@ const lowerUser = Effect.fnUntraced(function* (message: LLMRequest["messages"][n
       content.push(yield* lowerMedia(part))
       continue
     }
-    return yield* ProviderShared.unsupportedContent("Mistral Chat", "user", ["text", "media"])
+    return yield* ProviderShared.unsupportedContent("Mistral Chat", "user", kindsOf(contentPolicy, "user"))
   }
   if (content.every((part) => part.type === "text"))
     return { role: "user" as const, content: content.map((part) => part.text).join("") }
@@ -276,7 +285,11 @@ const lowerAssistant = Effect.fnUntraced(function* (
       toolCalls.push(lowerToolCall(part, normalizeID))
       continue
     }
-    return yield* ProviderShared.unsupportedContent("Mistral Chat", "assistant", ["text", "reasoning", "tool-call"])
+    return yield* ProviderShared.unsupportedContent(
+      "Mistral Chat",
+      "assistant",
+      kindsOf(contentPolicy, "assistant"),
+    )
   }
   return {
     role: "assistant" as const,
@@ -292,7 +305,7 @@ const lowerToolResults = Effect.fnUntraced(function* (
   const output: MistralMessage[] = []
   for (const part of message.content) {
     if (part.type !== "tool-result")
-      return yield* ProviderShared.unsupportedContent("Mistral Chat", "tool", ["tool-result"])
+      return yield* ProviderShared.unsupportedContent("Mistral Chat", "tool", kindsOf(contentPolicy, "tool"))
     if (part.result.type !== "content") {
       output.push({
         role: "tool",
