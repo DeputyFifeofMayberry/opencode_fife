@@ -20,51 +20,54 @@ export function logoColor(layer: LogoLayer): "base" | "muted" | "faint" {
 
 // Two pixel rows per terminal row, one pixel per cell. `.` empty, `F`/`C` the two
 // wordmark tones, `S` the star, `o`/`i` the outer and inner monument tones.
+// Glyphs are 8 cells wide with 2-pixel strokes over a 10-pixel x-height.
 export const logoArt: Record<"full" | "compact", string[]> = {
   full: [
-    "................................o................................",
-    "...........................ooooo.ooooo...........................",
-    "......................ooooo.....S.....ooooo......................",
-    ".................ooooo.........SSS.........ooooo.................",
-    "............ooooo............SSSSSSS............ooooo............",
-    ".......ooooo..................SSSSS..................ooooo.......",
-    "..ooooo........................S.S........................ooooo..",
-    "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo",
-    "...iiii.....FFF..F....FFF.......................C.........iiii...",
-    "...i..i.....F.........F.........................C.........i..i...",
-    "...i..i...FFFFF..F..FFFFF..FFF...CCC...CCC...CCCC..CCC....i..i...",
-    "...i..i.....F....F....F...F.....C...C.C...C.C...C.C.......i..i...",
-    "...i..i.....F....F....F...F.....C.....C...C.C...C.C.......i..i...",
-    "...i..i.....F....F....F...FFFF..C.....C...C.C...C.CCCC....i..i...",
-    "...i..i.....F....F....F...F.....C.....C...C.C...C.C.......i..i...",
-    "...iiii.....F....F....F...F.....C...C.C...C.C...C.C.......iiii...",
-    "...iiii.....F....F....F....FFF...CCC...CCC...CCCC..CCC....iiii...",
-    ".oooooooooo...........................................oooooooooo.",
+    "...........................................o...........................................",
+    "......................................ooooo.ooooo......................................",
+    ".................................ooooo...........ooooo.................................",
+    "............................ooooo..........S..........ooooo............................",
+    ".......................ooooo..............SSS..............ooooo.......................",
+    "..................ooooo.................SSSSSSS.................ooooo..................",
+    ".............ooooo.......................SSSSS.......................ooooo.............",
+    "........ooooo.............................S.S.............................ooooo........",
+    "...ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo...",
+    ".......................................................................................",
+    "...iiiii.....FFFFF..FF.....FFFFF..................................CC...........iiiii...",
+    "...i.i.i....FF......FF....FF......................................CC...........i.i.i...",
+    "...i.i.i....FF............FF.......FFFF.....CCCC.....CCCC.....CCCCCC...CCCC....i.i.i...",
+    "...i.i.i....FF......FF....FF......FF..FF...CC..CC...CC..CC...CC...CC..CC..CC...i.i.i...",
+    "...i.i.i..FFFFFFFF..FF..FFFFFFFF.FF....FF.CC....CC.CC....CC.CC....CC.CC....CC..i.i.i...",
+    "...i.i.i....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........i.i.i...",
+    "...i.i.i....FF......FF....FF.....FFFFFFFF.CC.......CC....CC.CC....CC.CCCCCCCC..i.i.i...",
+    "...i.i.i....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........i.i.i...",
+    "...i.i.i....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........i.i.i...",
+    "...i.i.i....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........i.i.i...",
+    "...i.i.i....FF......FF....FF......FF..FF...CC..CC...CC..CC...CC...CC..CC..CC...i.i.i...",
+    "...iiiii....FF......FF....FF.......FFFF.....CCCC.....CCCC.....CCCCCC...CCCC....iiiii...",
+    ".......................................................................................",
+    "ooooooooooo.................................................................ooooooooooo",
   ],
   compact: [
-    ".........................o.........................",
-    ".....................oooo.oooo.....................",
-    ".................oooo....S....oooo.................",
-    ".............oooo.......SSS.......oooo.............",
-    ".........oooo.........SSSSSSS.........oooo.........",
-    ".....oooo..............SSSSS..............oooo.....",
-    ".oooo...................S.S...................oooo.",
-    "ooooooooooooooooooooooooooooooooooooooooooooooooooo",
-    ".....FFF..F....FFF.......................C.........",
-    ".....F.........F.........................C.........",
-    "...FFFFF..F..FFFFF..FFF...CCC...CCC...CCCC..CCC....",
-    ".....F....F....F...F.....C...C.C...C.C...C.C.......",
-    ".....F....F....F...F.....C.....C...C.C...C.C.......",
-    ".....F....F....F...FFFF..C.....C...C.C...C.CCCC....",
-    ".....F....F....F...F.....C.....C...C.C...C.C.......",
-    ".....F....F....F...F.....C...C.C...C.C...C.C.......",
-    ".....F....F....F....FFF...CCC...CCC...CCCC..CCC....",
-    "...................................................",
+    "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo",
+    ".......................................................................",
+    ".....FFFFF..FF.....FFFFF..................................CC...........",
+    "....FF......FF....FF......................................CC...........",
+    "....FF............FF.......FFFF.....CCCC.....CCCC.....CCCCCC...CCCC....",
+    "....FF......FF....FF......FF..FF...CC..CC...CC..CC...CC...CC..CC..CC...",
+    "..FFFFFFFF..FF..FFFFFFFF.FF....FF.CC....CC.CC....CC.CC....CC.CC....CC..",
+    "....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........",
+    "....FF......FF....FF.....FFFFFFFF.CC.......CC....CC.CC....CC.CCCCCCCC..",
+    "....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........",
+    "....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........",
+    "....FF......FF....FF.....FF.......CC.......CC....CC.CC....CC.CC........",
+    "....FF......FF....FF......FF..FF...CC..CC...CC..CC...CC...CC..CC..CC...",
+    "....FF......FF....FF.......FFFF.....CCCC.....CCCC.....CCCCCC...CCCC....",
   ],
 }
 
-export const logoWidth = { full: 65, compact: 51, minimal: 8 } as const
-export const logoHeight = { full: 9, compact: 9, minimal: 1 } as const
+export const logoWidth = { full: 87, compact: 71, minimal: 8 } as const
+export const logoHeight = { full: 12, compact: 7, minimal: 1 } as const
 
 // The home screen pads 2 cells each side for the artwork tiers, and 1 each side
 // below 44 columns, where the plain wordmark is the only thing that fits.
@@ -77,9 +80,11 @@ export const logoSize = {
   minimal: logoWidth.minimal + MINIMAL_PADDING,
 } as const
 
+// The full stack is 3 spacer + 12 logo + 1 + prompt (4) + footer (1); 20 rows lets
+// the spacer give one row back. Compact needs 16 for its 7 rows.
 export function logoMode(width: number, height: number): LogoTier | null {
   if (height < 12 || width < logoSize.minimal) return null
-  if (height >= 16 && width >= logoSize.full) return "full"
+  if (height >= 20 && width >= logoSize.full) return "full"
   if (height >= 16 && width >= logoSize.compact) return "compact"
   return "minimal"
 }

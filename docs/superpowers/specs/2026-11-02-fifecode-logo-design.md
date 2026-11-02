@@ -73,22 +73,23 @@ and `c` become nearly identical, and the monument turns into a solid silhouette.
 Reference measurements (px): monument 1060×255, wordmark 630×126, pediment 840 wide
 × 113 tall, columns ~60 wide, bar-to-baseline box ≈ 3.4:1.
 
-Terminal canvas: **65 cells wide × 18 pixels tall = 9 text rows.**
+Terminal canvas: **87 cells wide × 24 pixels tall = 12 text rows.**
 
 | Band | Pixels | Rows | Contents |
 |---|---|---|---|
-| Pediment | 8 | 4 | stepped roofline, 7×5 star centred, cornice bar with end tabs |
-| Wordmark | 9 | 4.5 | `fifecode`, x-height 7 px, ascenders to row 8, baseline 16 |
-| Foundations | 1 | 0.5 | thin lines under each column, stepping outward |
+| Pediment | 9 | 4.5 | stepped roofline, 7×5 star centred, cornice bar with end tabs |
+| Gap | 1 | 0.5 | breathing space between cornice and letters |
+| Wordmark | 12 | 6 | `fifecode`, x-height 10 px, ascenders to the top, baseline at 21 |
+| Foundations | 1 | 0.5 | horizontal lines under each column, stepping outward |
 
-Horizontal, left to right: foundation overhang 3 · column 4 · gap 2 · wordmark 47 ·
-gap 2 · column 4 · overhang 3 = 65. The cornice bar spans the inner 59; pediment
-apex at x=32 (centre).
+Horizontal, left to right: foundation overhang 3 · fluted column 5 · gap 2 ·
+wordmark 67 · gap 2 · column 5 · overhang 3 = 87. The cornice bar spans the inner
+81; pediment apex at x=43 (centre).
 
-Letters: 5 px wide, 1 px gap, 8 letters = 47. Lowercase only, 1 px strokes. Band
-widths follow the reference ratio (pediment height ≈ 0.9 × wordmark height); the
-star is proportionally larger than in the reference because a 5-point star needs at
-least 5 px to read at all — see Differences.
+Letters: 8 cells wide (4 for `i`), 1 cell apart, 2-pixel strokes, x-height 10 px.
+Eight cells per glyph is the floor for readable counters — at five or six cells
+wide the `e`, `c`, `o` and `d` collapse into texture, which is why the earlier,
+narrower draft was rejected.
 
 ### Layer codes
 
@@ -122,7 +123,7 @@ Cell from two stacked pixels:
 | colour | colour | `▀` | top | bottom |
 
 Consecutive cells with the same glyph+fg+bg are grouped into one `<text>` element,
-so the densest row is 37 elements instead of 65. This drops the `tint()` shadow and the
+so the densest row is 48 elements instead of 87. This drops the `tint()` shadow and the
 `_ ^ ~ ,` shorthand: both existed to fake depth, and the design forbids shadows.
 The mark, not the letters, is now solid, so no per-character shadow is needed.
 
@@ -130,22 +131,18 @@ The mark, not the letters, is now solid, so no per-character shadow is needed.
 
 | Tier | Needs | Content |
 |---|---|---|
-| full | width ≥ 69, height ≥ 16 | complete monument, 65 wide × 9 rows |
-| compact | width ≥ 55, height ≥ 16 | wordmark + stepped pediment and star, no columns, no foundations, 51 wide × 9 rows |
+| full | width ≥ 91, height ≥ 20 | complete monument, 87 wide × 12 rows |
+| compact | width ≥ 75, height ≥ 16 | wordmark under a cornice lintel, no columns, no pediment, 71 wide × 7 rows |
 | minimal | otherwise | one line, `fife` muted + `code` bright, 8 wide × 1 row |
 | hidden | height < 12 or width < 10 | nothing (existing guard, plus a floor so the plain wordmark cannot wrap) |
 
-Full and compact share a height: at 55 columns what stops fitting is the columns, not
-the rows, so compact drops the columns, the foundations, and 14 columns of roof while
-keeping the pediment, the star, and the same wordmark. Short windows fall through to
-minimal instead of a squashed emblem: the stack is 3 spacer + 9 logo + 1 + prompt (4)
-+ footer (1), so 16 rows is the point below which the prompt starts to be squeezed.
-Breakpoints are computed in code from the art's declared width plus the home screen's
-padding, never from mockup pixels, and the tests assert the tier constants rather
-than the literals.
-
-The prompt caps at 75 cells, so the 65-cell mark stays narrower than the prompt at
-80 columns and does not become the widest element on screen.
+Full and compact trade different things. At 91 columns and above the whole monument
+fits; between 75 and 90 the wordmark keeps its resolution and loses the columns and
+pediment, because shrinking the glyphs to keep the architecture is what produced the
+unreadable first draft. Short windows fall through to minimal instead of a squashed
+emblem. Breakpoints are computed in code from the art's declared width plus the home
+screen's padding, never from mockup pixels, and the tests assert the tier constants
+rather than the literals.
 
 `minimal` replaces the old `go` branch in the logo component. `go` stays exported and
 untouched for `go-upsell-art.ts` and `mini/splash.ts`, so the upsell art is unchanged.
@@ -154,10 +151,10 @@ untouched for `go-upsell-art.ts` and `mini/splash.ts`, so the upsell art is unch
 
 | File | Change |
 |---|---|
-| `packages/tui/src/logo.ts` | Add `mark` (the monument grid), tier definitions with declared widths, and pure `logoRows(tier)` / `logoCells(rows)` helpers. Leave `logo {left, right}` and `go` byte-for-byte unchanged. |
+| `packages/tui/src/logo.ts` | Add `logoArt` (the two monument grids), `logoWidth` / `logoHeight` / `logoSize`, `logoMode`, `logoColor`, and the pure `logoRuns` cell converter. Leave `logo {left, right}` and `go` byte-for-byte unchanged. |
 | `packages/tui/src/component/logo.tsx` | Choose tier from `useTerminalDimensions()` + `useTheme()`, render grouped cells. Remove shadow/shorthand logic. |
-| `packages/tui/test/component/logo-art.test.ts` | New: art invariants and cell conversion. |
-| `packages/tui/test/component/logo.test.tsx` | New: tier selection at widths 80 / 60 / 40 and height 10. |
+| `packages/tui/test/component/logo-art.test.ts` | New: art invariants, wordmark decode, tier boundaries, frozen exports. |
+| `packages/tui/test/component/logo.test.tsx` | New: tier rendering at widths 100 / 80 / 60 and height 10. |
 
 `home.tsx` and `presentation.ts` need no changes. One other surface reuses the
 component: `component/stats.tsx` renders `<Logo />` and already hides it below 38
@@ -180,38 +177,38 @@ Pure-function tests (no renderer):
   baseline row 16;
 - `logoCells` maps the four top/bottom combinations correctly and never emits the
   `★` character;
-- run-length grouping keeps every row under 40 `<text>` elements;
+- run-length grouping keeps every row under 55 `<text>` elements;
 - the wordmark decodes to `f, i, f, e, c, o, d, e` — `c` open on the right, `o`
   closed, `d` carrying an ascender stem, `e` carrying a middle bar;
 - the frozen `logo.left` / `logo.right` arrays are untouched by the new code.
 
 Render tests reuse the existing `testRender` + `@jsxImportSource @opentui/solid`
 pattern and provider wrapper already used across `packages/tui/test/component`; no
-new harness. At width 80 the full tier mounts and its row count is 9; at width 60
-the compact tier is 5 rows; at width 40 the minimal tier renders the literal text
-`fifecode`; at height 10 nothing renders.
+new harness. At width 100 the full tier mounts with 12 rows and 87 cells; at width
+80 the compact tier is 7 rows and 71 cells; at width 60 the minimal tier renders the
+literal text `fifecode`; at height 10 nothing renders.
 
 ## Differences from the reference (deliberate)
 
 1. **Stroke anti-aliasing** is absent; edges are hard 1-px steps. Unavoidable.
 2. **Star is proportionally larger, and the roof is a single stepped chevron.**
-   The star is 7×5 px against the reference's 53%-of-pediment height; a five-point
-   star below about 7 px wide collapses into a diamond or a blob (5×5 was tried and
-   read as noise). A 4:1 staircase cannot hold a parallel inner line — shifting one
-   row down and 4 px inward lands on the same staircase — and nested chevrons at
-   different slopes cross near the apex at this size. The cornice bar supplies the
-   depth the reference gets from its extra outlines.
+   The star is 7×5 px in a 9-px pediment; a five-point star below about 7 px wide
+   collapses into a diamond or a blob (5×5 was tried and read as noise). A stepped
+   roofline cannot hold a parallel inner line at this slope — shifting one row down
+   and five columns inward lands on the same staircase — and nested chevrons at
+   different slopes cross near the apex. The cornice bar supplies the depth the
+   reference gets from its extra outlines.
 3. **Foundations are shorter** than the reference's long outward lines, to keep the
-   full tier at 65 cells instead of ~79 so it fits an 80-column terminal with margin.
+   full tier at 87 cells rather than ~100 so it still fits a 120-column terminal with
+   margin.
 4. **No gradient/shading on `fife`.** The reference shows a soft vertical shade; the
    brief rules it out, so `fife` is one flat muted tone.
 5. **No drop shadow** anywhere, unlike the current implementation.
 6. **`★` is drawn from pixels**, not the character, because U+2605 is
    ambiguous-width and can occupy two cells in some terminals.
-7. **Total height grows from 4 to 9 rows.** Bands are compressed against the
-   reference (pediment 0.9 × letters, letters 9 px, foundations 1 px) to keep the
-   growth as small as the structure allows. Compact is 9 rows too, because it
-   answers a narrow terminal, not a short one.
+7. **Total height grows from 4 to 12 rows.** The glyphs needed 12 px of letter height
+   at 8 cells wide to stop reading as texture; the pediment is compressed to 9 px so
+   the whole mark stays inside 12 rows. Compact is 7 rows.
 
 ## Risks
 

@@ -36,35 +36,35 @@ async function render(width: number, height: number) {
 const rows = (frame: string) => frame.split("\n").filter((line) => line.trim().length > 0)
 const widest = (frame: string) => Math.max(...rows(frame).map((line) => line.trimEnd().length))
 
-test("renders the full monument at 80 columns", async () => {
-  const app = await render(80, 24)
+test("renders the full monument on a wide window", async () => {
+  const app = await render(100, 24)
   try {
     await app.renderOnce()
     await app.renderOnce()
     const frame = app.captureCharFrame()
-    expect(rows(frame).length).toBe(9)
+    expect(rows(frame).length).toBe(12)
     expect(frame).toContain("▀")
-    expect(widest(frame)).toBe(65)
+    expect(widest(frame)).toBe(87)
   } finally {
     app.renderer.destroy()
   }
 })
 
-test("drops the columns at 60 columns", async () => {
-  const app = await render(60, 24)
+test("drops the columns at 80 columns", async () => {
+  const app = await render(80, 24)
   try {
     await app.renderOnce()
     await app.renderOnce()
     const frame = app.captureCharFrame()
-    expect(rows(frame).length).toBe(9)
-    expect(widest(frame)).toBe(51)
+    expect(rows(frame).length).toBe(7)
+    expect(widest(frame)).toBe(71)
   } finally {
     app.renderer.destroy()
   }
 })
 
 test("shows the plain lowercase wordmark when too narrow for the artwork", async () => {
-  const app = await render(40, 24)
+  const app = await render(60, 24)
   try {
     await app.renderOnce()
     await app.renderOnce()

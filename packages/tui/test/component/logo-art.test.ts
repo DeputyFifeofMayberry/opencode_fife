@@ -18,23 +18,22 @@ describe("logo art", () => {
   })
 
   test("fife and code both occupy every x-height row", () => {
-    for (const row of logoArt.full.slice(10, 17)) {
-      expect(row.slice(10, 31)).toContain("F")
-      expect(row.slice(32, 55)).toContain("C")
+    for (const row of logoArt.full.slice(12, 22)) {
+      expect(row.slice(10, 41)).toContain("F")
+      expect(row.slice(42, 77)).toContain("C")
     }
   })
 
-  test("all eight letters sit on row 16", () => {
-    const baseline = logoArt.full[16]
-    for (const column of [12, 17, 22, 27]) expect(baseline[column]).toBe("F")
-    for (const column of [33, 39, 45, 51]) expect(baseline[column]).toBe("C")
+  test("all eight letters sit on row 21", () => {
+    const baseline = logoArt.full[21]
+    for (const column of [12, 20, 26, 35]) expect(baseline[column]).toBe("F")
+    for (const column of [44, 53, 62, 71]) expect(baseline[column]).toBe("C")
   })
 
   test("the star is drawn from pixels, not characters", () => {
-    for (const rows of [logoArt.full, logoArt.compact]) {
-      expect(rows.join("")).not.toContain("★")
-      expect(rows.join("")).toContain("S")
-    }
+    for (const rows of [logoArt.full, logoArt.compact]) expect(rows.join("")).not.toContain("★")
+    expect(logoArt.full.join("")).toContain("S")
+    expect(logoArt.compact.join("")).not.toContain("S")
   })
 
   test("the pre-existing exports are untouched", () => {
@@ -56,25 +55,25 @@ describe("logo art", () => {
   test("the wordmark decodes to f, i, f, e, c, o, d, e", () => {
     const art = logoArt.full
     // f and d rise above the x-height; i keeps its dot with a gap beneath.
-    expect(art[8].slice(12, 15)).toBe("FFF")
-    expect(art[8][17]).toBe("F")
-    expect(art[9][17]).toBe(".")
-    expect(art[8].slice(22, 25)).toBe("FFF")
-    expect(art[8][48]).toBe("C")
-    expect(art[9][48]).toBe("C")
+    expect(art[10].slice(13, 18)).toBe("FFFFF")
+    expect(art[10][20]).toBe("F")
+    expect(art[12][20]).toBe(".")
+    expect(art[10].slice(27, 32)).toBe("FFFFF")
+    expect(art[10][66]).toBe("C")
+    expect(art[11][66]).toBe("C")
     // c is open on the right, o is closed — the only difference between them.
-    expect(art[12][36]).toBe(".")
-    expect(art[12][42]).toBe("C")
-    // e carries a middle bar; d does not.
-    expect(art[13].slice(26, 30)).toBe("FFFF")
-    expect(art[13].slice(44, 49)).toBe("C...C")
+    expect(art[16][47]).toBe(".")
+    expect(art[16][57]).toBe("C")
+    // e carries a full-width crossbar; d leaves its bowl open.
+    expect(art[16].slice(33, 41)).toBe("FFFFFFFF")
+    expect(art[16].slice(60, 68)).toBe("CC....CC")
   })
 })
 
 describe("logoMode", () => {
   test("picks the tier from measured cells", () => {
-    expect(logoMode(80, 24)).toBe("full")
-    expect(logoMode(logoSize.full, 16)).toBe("full")
+    expect(logoMode(100, 24)).toBe("full")
+    expect(logoMode(logoSize.full, 20)).toBe("full")
     expect(logoMode(logoSize.full - 1, 24)).toBe("compact")
     expect(logoMode(logoSize.compact, 16)).toBe("compact")
     expect(logoMode(logoSize.compact - 1, 24)).toBe("minimal")
@@ -110,7 +109,7 @@ describe("logoRuns", () => {
     expect(runs.length).toBe(logoHeight.full)
     for (const row of runs) {
       expect(row.map((run) => run.text).join("").length).toBe(logoWidth.full)
-      expect(row.length).toBeLessThan(40)
+      expect(row.length).toBeLessThan(55)
       for (const run of row) expect([" ", "▀", "▄"]).toContain(run.glyph)
     }
   })
