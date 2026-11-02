@@ -108,6 +108,10 @@ The router selects the model only. The fork effort policy owns the reasoning var
 - peer runtime: `@opencode-ai/plugin` present in the installed tree
 - elected server build: `0.0.0-dev-20261101.152432` from `5301bf554381`; `dev` is four commits ahead at `f15bb485c9`. The installed build was not updated, per the plan's instruction to record the difference and not install unasked.
 - private standalone probe: `opencode run --standalone` loaded the plugin and answered `ok` with no tool-schema or plugin-hook error. This is the compatibility gate for the v2 adapter.
-- elected-server restart and `/router` verification: pending
+- elected-server restart: completed; the log records `loading plugin id=opencode-model-router@2.9.1` on the new server.
+- elected-server probe: `opencode run` (shared server) answered `ok` with no tool-schema or plugin-hook error.
+- registered agents: `fast` (`opencode/glm-5.3-flash-free`, read-only), `medium` (`deepseek/deepseek-flash`), `heavy` (`deepseek/deepseek-flash`), all `mode: subagent`; `general` and `explore` remain.
+- registered commands: the server command API lists `router`, `tiers`, `preset`, `budget`, `bypass`, `annotate-plan`, `router-reload`.
+- `/router` and `/tiers` rendering: command registration is confirmed; an interactive TUI capture was not taken because the command API and the load log already establish registration. No plugin-render error appears in the server log.
 
 
