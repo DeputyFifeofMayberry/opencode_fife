@@ -1,0 +1,93 @@
+{
+  "window": null,
+  "localUSD": null,
+  "billedUSD": null,
+  "deltaUSD": null,
+  "deltaPct": null,
+  "verdict": "inconclusive",
+  "derivedRates": {
+    "vercel/minimax/minimax-m3.1-flash#medium": {
+      "status": "underdetermined",
+      "rank": 3,
+      "equations": 11,
+      "note": "rank-deficient and not in the terra family; no rate is reported"
+    },
+    "vercel/deepseek/deepseek-v4.1-flash-1017#max": {
+      "status": "underdetermined",
+      "rank": 3,
+      "equations": 12,
+      "note": "rank-deficient and not in the terra family; no rate is reported"
+    },
+    "vercel/openai/gpt-6.1-terra#xhigh": {
+      "status": "solved",
+      "rank": 4,
+      "equations": 4,
+      "rates": {
+        "input": 0.9999999990195647,
+        "output": 4.999999999999634,
+        "cacheRead": 0.0500000000001537,
+        "cacheWrite": 1.2500000000001703
+      },
+      "residual": 2.7755575615628914e-16
+    },
+    "deepseek/deepseek-flash#default": {
+      "status": "underdetermined",
+      "rank": 3,
+      "equations": 2323,
+      "note": "rank-deficient and not in the terra family; no rate is reported"
+    },
+    "vercel/deepseek/deepseek-v4.1-flash-1017#none": {
+      "status": "underdetermined",
+      "rank": 2,
+      "equations": 2,
+      "note": "rank-deficient and not in the terra family; no rate is reported"
+    },
+    "vercel/openai/gpt-6.1-terra-fast#xhigh": {
+      "status": "solved",
+      "rank": 4,
+      "equations": 4,
+      "rates": {
+        "input": 1.9999999997417035,
+        "output": 9.999999999999945,
+        "cacheRead": 0.1000000000000445,
+        "cacheWrite": 2.5000000000000457
+      },
+      "residual": 1.3877787807814457e-17
+    },
+    "deepseek/deepseek-flash#max": {
+      "status": "underdetermined",
+      "rank": 3,
+      "equations": 59,
+      "note": "rank-deficient and not in the terra family; no rate is reported"
+    },
+    "deepseek/deepseek-flash#high": {
+      "status": "underdetermined",
+      "rank": 3,
+      "equations": 372,
+      "note": "rank-deficient and not in the terra family; no rate is reported"
+    },
+    "deepseek/deepseek-flash#low": {
+      "status": "underdetermined",
+      "rank": 3,
+      "equations": 3,
+      "note": "rank-deficient and not in the terra family; no rate is reported"
+    }
+  },
+  "localHeavy": 0,
+  "localNonHeavy": null,
+  "heavyOutsideCohort": 11,
+  "validationFactor": 1,
+  "validationStatus": "not-needed",
+  "split": {
+    "cohortUSD": 0,
+    "nonTierChildUSD": 0.047917,
+    "topLevelUSD": 3.210492,
+    "topLevelCreatedAfterRunStart": null,
+    "totalUSD": 4.146239,
+    "tierShare": 0
+  },
+  "fastMonthly": 7.8854,
+  "fastMonthlyStatus": "measured",
+  "allFastMeanMonthly": 0.6331,
+  "fastMeanBasis": "intended identity vercel/minimax/minimax-m3.1-flash#medium"
+}
