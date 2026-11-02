@@ -122,7 +122,7 @@ describe("EffortAdapter.resolve", () => {
   it("filters the policy's own echo out of the exact pick", () => {
     const row = { sessionID: SessionID.make("ses_adapter"), baseLevel: "low" as const, revision: 1, lastAppliedVariant: "max" }
     const echoed = EffortAdapter.resolve({ model: full, state: row, agent: "build", selection })
-    expect(echoed.selectedVariant).toBe("max")
+    expect(echoed.selectedVariant).toBe(Model.VariantID.make("max"))
     expect(echoed.exact).toBeUndefined()
     expect(echoed.decision).toEqual({ rule: "base", level: "low", effort: "low" })
     expect(EffortAdapter.resolve({ model: full, state: row, agent: "build", selection: { ...selection, variant: Model.VariantID.make("high") } })).toMatchObject({

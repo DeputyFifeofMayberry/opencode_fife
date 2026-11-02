@@ -92,9 +92,9 @@ export interface Resolution {
   /** The effective base level: durable row, else adaptive ladder seed, else configured base, else standard. */
   readonly baseLevel: EffortLevel
   /** The session's selected variant with the "default" sentinel removed; absent means Auto. */
-  readonly selectedVariant?: string
+  readonly selectedVariant?: Model.VariantID
   /** The user's exact pick after removing the policy's own echo; absent means the policy decides. */
-  readonly exact?: string
+  readonly exact?: Model.VariantID
   /** Route support, from the resolved model's advertised efforts. */
   readonly support: "unknown" | "unsupported" | "supported"
   /** The decision for this snapshot; absent only when the model is unknown. */
