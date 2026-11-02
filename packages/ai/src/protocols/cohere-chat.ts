@@ -144,13 +144,12 @@ type State = {
 
 const TOOL_CHOICE = { auto: undefined, none: "NONE", required: "REQUIRED", tool: "REQUIRED" } as const
 
-const contentPolicy: ContentPolicy = {
-  route: "Cohere Chat",
+const contentPolicy = {
   system: ["text"],
   user: ["text", "media"],
   assistant: ["text", "reasoning", "tool-call"],
   tool: ["tool-result"],
-}
+} as const satisfies ContentPolicy
 
 const fromRequest = Effect.fn("CohereChat.fromRequest")(function* (request: LLMRequest) {
   const options = yield* ProviderShared.validateWith(Schema.decodeUnknownEffect(Options))(request.providerOptions ?? {})

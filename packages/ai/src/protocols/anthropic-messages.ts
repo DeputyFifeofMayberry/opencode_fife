@@ -27,6 +27,7 @@ import {
   type ToolResultPart,
 } from "../schema/index.js"
 import { JsonObject, knownString, optionalArray, optionalNull, ProviderShared, withUntypedFrames } from "./shared.js"
+import { kindsOf, type ContentPolicy } from "./lowering/content.js"
 import { classifyProviderFailure } from "../provider-error.js"
 import { effortUpdate, resolveEffortUpdates } from "../effort-updates.js"
 import * as Cache from "./utils/cache.js"
@@ -942,7 +943,7 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest, breakpoi
           content.push(yield* lowerMedia(part, request, breakpoints))
           continue
         }
-        return yield* ProviderShared.unsupportedContent("Anthropic Messages", "user", ["text", "media"])
+        return yield* ProviderShared.unsupportedContent("Anthropic Messages", "user", kindsOf(contentPolicy, "user"))
       }
       if (content.length > 0) messages.push({ role: "user", content })
       continue
@@ -988,8 +989,10 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest, breakpoi
           content.push(yield* lowerServerToolResult(part, providerMetadataKey))
           continue
         }
-        return yield* invalid(
-          `Anthropic Messages assistant messages only support text, reasoning, and tool-call content for now`,
+        return yield* ProviderShared.unsupportedContent(
+          "Anthropic Messages",
+          "assistant",
+          kindsOf(contentPolicy, "assistant"),
         )
       }
       if (content.length === 0) continue
@@ -1001,7 +1004,7 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest, breakpoi
     const content: AnthropicToolResultBlock[] = []
     for (const part of message.content) {
       if (!ProviderShared.supportsContent(part, ["tool-result"]))
-        return yield* ProviderShared.unsupportedContent("Anthropic Messages", "tool", ["tool-result"])
+        return yield* ProviderShared.unsupportedContent("Anthropic Messages", "tool", kindsOf(contentPolicy, "tool"))
       content.push({
         type: "tool_result",
         tool_use_id: scrubToolCallID(part.id),
@@ -1056,6 +1059,13 @@ const fitThinking = (thinking: AnthropicThinking | undefined, maxTokens: number)
         budget_tokens: ProviderShared.fitThinkingBudget(thinking.budget_tokens, maxTokens, MIN_THINKING_BUDGET),
       }
     : thinking
+
+const contentPolicy = {
+  system: ["text"],
+  user: ["text", "media"],
+  assistant: ["compaction", "text", "reasoning", "tool-call"],
+  tool: ["tool-result"],
+} as const satisfies ContentPolicy
 
 const fromRequest = Effect.fn("AnthropicMessages.fromRequest")(function* (request: LLMRequest) {
   const options = yield* decodeOptions(request.providerOptions ?? {})

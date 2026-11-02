@@ -22,6 +22,7 @@ import {
 import { BedrockEventStream } from "./bedrock-event-stream.js"
 import { classifyProviderFailure } from "../provider-error.js"
 import { JsonObject, optionalArray, ProviderShared } from "./shared.js"
+import { accepts, kindsOf, type ContentPolicy } from "./lowering/content.js"
 import { BedrockAuth } from "./utils/bedrock-auth.js"
 import { BedrockCache } from "./utils/bedrock-cache.js"
 import { BedrockMedia } from "./utils/bedrock-media.js"
@@ -383,8 +384,8 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest, breakpoi
     if (message.role === "user") {
       const content: BedrockUserBlock[] = []
       for (const part of message.content) {
-        if (!ProviderShared.supportsContent(part, ["text", "media"]))
-          return yield* ProviderShared.unsupportedContent("Bedrock Converse", "user", ["text", "media"])
+        if (!accepts(contentPolicy, "user", part))
+          return yield* ProviderShared.unsupportedContent("Bedrock Converse", "user", kindsOf(contentPolicy, "user"))
         if (part.type === "text") {
           content.push(...textWithCache(breakpoints, part.text, part.cache))
           continue
@@ -404,12 +405,12 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest, breakpoi
     if (message.role === "assistant") {
       const content: BedrockAssistantBlock[] = []
       for (const part of message.content) {
-        if (!ProviderShared.supportsContent(part, ["text", "reasoning", "tool-call"]))
-          return yield* ProviderShared.unsupportedContent("Bedrock Converse", "assistant", [
-            "text",
-            "reasoning",
-            "tool-call",
-          ])
+        if (!accepts(contentPolicy, "assistant", part))
+          return yield* ProviderShared.unsupportedContent(
+            "Bedrock Converse",
+            "assistant",
+            kindsOf(contentPolicy, "assistant"),
+          )
         if (part.type === "text") {
           content.push(...textWithCache(breakpoints, part.text, part.cache))
           continue
@@ -436,8 +437,8 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest, breakpoi
 
     const content: BedrockUserBlock[] = []
     for (const part of message.content) {
-      if (!ProviderShared.supportsContent(part, ["tool-result"]))
-        return yield* ProviderShared.unsupportedContent("Bedrock Converse", "tool", ["tool-result"])
+      if (!accepts(contentPolicy, "tool", part))
+        return yield* ProviderShared.unsupportedContent("Bedrock Converse", "tool", kindsOf(contentPolicy, "tool"))
       const result = yield* lowerToolResult(part, documentNames, normalizeID)
       const images: BedrockMedia.ImageBlock[] = hoistImages
         ? result.toolResult.content.filter((item) => "image" in item)
@@ -560,6 +561,13 @@ const applyThinkingBindingDefault = (request: LLMRequest, thinking: Readonly<Rec
     block_binding: { prefix_mismatch_behavior: "drop_block" },
   }
 }
+
+const contentPolicy = {
+  system: ["text"],
+  user: ["text", "media"],
+  assistant: ["text", "reasoning", "tool-call"],
+  tool: ["tool-result"],
+} as const satisfies ContentPolicy
 
 const fromRequest = Effect.fn("BedrockConverse.fromRequest")(function* (request: LLMRequest) {
   const toolChoice = request.toolChoice ? yield* lowerToolChoice(request.toolChoice) : undefined

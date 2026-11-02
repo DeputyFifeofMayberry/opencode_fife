@@ -1,6 +1,4 @@
-import { Effect } from "effect"
-import type { AIError, ContentPart, MessageRole } from "../../schema/index.js"
-import { unsupportedContent } from "../shared.js"
+import type { ContentPart, MessageRole } from "../../schema/index.js"
 
 export type PartKind = ContentPart["type"]
 
@@ -17,16 +15,22 @@ type AllKindsListed = [Unlisted] extends [never] ? true : ["part kind missing fr
 /** Never read. Its type is the assertion that `PartKinds` covers every `ContentPart` member. */
 export const partKindsComplete: AllKindsListed = true
 
-/** Which part kinds a protocol accepts, per role. Each protocol declares its own. */
+/**
+ * Which part kinds a protocol accepts, per role. Declare with `as const satisfies ContentPolicy`
+ * so `accepts` can narrow the part type at the call site.
+ */
 export interface ContentPolicy {
-  readonly route: string
   readonly system: ReadonlyArray<PartKind>
   readonly user: ReadonlyArray<PartKind>
   readonly assistant: ReadonlyArray<PartKind>
   readonly tool: ReadonlyArray<PartKind>
 }
 
-export const accepts = (policy: ContentPolicy, role: MessageRole, part: ContentPart) => policy[role].includes(part.type)
+export const accepts = <const Policy extends ContentPolicy, const Role extends MessageRole>(
+  policy: Policy,
+  role: Role,
+  part: ContentPart,
+): part is Extract<ContentPart, { readonly type: Policy[Role][number] }> => policy[role].includes(part.type)
 
 /**
  * Accepted kinds in canonical order, so the diagnostic message does not depend on
@@ -37,13 +41,3 @@ export const kindsOf = (policy: ContentPolicy, role: MessageRole): ReadonlyArray
   if (accepted.length <= 1) return accepted
   return PartKinds.filter((kind) => accepted.includes(kind))
 }
-
-/**
- * The shared guard. Deliberately returns `void`: the previous per-protocol guard was a
- * type predicate, and routing the part back through an Effect would lose that narrowing.
- * Callers discriminate `part.type` inside their own branches.
- */
-export const assert = (policy: ContentPolicy, role: MessageRole, part: ContentPart): Effect.Effect<void, AIError> =>
-  accepts(policy, role, part)
-    ? Effect.void
-    : Effect.fail(unsupportedContent(policy.route, role, kindsOf(policy, role)))

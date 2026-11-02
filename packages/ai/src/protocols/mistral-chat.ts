@@ -228,13 +228,12 @@ const lowerMedia = Effect.fnUntraced(function* (part: MediaPart) {
   return yield* ProviderShared.invalidRequest(`Mistral Chat does not support media type ${part.media.mediaType}`)
 })
 
-const contentPolicy: ContentPolicy = {
-  route: "Mistral Chat",
+const contentPolicy = {
   system: ["text"],
   user: ["text", "media"],
   assistant: ["text", "reasoning", "tool-call"],
   tool: ["tool-result"],
-}
+} as const satisfies ContentPolicy
 
 const lowerUser = Effect.fnUntraced(function* (message: LLMRequest["messages"][number]) {
   const content: MistralUserContent[] = []

@@ -24,6 +24,7 @@ import {
 } from "../schema/index.js"
 import { classifyProviderFailure } from "../provider-error.js"
 import { isRecord, JsonObject, optionalArray, optionalNull, ProviderShared } from "./shared.js"
+import { accepts, kindsOf, type ContentPolicy } from "./lowering/content.js"
 import { placesMarkers, requestTTL } from "../cache-policy.js"
 import * as Cache from "./utils/cache.js"
 import { resolveParallelToolCalls } from "./open-responses.js"
@@ -515,7 +516,7 @@ const lowerUserMessage = Effect.fnUntraced(function* (message: OpenAIChatRequest
       content.push(yield* lowerMedia(part))
       continue
     }
-    return yield* ProviderShared.unsupportedContent("OpenAI Chat", "user", ["text", "media"])
+    return yield* ProviderShared.unsupportedContent("OpenAI Chat", "user", kindsOf(contentPolicy, "user"))
   }
   if (content.every((part) => part.type === "text" && part.cache_control === undefined))
     return {
@@ -535,8 +536,8 @@ const lowerAssistantMessage = Effect.fnUntraced(function* (
   const reasoning: ReasoningPart[] = []
   const toolCalls: OpenAIChatAssistantToolCall[] = []
   for (const part of message.content) {
-    if (!ProviderShared.supportsContent(part, ["text", "reasoning", "tool-call"]))
-      return yield* ProviderShared.unsupportedContent("OpenAI Chat", "assistant", ["text", "reasoning", "tool-call"])
+    if (!accepts(contentPolicy, "assistant", part))
+      return yield* ProviderShared.unsupportedContent("OpenAI Chat", "assistant", kindsOf(contentPolicy, "assistant"))
     if (part.type === "text") {
       content.push({ type: "text", text: part.text, cache_control: options.cacheControl?.(part.cache) })
       continue
@@ -594,8 +595,8 @@ const lowerToolMessages = Effect.fnUntraced(function* (message: OpenAIChatReques
   const messages: OpenAIChatMessage[] = []
   const attachments: OpenAIChatUserContent[] = []
   for (const part of message.content) {
-    if (!ProviderShared.supportsContent(part, ["tool-result"]))
-      return yield* ProviderShared.unsupportedContent("OpenAI Chat", "tool", ["tool-result"])
+    if (!accepts(contentPolicy, "tool", part))
+      return yield* ProviderShared.unsupportedContent("OpenAI Chat", "tool", kindsOf(contentPolicy, "tool"))
     if (part.result.type !== "content") {
       messages.push(
         toolMessage(
@@ -864,6 +865,13 @@ const lowerOptions = (request: LLMRequest, supportsStore: boolean, hasActiveTool
     ...(options.safetyIdentifier ? { safety_identifier: options.safetyIdentifier } : {}),
   }
 }
+
+const contentPolicy = {
+  system: ["text"],
+  user: ["text", "media"],
+  assistant: ["text", "reasoning", "tool-call"],
+  tool: ["tool-result"],
+} as const satisfies ContentPolicy
 
 export const fromRequest = Effect.fn("OpenAIChat.fromRequest")(function* (
   request: LLMRequest,

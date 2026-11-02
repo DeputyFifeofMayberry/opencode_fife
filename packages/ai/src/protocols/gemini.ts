@@ -27,6 +27,7 @@ import {
 import { classifyProviderFailure } from "../provider-error.js"
 import { Media } from "../media.js"
 import { JsonObject, knownString, lenient, optionalArray, optionalNull, ProviderShared } from "./shared.js"
+import { accepts, kindsOf, type ContentPolicy } from "./lowering/content.js"
 import { GeminiGenerateContent } from "./utils/gemini-generate-content.js"
 import { Lifecycle } from "./utils/lifecycle.js"
 
@@ -337,8 +338,8 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest) {
     if (message.role === "user") {
       const parts: Array<Schema.Schema.Type<typeof GeminiContentPart>> = []
       for (const part of message.content) {
-        if (!ProviderShared.supportsContent(part, ["text", "media"]))
-          return yield* ProviderShared.unsupportedContent("Gemini", "user", ["text", "media"])
+        if (!accepts(contentPolicy, "user", part))
+          return yield* ProviderShared.unsupportedContent("Gemini", "user", kindsOf(contentPolicy, "user"))
         parts.push(yield* lowerContentPart(part))
       }
       contents.push({ role: "user", parts })
@@ -350,13 +351,8 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest) {
       // Parallel Gemini 3 calls may carry one signature on the first call; unsigned sibling calls are valid.
       let hasSignedToolCall = false
       for (const part of message.content) {
-        if (!ProviderShared.supportsContent(part, ["text", "reasoning", "tool-call", "media"]))
-          return yield* ProviderShared.unsupportedContent("Gemini", "assistant", [
-            "text",
-            "reasoning",
-            "tool-call",
-            "media",
-          ])
+        if (!accepts(contentPolicy, "assistant", part))
+          return yield* ProviderShared.unsupportedContent("Gemini", "assistant", kindsOf(contentPolicy, "assistant"))
         if (part.type === "text") {
           parts.push({ text: part.text, thoughtSignature: thoughtSignature(part.providerMetadata, metadataKey) })
           continue
@@ -392,8 +388,8 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest) {
 
     const parts: Array<Schema.Schema.Type<typeof GeminiContentPart>> = []
     for (const part of message.content) {
-      if (!ProviderShared.supportsContent(part, ["tool-result"]))
-        return yield* ProviderShared.unsupportedContent("Gemini", "tool", ["tool-result"])
+      if (!accepts(contentPolicy, "tool", part))
+        return yield* ProviderShared.unsupportedContent("Gemini", "tool", kindsOf(contentPolicy, "tool"))
       if (part.result.type !== "content") {
         parts.push({
           functionResponse: {
@@ -440,6 +436,13 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest) {
   flushMedia()
   return contents
 })
+
+const contentPolicy = {
+  system: ["text"],
+  user: ["text", "media"],
+  assistant: ["text", "reasoning", "tool-call", "media"],
+  tool: ["tool-result"],
+} as const satisfies ContentPolicy
 
 const fromRequest = Effect.fn("Gemini.fromRequest")(function* (request: LLMRequest) {
   const flattened = ProviderShared.flattenToolRequest(request)
