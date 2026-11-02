@@ -167,6 +167,36 @@ Sample row:
 
 Heavy decision rows appear about ten seconds after the dispatch because the persister coalesces writes; an immediate read can lag.
 
+## Task 6 — Advise window
+
+- engine switched from `shadow` to `advise`; a smoke dispatch recorded `"mode":"advise"` with `switched: false`.
+- twelve matched runs used the same root model and prompts as the baseline. Twenty-four report rows were produced.
+- routing did happen: 7 of 12 tasks created child sessions (task 01: one `fast`; 04, 05: one `medium` each; 08, 10: one `fast` each; 11: three `fast`; 12: one `medium` and one `fast`). The other five roots did the work themselves; the router still logged a proposed dispatch for most of them.
+- task 01 failed: the `fast` child answered `column: base_level`, while the checker requires the adaptive `level` column. The answer is plausible but does not meet the check. This is a real correctness loss on that task, not a scoring bug.
+- router statistics for the advise window: 11 decision rows, 11 chosen == best, 0 switched, 0 pinned. Classes: `search` 1, `recon` 2, `implement` 2, `debug` 1, `design` 5.
+
+### Comparison
+
+| Metric | Baseline | Advise | Change |
+|---|---|---|---|
+| Passes | 12/12 | 11/12 | −8.3 points |
+| Cost per success | $0.005057 | $0.005864 | +15.9% (worse) |
+| Gross tokens per success | 203,324 | 222,304 | +9.3% (worse) |
+| Median wall time | 19,147 ms | 19,112 ms | −0.2% |
+| `usage_complete` | 12/12 | 12/12 | — |
+| `cost_complete` | 0/12 | 0/12 | unknown attempt counts in both arms |
+
+The predeclared gate required cost per success at least 15% lower and the pass rate within 5 points. The advise arm is 15.9% more expensive per success and 8.3 points less accurate. Both conditions fail.
+
+The likely cause is the fixed cost of the delegation protocol and the duplicated context in each child; the free `fast` tier does not offset that on this workload. The `medium` and `heavy` tiers use the same paid model as the root, so a switch adds a second context rather than a cheaper one.
+
+### Decision
+
+**Return to shadow.** Routing is disabled as a behavior change; the router continues to log decisions for observation. The enforce gate is not considered because the advise arm did not clear its cost and correctness thresholds. Revisit only after changing the tier mapping (for example, a cheaper `medium`) or reducing the protocol's context cost, then rerun this matched workload.
+
+This is screening-grade evidence: one run per task, twelve tasks, one root model. It does not establish a 15% difference beyond this sample.
+
+
 
 
 
