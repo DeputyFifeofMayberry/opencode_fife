@@ -152,5 +152,21 @@ A standard session resumed with agent `plan` reported base `standard`, `next.rul
 
 Resumed the medium child from its original parent session with the same `sessionID` and no `model` override. The child stayed `ses_e657b4c12ffe3YLXTELBHixUH4`, agent `medium`, model `deepseek/deepseek-flash`, base `standard`, selected variant none. A new root session cannot resume it: the subagent tool rejects a session that is not a child of the current conversation (`Session ... is not a child of the current session`), so resume must be issued from the original parent.
 
+## Task 5 — Shadow window
+
+- engine switched from `static` to `shadow` by editing the global overrides file; the router hot-reloaded it, and every decision row records `"mode":"shadow"`.
+- ten dispatches recorded across `search`, `recon`, `mechanical`, `implement`, `debug`, `design`, and `review`.
+- `switched: false` on all ten rows; `pinned: false` on all ten.
+- the root orchestrator chose the tier in each case; the engine agreed (`best` == `chosen`).
+
+Sample row:
+
+```json
+{"v":1,"ts":"2026-11-02T04:31:42.631Z","sessionID":"ses_e657900efffesgFMfcsGv4llr3","kind":"decision","decisionID":"ses_e657900efffesgFMfcsGv4llr3:1793593902629:6ed640f21e37adcc:1","mode":"shadow","childSessionID":null,"facts":{"class":"search","risk":"low","scope":"single","needs":[],"confidence":0.8,"source":"rules"},"chosen":{"key":"search|router:fast|opencode/glm-5.3-flash-free#default","agent":"fast","origin":"router","model":"opencode/glm-5.3-flash-free","variant":"default"},"best":{"key":"search|router:fast|opencode/glm-5.3-flash-free#default","agent":"fast","origin":"router","model":"opencode/glm-5.3-flash-free","variant":"default"},"switched":false,"pinned":false,"unit":"ratio","costs":{"search|router:fast|opencode/glm-5.3-flash-free#default":1.8154999999999997,"search|router:medium|deepseek/deepseek-flash#default":3.6967875,"search|router:heavy|deepseek/deepseek-flash#default":6.545},"confidence":0,"reason":"kept:best-is-chosen: the chosen dispatch is the cheapest (1.8155 ratio)","step":"dispatch","resume":false,"trace":{"routeLines":{"count":0,"conflict":false,"edgeOnly":true},"backend":null},"detection":{"effective":"none"},"capability":{"pick":0,"dispatched":0}}
+```
+
+Heavy decision rows appear about ten seconds after the dispatch because the persister coalesces writes; an immediate read can lag.
+
+
 
 
