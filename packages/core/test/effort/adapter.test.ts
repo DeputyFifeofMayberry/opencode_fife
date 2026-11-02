@@ -3,6 +3,8 @@ import { EFFORT_POLICY_PROTOCOL_VERSION } from "@opencode/core/effort/policy/ind
 import { EffortAdapter } from "@opencode/core/effort/adapter"
 import { Model } from "@opencode/schema/model"
 import { Provider } from "@opencode/schema/provider"
+import { ConfigEffort } from "@opencode/schema/config/effort"
+import { SessionID } from "@opencode/schema/session-id"
 
 function modelWith(...ids: string[]): Model.Info {
   return {
@@ -99,5 +101,76 @@ describe("EffortAdapter.decideFor", () => {
 
   it("pins the supported protocol version pairing", () => {
     expect(EffortAdapter.SUPPORTED_PROTOCOL_VERSION).toBe(EFFORT_POLICY_PROTOCOL_VERSION)
+  })
+})
+
+describe("EffortAdapter.resolve", () => {
+  const full = modelWith("none", "low", "high", "max")
+  const selection = { providerID: Provider.ID.make("test"), id: Model.ID.make("test-model"), variant: Model.VariantID.make("max") }
+
+  it("treats a default-variant selection as Auto with the default base", () => {
+    expect(
+      EffortAdapter.resolve({ model: full, selection: { ...selection, variant: Model.VariantID.make("default") }, agent: "build" }),
+    ).toEqual({
+      mode: "static",
+      baseLevel: "standard",
+      support: "supported",
+      decision: { rule: "base", level: "standard" },
+    })
+  })
+
+  it("filters the policy's own echo out of the exact pick", () => {
+    const row = { sessionID: SessionID.make("ses_adapter"), baseLevel: "low" as const, revision: 1, lastAppliedVariant: "max" }
+    const echoed = EffortAdapter.resolve({ model: full, state: row, agent: "build", selection })
+    expect(echoed.selectedVariant).toBe("max")
+    expect(echoed.exact).toBeUndefined()
+    expect(echoed.decision).toEqual({ rule: "base", level: "low", effort: "low" })
+    expect(EffortAdapter.resolve({ model: full, state: row, agent: "build", selection: { ...selection, variant: Model.VariantID.make("high") } })).toMatchObject({
+      selectedVariant: "high",
+      exact: "high",
+      decision: { rule: "exact-base", effort: "high" },
+    })
+  })
+
+  it("seeds the base from the adaptive ladder only without a row", () => {
+    const adaptive = new ConfigEffort.Info({ mode: "adaptive" })
+    expect(EffortAdapter.resolve({ policy: adaptive, model: full, agent: "explore" })).toMatchObject({
+      mode: "adaptive",
+      baseLevel: "low",
+      decision: { rule: "base", level: "low", effort: "low" },
+    })
+    const staticPolicy = new ConfigEffort.Info({ verification_commands: ["bun test"], base_level: "low" })
+    expect(EffortAdapter.resolve({ policy: staticPolicy, model: full, agent: "build" })).toMatchObject({
+      mode: "static",
+      baseLevel: "low",
+      decision: { rule: "base", level: "low", effort: "low" },
+    })
+  })
+
+  it("decides from the durable adaptive state, including an open failure", () => {
+    const row = {
+      sessionID: SessionID.make("ses_adapter"),
+      baseLevel: "standard" as const,
+      revision: 2,
+      level: "deep" as const,
+      cleanPasses: 1,
+      lastAppliedVariant: "max",
+      openFailure: { verifier: "bun test", sequence: 1, revision: 2 },
+    }
+    expect(EffortAdapter.resolve({ policy: new ConfigEffort.Info({ mode: "adaptive", verification_commands: ["bun test"] }), model: full, state: row, agent: "build", selection })).toMatchObject({
+      mode: "adaptive",
+      baseLevel: "standard",
+      decision: { rule: "escalated", level: "deep", effort: "max" },
+    })
+  })
+
+  it("keeps the missing-model and degenerate-route outcomes honest", () => {
+    expect(EffortAdapter.resolve({ agent: "build" })).toEqual({ mode: "static", baseLevel: "standard", support: "unknown" })
+    expect(EffortAdapter.resolve({ model: modelWith("none", "thinking"), agent: "build" })).toEqual({
+      mode: "static",
+      baseLevel: "standard",
+      support: "unsupported",
+      decision: { rule: "untouched" },
+    })
   })
 })

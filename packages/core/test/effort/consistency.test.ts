@@ -80,6 +80,14 @@ const resolved = () =>
     limit: { context: 200_000, output: 32_000 },
   })
 
+interface Deps {
+  readonly bus: Bus.Interface
+  readonly store: SessionStore.Interface
+  readonly efforts: EffortStore.Interface
+  readonly config: Config.Interface
+  readonly models: Model.Interface
+}
+
 const deps = Effect.fn(function* () {
   const bus = yield* Bus.Service
   const store = yield* SessionStore.Service
@@ -90,7 +98,7 @@ const deps = Effect.fn(function* () {
 })
 
 /** The same snapshot the server handler assembles for GET /session/:id/effort. */
-const describeFor = Effect.fn(function* (d: Awaited<ReturnType<typeof deps>>, sessionID: SessionID, agent: string) {
+const describeFor = Effect.fn(function* (d: Deps, sessionID: SessionID, agent: string) {
   const session = yield* d.store.get(sessionID)
   const policy = Config.effortPolicy(yield* d.config.entries())
   const state = yield* d.efforts.get(sessionID)
@@ -115,10 +123,10 @@ const eventually = Effect.fnUntraced(function* (condition: Effect.Effect<boolean
 })
 
 const expectConsistent = Effect.fn(function* (
-  d: Awaited<ReturnType<typeof deps>>,
+  d: Deps,
   sessionID: SessionID,
   agent: string,
-  expectedNext: { rule: string; effort?: string },
+  expectedNext: { rule: string; level?: string; effort?: string },
 ) {
   const before = yield* describeFor(d, sessionID, agent)
   expect(before.next).toMatchObject(expectedNext)
