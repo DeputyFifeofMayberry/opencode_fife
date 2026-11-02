@@ -39,7 +39,6 @@ export const observe = Effect.fn("EffortEvidence.observe")(function* (
       const state = {
         base: row.baseLevel,
         ...(row.openFailure === undefined ? {} : { openFailure: row.openFailure }),
-        ...(row.lastAppliedVariant === undefined ? {} : { lastAppliedVariant: row.lastAppliedVariant }),
         ...(adaptive
           ? {
               level: row.level ?? row.baseLevel,
