@@ -2,7 +2,7 @@ import { describe, expect } from "bun:test"
 import { LanguageModel } from "@opencode/ai/effect"
 import { OpenAIChat } from "@opencode/ai/protocols/openai-chat"
 import { TestLLM } from "@opencode/ai/testing"
-import { Effect, Layer } from "effect"
+import { Effect, Layer, Queue, Stream } from "effect"
 import { Bus } from "@opencode/core/bus"
 import { Config } from "@opencode/core/config"
 import { Database } from "@opencode/core/database/database"
@@ -12,11 +12,14 @@ import { EffortStore } from "@opencode/core/effort/store"
 import { EffortTransition } from "@opencode/core/effort/transition"
 import { Model } from "@opencode/core/model"
 import { Provider } from "@opencode/schema/provider"
+import { ConfigEffort } from "@opencode/schema/config/effort"
+import { Document, Info } from "@opencode/schema/config"
 import { ProjectTable } from "@opencode/core/project/sql"
 import { SessionRunnerModel } from "@opencode/core/session/runner/model"
 import { SessionProjector } from "@opencode/core/session/projector"
 import { SessionStore } from "@opencode/core/session/store"
 import { SessionTable } from "@opencode/core/session/sql"
+import { SessionEvent } from "@opencode/schema/session-event"
 import { Project } from "@opencode/schema/project"
 import { AbsolutePath } from "@opencode/schema/schema"
 import { SessionID } from "@opencode/schema/session-id"
@@ -25,12 +28,7 @@ import { testEffect } from "../lib/effect"
 
 const effortModel = Model.Info.default(Provider.ID.make("fake"), Model.ID.make("fake-model"))
 
-const TestModels = (variants: string[]) =>
-  Layer.mock(Model.Service, {
-    get: () => Effect.succeed({ ...effortModel, variants: variants.map((id) => ({ id: Model.VariantID.make(id) })) }),
-  })
-
-const testLayers = (variants: string[]) =>
+const testLayers = (variants: string[] | undefined, policy?: ConfigEffort.Info) =>
   testEffect(
     Layer.merge(
       AppNodeBuilder.build(
@@ -39,13 +37,27 @@ const testLayers = (variants: string[]) =>
       ),
       Layer.merge(
         TestLLM.testLayer(),
-        Layer.merge(TestModels(variants), Config.testLayer([])),
+        Layer.merge(
+          Layer.mock(Model.Service, {
+            get: () =>
+              Effect.succeed(
+                variants === undefined
+                  ? undefined
+                  : { ...effortModel, variants: variants.map((id) => ({ id: Model.VariantID.make(id) })) },
+              ),
+          }),
+          Config.testLayer(
+            policy ? [new Document({ type: "document", info: new Info({ effort_policy: policy }) })] : [],
+          ),
+        ),
       ),
     ),
   )
 
 const it = testLayers(["low", "high", "max"])
 const degenerateIt = testLayers(["thinking"])
+const adaptiveIt = testLayers(["low", "high", "max"], new ConfigEffort.Info({ mode: "adaptive", clean_passes: 2 }))
+const noModelIt = testLayers(undefined)
 
 const worktree = AbsolutePath.make("/work")
 
@@ -130,9 +142,36 @@ const expectConsistent = Effect.fn(function* (
 ) {
   const before = yield* describeFor(d, sessionID, agent)
   expect(before.next).toMatchObject(expectedNext)
+  const transitions = yield* Queue.unbounded<SessionEvent.EffortTransitioned["data"]>()
+  yield* d.bus.subscribe(SessionEvent.EffortTransitioned).pipe(
+    Stream.filter((event) => event.data.sessionID === sessionID),
+    Stream.runForEach((event) => Queue.offer(transitions, event.data)),
+    Effect.forkScoped({ startImmediately: true }),
+  )
   const switched = yield* EffortTransition.apply(d, { sessionID, agent, resolved: resolved() })
-  expect(switched).toBe(expectedNext.effort !== undefined && expectedNext.rule !== "exact-base")
-  const expectedVariant = expectedNext.effort ?? "default"
+  // apply switches exactly when the decided target differs from the selected
+  // variant — including a clear to the model default, whose decision carries no
+  // effort — and never for an exact pick or an untouched route.
+  const target = expectedNext.effort ?? "default"
+  const current = before.selectedVariant ?? "default"
+  expect(switched).toBe(
+    expectedNext.rule !== "exact-base" && expectedNext.rule !== "untouched" && target !== current,
+  )
+  if (switched) {
+    // The published decision must be the one describe reported for this snapshot.
+    // Write rules always carry a level; exact-base and untouched never switch.
+    if (before.next === undefined || before.next.rule === "exact-base" || before.next.rule === "untouched") {
+      throw new Error("a switched transition must decide a write rule")
+    }
+    const event = yield* Queue.take(transitions)
+    expect(event.decision).toEqual({
+      rule: before.next.rule,
+      level: before.next.level!,
+      effort: before.next.effort,
+    })
+  } else {
+    expect(yield* Queue.isFull(transitions)).toBe(false)
+  }  const expectedVariant = expectedNext.effort ?? "default"
   yield* eventually(
     d.store.get(sessionID).pipe(Effect.map((session) => (session?.model?.variant ?? "default") === expectedVariant)),
   )
@@ -183,6 +222,78 @@ describe("EffortTransition and EffortStatus decision consistency", () => {
       const id = SessionID.make("ses_consistency_plan")
       yield* seedSession(id, undefined)
       yield* expectConsistent(d, id, "plan", { rule: "mode-pin", level: "deep", effort: "max" })
+    })
+  })
+
+  it.effect("an open failure clears a policy-written low variant back to the model default", () => {
+    return Effect.gen(function* () {
+      const d = yield* deps()
+      const id = SessionID.make("ses_consistency_escalate_clear")
+      yield* seedSession(id, "low")
+      yield* d.efforts.set({
+        sessionID: id,
+        baseLevel: "low",
+        revision: 1,
+        lastAppliedVariant: "low",
+        openFailure: { verifier: "bun test", sequence: 1, revision: 1 },
+      })
+      yield* expectConsistent(d, id, "build", { rule: "escalated", level: "standard" })
+      const row = yield* d.efforts.get(id)
+      expect(row?.openFailure).toBeDefined()
+      expect(row?.lastAppliedVariant).toBeUndefined()
+    })
+  })
+
+  adaptiveIt.effect("an adaptive session above its base reports a step-down while holding the raised variant", () => {
+    return Effect.gen(function* () {
+      const d = yield* deps()
+      const id = SessionID.make("ses_consistency_step_down")
+      yield* seedSession(id, "max")
+      yield* d.efforts.set({ sessionID: id, baseLevel: "low", revision: 1, level: "deep", cleanPasses: 0, lastAppliedVariant: "max" })
+      yield* expectConsistent(d, id, "build", { rule: "step-down", level: "deep", effort: "max" })
+    })
+  })
+
+  adaptiveIt.effect("an adaptive session without a row reports and writes its ladder seed", () => {
+    return Effect.gen(function* () {
+      const d = yield* deps()
+      const id = SessionID.make("ses_consistency_adaptive_seed")
+      yield* seedSession(id, undefined)
+      yield* expectConsistent(d, id, "explore", { rule: "base", level: "low", effort: "low" })
+      const row = yield* d.efforts.get(id)
+      expect(row?.baseLevel).toBe("low")
+      expect(row?.level).toBe("low")
+    })
+  })
+
+  adaptiveIt.effect("an adaptive escalation to the model default clears the variant", () => {
+    return Effect.gen(function* () {
+      const d = yield* deps()
+      const id = SessionID.make("ses_consistency_adaptive_clear")
+      yield* seedSession(id, "low")
+      yield* d.efforts.set({
+        sessionID: id,
+        baseLevel: "low",
+        revision: 1,
+        level: "standard",
+        cleanPasses: 0,
+        lastAppliedVariant: "low",
+        openFailure: { verifier: "bun test", sequence: 1, revision: 1 },
+      })
+      yield* expectConsistent(d, id, "build", { rule: "escalated", level: "standard" })
+      const row = yield* d.efforts.get(id)
+      expect(row?.level).toBe("standard")
+      expect(row?.openFailure).toBeDefined()
+    })
+  })
+
+  noModelIt.effect("a missing model skips the transition without writing state", () => {
+    return Effect.gen(function* () {
+      const d = yield* deps()
+      const id = SessionID.make("ses_consistency_no_model")
+      yield* seedSession(id, undefined)
+      expect(yield* EffortTransition.apply(d, { sessionID: id, agent: "build", resolved: resolved() })).toBe(false)
+      expect(yield* d.efforts.get(id)).toBeUndefined()
     })
   })
 
