@@ -1,0 +1,15 @@
+{
+  "window": {
+    "from": 1793032672338,
+    "to": 1793662891108
+  },
+  "timingsRows": 109,
+  "uniqueChildSessions": 100,
+  "exact": 91,
+  "split": 9,
+  "untimed": 11,
+  "unmatched": 0,
+  "tierUnknown": 0,
+  "modelMixSessions": 3,
+  "costDeltaSessions": 15
+}
