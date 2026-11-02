@@ -196,6 +196,44 @@ The likely cause is the fixed cost of the delegation protocol and the duplicated
 
 This is screening-grade evidence: one run per task, twelve tasks, one root model. It does not establish a 15% difference beyond this sample.
 
+## Task 7 — Regression and rollback
+
+### Repository gates
+
+- `bun test test/effort` from `packages/core`: 142 pass, 0 fail, 14 files.
+- `bun typecheck` from `packages/core`: 0 errors in 1,921 files.
+- `bun run check` from the repository root: 0 errors and 1,348 warnings. The warnings are pre-existing lint advisories across `packages/**`; this task changed no source file. The command exited 0 and all 36 typecheck tasks succeeded.
+
+### Effort parity and model switch
+
+A `heavy` child was resumed with a different model, `opencode/glm-5.3-flash-free`. After the switch the child reported:
+
+- model `opencode/glm-5.3-flash-free`
+- base level `deep`, selected variant `max`, next effort `max`
+- mode `adaptive`, verification commands `["bun run check"]`
+
+The durable level was re-applied on the new model rather than dropped to the provider default.
+
+### Malformed override tolerance
+
+With `"engine": "banana"`, `/router` still reported `router: engine=shadow` and the server stayed up. The invalid layer was ignored; this build did not print a `router: config notice:` line for it. The valid file was restored immediately.
+
+### Session bypass
+
+`/bypass on` returned `# Bypass: ON` (delegation protocol, cap enforcement, and narration detection disabled). A subagent task still worked while bypassed, and the shadow engine still logged its decision row: bypass disables the protocol and guards, not observation. `/bypass off` returned `# Bypass: OFF` (router active).
+
+### Full removal drill
+
+- `opencode plugin remove opencode-model-router@2.9.1` followed by a server restart: plugin list contained only `superpowers`; `opencode debug agents` had no `fast`, `medium`, or `heavy`; the command API returned no router commands; `general` and `explore` remained.
+- baseline subagent probe: child agent `general`, model `deepseek/deepseek-flash` (the parent model), base `standard`, selected variant none, verification commands `["bun run check"]`. This matches the Task 1 baseline.
+- sessions remained readable across both restarts; 23 sessions were listed after reinstall.
+- `opencode plugin add opencode-model-router@2.9.1` plus restart restored the three tiers and their models, and `/router` reported `router: engine=shadow build=2.9.1+unknown`.
+
+### `/router` and `/tiers` capture
+
+Both commands were executed through the server command API on a live session. `/tiers` showed preset `fife` with `fast` = `opencode/glm-5.3-flash-free`, `medium` and `heavy` = `deepseek/deepseek-flash`, and no variant or effort fields. This satisfies the Task 3 rendering check without a TUI screenshot.
+
+
 
 
 
