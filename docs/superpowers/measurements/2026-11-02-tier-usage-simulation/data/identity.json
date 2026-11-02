@@ -1,0 +1,103 @@
+{
+  "intended": {
+    "fast": "vercel/minimax/minimax-m3.1-flash#medium",
+    "medium": "vercel/deepseek/deepseek-v4.1-flash-1017#max",
+    "heavy": "vercel/openai/gpt-6.1-terra#xhigh"
+  },
+  "byKey": {
+    "vercel/minimax/minimax-m3.1-flash#medium": {
+      "steps": 11,
+      "costUSD": 0.011682
+    },
+    "vercel/deepseek/deepseek-v4.1-flash-1017#max": {
+      "steps": 12,
+      "costUSD": 0.04346
+    },
+    "vercel/openai/gpt-6.1-terra#xhigh": {
+      "steps": 4,
+      "costUSD": 0.041375
+    },
+    "deepseek/deepseek-flash#default": {
+      "steps": 2327,
+      "costUSD": 3.17244
+    },
+    "vercel/deepseek/deepseek-v4.1-flash-1017#none": {
+      "steps": 2,
+      "costUSD": 0.003194
+    },
+    "vercel/reflection/beam-free#low": {
+      "steps": 3,
+      "costUSD": 0
+    },
+    "opencode/beam-free#low": {
+      "steps": 1,
+      "costUSD": 0
+    },
+    "vercel/openai/gpt-6.1-terra-fast#xhigh": {
+      "steps": 4,
+      "costUSD": 0.106515
+    },
+    "zai-coding-plan/glm-5.3-flash#low": {
+      "steps": 114,
+      "costUSD": 0
+    },
+    "deepseek/deepseek-flash#max": {
+      "steps": 59,
+      "costUSD": 0.173382
+    },
+    "deepseek/deepseek-flash#high": {
+      "steps": 373,
+      "costUSD": 0.494261
+    },
+    "opencode/glm-5.3-flash-free#low": {
+      "steps": 190,
+      "costUSD": 0
+    },
+    "zai-coding-plan/glm-5.3-flash#default": {
+      "steps": 142,
+      "costUSD": 0
+    },
+    "zai-coding-plan/glm-5.3-flash#max": {
+      "steps": 87,
+      "costUSD": 0
+    },
+    "opencode/flint-40b-free#unspecified": {
+      "steps": 4,
+      "costUSD": 0
+    },
+    "deepseek/deepseek-flash#low": {
+      "steps": 3,
+      "costUSD": 0.001718
+    },
+    "opencode/glm-5.3-flash-free#max": {
+      "steps": 3,
+      "costUSD": 0
+    },
+    "opencode/deepseek-v4.1-flash-free#default": {
+      "steps": 98,
+      "costUSD": 0
+    },
+    "opencode/deepseek-v4.1-flash-free#low": {
+      "steps": 87,
+      "costUSD": 0
+    }
+  },
+  "byTierKey": {},
+  "mixedSessions": [],
+  "fallbacks": [],
+  "provenance": {
+    "estimated": {
+      "steps": 3088,
+      "costUSD": 4.048028
+    },
+    "unknown": {
+      "steps": 66,
+      "costUSD": 0
+    },
+    "provider": {
+      "steps": 370,
+      "costUSD": 0
+    }
+  },
+  "cohortSize": 0
+}
