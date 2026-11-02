@@ -274,7 +274,7 @@ The rule that keeps the kit small: **anything that needs to know about position 
 ### 8.1 Hard constraints
 
 - `ProtocolBody`, `Protocol`, `Route`, `LLMRequest`, and every wire body type are unchanged.
-- Every emitted request body is byte-identical to today for all covered cases. The 1,323-case suite asserting `toEqual` bodies is the proof.
+- Every emitted request body is byte-identical to today for all covered cases. The 2,046-test suite, whose provider files assert complete wire bodies, is the proof.
 - No public export is removed. `ProviderShared` and `open-responses`'s `resolveParallelToolCalls` remain.
 - `packages/ai` gains no dependency; the kit imports only `schema` and existing local modules.
 - Promise and Effect `ai` remain identical (`test/promise-parity.types.ts`).

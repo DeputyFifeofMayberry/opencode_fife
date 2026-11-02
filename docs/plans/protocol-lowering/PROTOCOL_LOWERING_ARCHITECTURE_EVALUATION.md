@@ -14,7 +14,7 @@
 | Source inspection | All 72 files in `packages/ai/src/protocols` (18,264 lines); the nine in-scope protocols read in full; `schema/messages.ts`; `route/protocol.ts`; `protocols/shared.ts` | High — read directly |
 | Measurement | Physical line counts, lowering-region spans, cross-protocol import graph (see §2.6, §3.4) | High — reproducible commands in §12 |
 | Git history | 40 most recent commits touching the directory; targeted diffs for multi-protocol commits | High for what it shows; intent inferred from messages only |
-| Test inventory | 156 files, 1,323 `bun test` cases, 59 recorded-cassette suites | High for structure. **No suite was executed.** |
+| Test inventory | 156 files, **2,046 tests** (measured 2026-11-02: 2,018 pass, 28 skip, 0 fail), including 59 recorded-cassette suites | High — measured baseline |
 | Runtime measurement | None | Absent by design — §9.4 |
 | Originating review | Not available (§0.1) | — |
 
@@ -33,7 +33,9 @@ Three nouns survive; no findings list, severity, or proposed design does. **The 
 
 ### 0.2 Not done
 
-No production file edited. No test run. No dependency added. No prototype written. No git state changed (upstream divergence is read from the local tracking ref, without a fetch).
+During the investigation: no production file edited, no dependency added, no prototype written, no git state changed (upstream divergence is read from the local tracking ref, without a fetch).
+
+After the investigation, at implementation start (2026-11-02), the baseline was executed rather than assumed: 2,046 tests, 2,018 pass, 28 skip, 0 fail. Reaching green required one test-only repair — `openai-chat.test.ts` had lost its `LLM` import in the earlier `ai.request` refactor, failing 5 cases with `ReferenceError: LLM is not defined`. That repair is commit `68b4c70cb5` on branch `lowering-kit`; no production code was involved.
 
 ---
 
@@ -244,7 +246,7 @@ Fifteen protocol files import one of the eight bases:
 
 ### 3.3 What the tests already pin
 
-1,323 `bun test` cases in 156 files; 59 use recorded cassettes. Non-recorded provider tests assert the **complete outbound body** with `toEqual`, plus exact URL and headers. Recorded suites replay provider bytes and assert SDK-level output only, so a request-side regression is caught by the non-recorded sibling or not at all.
+2,046 tests in 156 files, of which 59 files use recorded cassettes. Baseline measured green on 2026-11-02: 2,018 pass, 28 skip, 0 fail. Non-recorded provider tests assert the **complete outbound body** with `toEqual`, plus exact URL and headers. Recorded suites replay provider bytes and assert SDK-level output only, so a request-side regression is caught by the non-recorded sibling or not at all.
 
 There is **no test that asserts two protocols lower the same semantic intent to their respective shapes**, and no test that asserts a protocol's part-kind coverage. Coverage is implicit in scattered `supportsContent([...])` arrays: `bedrock` 6 call sites, `gemini` 6, `openai-chat` 5, `open-responses` 4, `anthropic` 3, `mistral` 3, `cohere` 2, `interactions` 2.
 
@@ -427,7 +429,7 @@ Finalists: **A** (status quo), **B/F** (kit), **C** (engine).
 
 ### 7.2 Challenge to the leader
 
-- **Weakest property of B/F:** the manifest can drift from the loop. **Mitigation:** the loop's guard is `Lowering.assertContent(route, role, manifest, part)`, so a wrong manifest changes runtime behaviour and is caught by the 1,323 exact-body tests — drift is a test failure, not a silent lie.
+- **Weakest property of B/F:** the manifest can drift from the loop. **Mitigation:** the loop's guard is `Lowering.assertContent(route, role, manifest, part)`, so a wrong manifest changes runtime behaviour and is caught by the 2,046-test suite — drift is a test failure, not a silent lie.
 - **Complexity it adds:** four modules and eight constants that a new maintainer must learn. **Justification:** each module is a pure function over request data with its own unit tests; the alternative (C) adds a protocol.
 - **Problem it leaves unresolved:** merge/ordering duplication across seven shapes stays. **Deliberate:** §4.3 shows it is not shareable without an engine.
 - **Could something simpler deliver nearly the same?** Candidate A plus *only* the capability manifest and conformance test — yes, and that is the minimum viable slice (plan Tasks 1, 3, 7–10). The tool-result and tool-id modules carry the rest; if those stages are cut, the decision is still sound.
