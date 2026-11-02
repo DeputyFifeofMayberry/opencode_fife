@@ -41,6 +41,13 @@ export function Logo() {
           </text>
         )
       }
+      if (char === "★") {
+        return (
+          <text fg={theme.text.base} attributes={TextAttributes.BOLD} selectable={false}>
+            {char}
+          </text>
+        )
+      }
       return (
         <text fg={fg} attributes={attrs} selectable={false}>
           {char}
@@ -57,7 +64,7 @@ export function Logo() {
         </For>
       ) : dimensions().width < 44 ? (
         <>
-          <For each={logo.left.slice(1)}>
+          <For each={logo.left}>
             {(line) => <box flexDirection="row">{renderLine(line, theme.text.muted, false)}</box>}
           </For>
           <For each={logo.right}>
