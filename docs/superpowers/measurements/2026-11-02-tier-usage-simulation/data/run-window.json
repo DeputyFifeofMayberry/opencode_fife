@@ -4,6 +4,7 @@
   "runEndMs": null,
   "planned": { "fast": 45, "medium": 39, "heavy": 9 },
   "executed": { "fast": 11, "medium": 0, "heavy": 0 },
+  "measured": { "fastSpendUSD": 0.045772, "fastMeanUSD": 0.004161 },
   "concurrency": 3,
   "perDispatchCeilingUSD": 0.9,
   "stoppedEarly": "pending-scope-decision",
