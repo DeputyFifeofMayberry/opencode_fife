@@ -27,6 +27,14 @@ import {
   ProviderShared,
   withUntypedFrames,
 } from "./shared.js"
+import { accepts, kindsOf, type ContentPolicy } from "./lowering/content.js"
+
+const contentPolicy = {
+  system: ["text"],
+  user: ["text", "media"],
+  assistant: ["compaction", "text", "reasoning", "tool-call", "tool-result", "media"],
+  tool: ["tool-result"],
+} as const satisfies ContentPolicy
 import { classifyProviderFailure } from "../provider-error.js"
 import { effortUpdate } from "../effort-updates.js"
 import { OpenResponsesOptions } from "./utils/open-responses-options.js"
@@ -612,7 +620,7 @@ const lowerUserContent = Effect.fnUntraced(function* (
 ) {
   if (part.type === "text") return { type: "input_text" as const, text: part.text }
   if (part.type === "media") return yield* lowerMedia(part, request, adapter)
-  return yield* ProviderShared.unsupportedContent(adapter.name, "user", ["text", "media"])
+  return yield* ProviderShared.unsupportedContent(adapter.name, "user", kindsOf(contentPolicy, "user"))
 })
 
 // Tool results may carry structured text, images, and files. Keep media as provider-native
@@ -778,21 +786,19 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest, adapter:
           })
           continue
         }
-        return yield* ProviderShared.unsupportedContent(adapter.name, "assistant", [
-          "text",
-          "reasoning",
-          "tool-call",
-          "tool-result",
-          "media",
-        ])
+        return yield* ProviderShared.unsupportedContent(
+          adapter.name,
+          "assistant",
+          kindsOf(contentPolicy, "assistant"),
+        )
       }
       flushText()
       continue
     }
 
     for (const part of message.content) {
-      if (!ProviderShared.supportsContent(part, ["tool-result"]))
-        return yield* ProviderShared.unsupportedContent(adapter.name, "tool", ["tool-result"])
+      if (!accepts(contentPolicy, "tool", part))
+        return yield* ProviderShared.unsupportedContent(adapter.name, "tool", kindsOf(contentPolicy, "tool"))
       input.push({
         type: customTool(part) ? "custom_tool_call_output" : "function_call_output",
         call_id: part.id,

@@ -19,6 +19,14 @@ import { Media } from "../media.js"
 import { classifyProviderFailure, providerErrorMessage } from "../provider-error.js"
 import { encodeJson } from "../utils/json.js"
 import { JsonObject, knownString, lenient, optionalNull, ProviderShared } from "./shared.js"
+import { kindsOf, type ContentPolicy } from "./lowering/content.js"
+
+const contentPolicy = {
+  system: ["text"],
+  user: ["text", "media"],
+  assistant: ["text", "media", "reasoning", "tool-call", "tool-result"],
+  tool: ["tool-result"],
+} as const satisfies ContentPolicy
 import { Lifecycle } from "./utils/lifecycle.js"
 import { MediaInput } from "./utils/media-input.js"
 import { GeminiGenerateContent } from "./utils/gemini-generate-content.js"
@@ -273,7 +281,7 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest) {
     for (const part of message.content) {
       if (message.role === "tool") {
         if (part.type !== "tool-result")
-          return yield* ProviderShared.unsupportedContent(ADAPTER, "tool", ["tool-result"])
+          return yield* ProviderShared.unsupportedContent(ADAPTER, "tool", kindsOf(contentPolicy, "tool"))
         steps.push({
           type: "function_result",
           call_id: part.id,
@@ -313,11 +321,7 @@ const lowerMessages = Effect.fnUntraced(function* (request: LLMRequest) {
         if (toolSignature !== undefined) hasSignedStep = true
         continue
       }
-      return yield* ProviderShared.unsupportedContent(
-        ADAPTER,
-        message.role,
-        message.role === "user" ? ["text", "media"] : ["text", "media", "reasoning", "tool-call"],
-      )
+      return yield* ProviderShared.unsupportedContent(ADAPTER, message.role, kindsOf(contentPolicy, message.role))
     }
   }
   return steps
