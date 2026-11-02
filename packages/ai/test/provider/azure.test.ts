@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { Effect } from "effect"
+import { Effect, Schema } from "effect"
 import { HttpClientRequest } from "effect/http"
 import { ai } from "../../src/effect.js"
 import { Azure } from "../../src/providers.js"
@@ -7,7 +7,11 @@ import { LLMClient } from "../../src/route/client.js"
 import { it } from "../lib/effect.js"
 import { dynamicResponse } from "../lib/http.js"
 
-const send = (model: ReturnType<typeof Azure.messagesModel>) =>
+type AzureModel =
+  | ReturnType<typeof Azure.messagesModel>
+  | ReturnType<typeof Azure.responsesModel>
+
+const send = (model: AzureModel) =>
   Effect.gen(function* () {
     const seen: Array<Request> = []
     yield* LLMClient.generate(ai.request({ model, prompt: "Hi" })).pipe(
@@ -22,6 +26,12 @@ const send = (model: ReturnType<typeof Azure.messagesModel>) =>
       Effect.flip,
     )
     return seen[0]!
+  })
+
+const readBody = (request: Request) =>
+  Effect.gen(function* () {
+    const text = yield* Effect.promise(() => request.text())
+    return Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(text)
   })
 
 describe("Azure Messages", () => {
@@ -87,6 +97,45 @@ describe("Azure Messages", () => {
       expect(() =>
         Azure.configure({ baseURL: "https://gateway.example/openai/v1", apiKey: "key" }).messages("claude"),
       ).toThrow(/https:\/\/gateway\.example\/openai\/v1.*\/anthropic/)
+    }),
+  )
+
+  it.effect("drops OpenAI options from an Anthropic Messages body", () =>
+    Effect.gen(function* () {
+      const request = yield* send(
+        Azure.configure({
+          resourceName: "fixture",
+          apiKey: "key",
+          providerOptions: { store: false, reasoningEffort: "high", metadata: { user_id: "user_1" } },
+        }).messages("claude"),
+      )
+      const body = yield* readBody(request)
+
+      expect(body).toMatchObject({ metadata: { user_id: "user_1" } })
+      expect(body).not.toHaveProperty("store")
+      expect(body).not.toHaveProperty("reasoningEffort")
+      expect(body).not.toHaveProperty("reasoning_effort")
+    }),
+  )
+
+  it.effect("drops Anthropic options from an OpenAI Responses body", () =>
+    Effect.gen(function* () {
+      const request = yield* send(
+        Azure.configure({
+          resourceName: "fixture",
+          apiKey: "key",
+          providerOptions: {
+            store: true,
+            thinking: { type: "enabled", budgetTokens: 1_024 },
+            cache_control: { type: "ephemeral" },
+          },
+        }).responses("gpt-5"),
+      )
+      const body = yield* readBody(request)
+
+      expect(body).toMatchObject({ store: true })
+      expect(body).not.toHaveProperty("thinking")
+      expect(body).not.toHaveProperty("cache_control")
     }),
   )
 })

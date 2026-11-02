@@ -32,6 +32,10 @@ export type Config = AzureURL &
     readonly apiVersion?: string
     readonly queryParams?: Record<string, string>
     readonly useDeploymentBasedUrls?: boolean
+    // The union is deliberate: one Azure configuration serves both model families. Each route's protocol
+    // decodes `providerOptions` through its own closed schema before serialization
+    // (`protocols/anthropic-messages.ts`, `protocols/utils/open-responses-options.ts`), so an option that
+    // belongs to the other family is accepted and ignored instead of reaching the wire.
     readonly providerOptions?: OpenAIProviderOptionsInput | AnthropicMessages.ProviderOptionsInput
   }
 
