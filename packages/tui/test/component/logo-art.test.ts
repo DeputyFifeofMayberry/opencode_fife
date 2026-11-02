@@ -38,9 +38,36 @@ describe("logo art", () => {
   })
 
   test("the pre-existing exports are untouched", () => {
-    expect(logo.left.length).toBe(4)
-    expect(logo.right.length).toBe(4)
+    expect(logo.left).toEqual([
+      " ▄▄   ★    ▄▄      ",
+      "█     █   █    █▀▀█",
+      "█^^^  █   █^^^ █^^^",
+      "█     █   █    ▀▀▀▀",
+    ])
+    expect(logo.right).toEqual([
+      "             ▄     ",
+      "█▀▀▀ █▀▀█ █▀▀█ █▀▀█",
+      "█___ █__█ █__█ █^^^",
+      "▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀",
+    ])
     expect(go.left.length).toBe(4)
+  })
+
+  test("the wordmark decodes to f, i, f, e, c, o, d, e", () => {
+    const art = logoArt.full
+    // f and d rise above the x-height; i keeps its dot with a gap beneath.
+    expect(art[8].slice(12, 15)).toBe("FFF")
+    expect(art[8][17]).toBe("F")
+    expect(art[9][17]).toBe(".")
+    expect(art[8].slice(22, 25)).toBe("FFF")
+    expect(art[8][48]).toBe("C")
+    expect(art[9][48]).toBe("C")
+    // c is open on the right, o is closed — the only difference between them.
+    expect(art[12][36]).toBe(".")
+    expect(art[12][42]).toBe("C")
+    // e carries a middle bar; d does not.
+    expect(art[13].slice(26, 30)).toBe("FFFF")
+    expect(art[13].slice(44, 49)).toBe("C...C")
   })
 })
 
@@ -53,6 +80,17 @@ describe("logoMode", () => {
     expect(logoMode(logoSize.compact - 1, 24)).toBe("minimal")
     expect(logoMode(400, 15)).toBe("minimal")
     expect(logoMode(400, 11)).toBeNull()
+  })
+
+  test("thresholds follow the artwork width plus the home screen's padding", () => {
+    expect(logoSize.full - logoWidth.full).toBe(4)
+    expect(logoSize.compact - logoWidth.compact).toBe(4)
+    expect(logoSize.minimal - logoWidth.minimal).toBe(2)
+  })
+
+  test("hides the mark when the window cannot hold even the plain wordmark", () => {
+    expect(logoMode(logoSize.minimal, 24)).toBe("minimal")
+    expect(logoMode(logoSize.minimal - 1, 24)).toBeNull()
   })
 })
 

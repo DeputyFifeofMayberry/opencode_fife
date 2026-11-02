@@ -133,7 +133,7 @@ The mark, not the letters, is now solid, so no per-character shadow is needed.
 | full | width ≥ 69, height ≥ 16 | complete monument, 65 wide × 9 rows |
 | compact | width ≥ 55, height ≥ 16 | wordmark + stepped pediment and star, no columns, no foundations, 51 wide × 9 rows |
 | minimal | otherwise | one line, `fife` muted + `code` bright, 8 wide × 1 row |
-| hidden | height < 12 | nothing (existing guard) |
+| hidden | height < 12 or width < 10 | nothing (existing guard, plus a floor so the plain wordmark cannot wrap) |
 
 Full and compact share a height: at 55 columns what stops fitting is the columns, not
 the rows, so compact drops the columns, the foundations, and 14 columns of roof while
@@ -159,7 +159,9 @@ untouched for `go-upsell-art.ts` and `mini/splash.ts`, so the upsell art is unch
 | `packages/tui/test/component/logo-art.test.ts` | New: art invariants and cell conversion. |
 | `packages/tui/test/component/logo.test.tsx` | New: tier selection at widths 80 / 60 / 40 and height 10. |
 
-`home.tsx` and `presentation.ts` need no changes.
+`home.tsx` and `presentation.ts` need no changes. One other surface reuses the
+component: `component/stats.tsx` renders `<Logo />` and already hides it below 38
+rows, so it inherits the new mark unchanged; that is accepted, not an oversight.
 
 `util/presentation.ts` reads `logo.left` / `logo.right` positionally and decodes the
 old `_ ^ ~ ,` shorthand with its own 256-colour escapes. Re-deriving those arrays
@@ -178,7 +180,9 @@ Pure-function tests (no renderer):
   baseline row 16;
 - `logoCells` maps the four top/bottom combinations correctly and never emits the
   `★` character;
-- run-length grouping keeps every row under 25 `<text>` elements;
+- run-length grouping keeps every row under 40 `<text>` elements;
+- the wordmark decodes to `f, i, f, e, c, o, d, e` — `c` open on the right, `o`
+  closed, `d` carrying an ascender stem, `e` carrying a middle bar;
 - the frozen `logo.left` / `logo.right` arrays are untouched by the new code.
 
 Render tests reuse the existing `testRender` + `@jsxImportSource @opentui/solid`

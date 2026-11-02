@@ -65,11 +65,20 @@ export const logoArt: Record<"full" | "compact", string[]> = {
 
 export const logoWidth = { full: 65, compact: 51, minimal: 8 } as const
 export const logoHeight = { full: 9, compact: 9, minimal: 1 } as const
-// Art width plus the home screen's 2 cells of padding on each side.
-export const logoSize = { full: 69, compact: 55 } as const
+
+// The home screen pads 2 cells each side for the artwork tiers, and 1 each side
+// below 44 columns, where the plain wordmark is the only thing that fits.
+const ART_PADDING = 4
+const MINIMAL_PADDING = 2
+
+export const logoSize = {
+  full: logoWidth.full + ART_PADDING,
+  compact: logoWidth.compact + ART_PADDING,
+  minimal: logoWidth.minimal + MINIMAL_PADDING,
+} as const
 
 export function logoMode(width: number, height: number): LogoTier | null {
-  if (height < 12) return null
+  if (height < 12 || width < logoSize.minimal) return null
   if (height >= 16 && width >= logoSize.full) return "full"
   if (height >= 16 && width >= logoSize.compact) return "compact"
   return "minimal"
