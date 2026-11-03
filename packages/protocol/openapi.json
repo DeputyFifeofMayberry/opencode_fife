@@ -20704,9 +20704,60 @@
             },
             "required": ["read", "write"],
             "additionalProperties": false
+          },
+          "multipliers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Model.CostMultiplier"
+            }
           }
         },
         "required": ["input", "output", "cache"],
+        "additionalProperties": false
+      },
+      "Model.CostMultiplier": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Model.CostWindow"
+          },
+          "factor": {
+            "type": "number"
+          }
+        },
+        "required": ["window", "factor"],
+        "additionalProperties": false
+      },
+      "Model.CostWindow": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ranges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                }
+              },
+              "required": ["from", "to"],
+              "additionalProperties": false
+            }
+          },
+          "skipHolidays": {
+            "type": "boolean"
+          }
+        },
+        "required": ["days", "ranges", "skipHolidays"],
         "additionalProperties": false
       },
       "Model.Info": {

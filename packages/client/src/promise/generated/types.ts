@@ -217,6 +217,12 @@ export type ModelCapabilities = { tools: boolean; input: Array<string>; output: 
 
 export type MoneyUSDPerMillionTokens = number
 
+export type ModelCostWindow = {
+  days: Array<string>
+  ranges: Array<{ from: string; to: string }>
+  skipHolidays: boolean
+}
+
 export type GenerateTextResponse = { data: { text: string } }
 
 export type GenerateUsage = { input?: number; output?: number }
@@ -736,12 +742,7 @@ export type ProviderCompatibility = {
   mediaInput?: ModelMediaInput
 }
 
-export type ModelCost = {
-  tier?: { type: "context"; size: number }
-  input: MoneyUSDPerMillionTokens
-  output: MoneyUSDPerMillionTokens
-  cache: { read: MoneyUSDPerMillionTokens; write: MoneyUSDPerMillionTokens }
-}
+export type ModelCostMultiplier = { window: ModelCostWindow; factor: number }
 
 export type GenerateChoiceAnswer = {
   type: "choice"
@@ -2178,6 +2179,14 @@ export type SessionMessageToolStateError1 = {
   metadata?: { [x: string]: JsonValue }
 }
 
+export type ModelCost = {
+  tier?: { type: "context"; size: number }
+  input: MoneyUSDPerMillionTokens
+  output: MoneyUSDPerMillionTokens
+  cache: { read: MoneyUSDPerMillionTokens; write: MoneyUSDPerMillionTokens }
+  multipliers?: Array<ModelCostMultiplier>
+}
+
 export type GenerateDecisionAnswer =
   | GeneratePredicateAnswer
   | GenerateChoiceAnswer
@@ -2305,28 +2314,6 @@ export type ProviderInfo = {
   settings?: ProviderSettings
   headers?: { [x: string]: string }
   body?: { [x: string]: any }
-}
-
-export type ModelInfo = {
-  id: string
-  modelID: string
-  providerID: ProviderID
-  canonical?: ProviderID
-  type?: ModelType
-  family?: string
-  name: string
-  compatibility?: ModelCompatibility
-  package?: string
-  settings?: ModelSettings
-  headers?: { [x: string]: string }
-  body?: { [x: string]: any }
-  capabilities: ModelCapabilities
-  variants: Array<ModelVariant>
-  time: { released: number }
-  cost: Array<ModelCost>
-  status: "alpha" | "beta" | "deprecated" | "active"
-  enabled: boolean
-  limit: { context: number; input?: number; output: number }
 }
 
 export type SessionInfo = {
@@ -2653,6 +2640,28 @@ export type SessionMessageAssistantTool1 = {
     | SessionMessageToolStateCompleted1
     | SessionMessageToolStateError1
   time: { created: number; ran?: number; completed?: number }
+}
+
+export type ModelInfo = {
+  id: string
+  modelID: string
+  providerID: ProviderID
+  canonical?: ProviderID
+  type?: ModelType
+  family?: string
+  name: string
+  compatibility?: ModelCompatibility
+  package?: string
+  settings?: ModelSettings
+  headers?: { [x: string]: string }
+  body?: { [x: string]: any }
+  capabilities: ModelCapabilities
+  variants: Array<ModelVariant>
+  time: { released: number }
+  cost: Array<ModelCost>
+  status: "alpha" | "beta" | "deprecated" | "active"
+  enabled: boolean
+  limit: { context: number; input?: number; output: number }
 }
 
 export type GenerateDecisionResult = {
