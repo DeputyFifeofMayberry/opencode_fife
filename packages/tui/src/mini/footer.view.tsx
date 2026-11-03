@@ -35,6 +35,7 @@ import { footerStatuslinePolicy } from "./footer.width"
 import { Keymap } from "../context/keymap"
 import type { ClipboardService } from "../context/clipboard"
 import { modelInfo } from "./variant.shared"
+import { stepLabel } from "./step-label"
 import { monoShortcut } from "./mono"
 import { stringWidth } from "../util/string-width"
 import { formatContextUsage } from "../util/session"
@@ -235,12 +236,20 @@ export function RunFooterView(props: RunFooterViewProps) {
     return colors[Math.max(0, index) % colors.length]!
   })
   const block = createMemo(() => runTheme().block)
-  // An exact pick names itself; otherwise the effort policy decides, so the status names Auto.
-  const variantStatus = createMemo(() => props.currentVariant() ?? (props.variants().length > 0 ? "auto" : undefined))
+  // The last step that actually ran names itself; before the first step, the
+  // session's next-request identity stands in. There is no "auto" state.
+  const label = createMemo(() =>
+    stepLabel(props.state().step, {
+      agent: props.currentAgent(),
+      model: model()?.model ?? props.state().model.trim(),
+      variant: props.currentVariant(),
+    }),
+  )
+  const variantStatus = createMemo(() => label().variant)
   const footerStatus = createMemo(() => {
-    const current = model()?.model ?? props.state().model.trim()
+    const current = label().model
     const variant = variantStatus()
-    const details = [busy() ? "running" : "idle", `agent ${props.currentAgent()}`]
+    const details = [busy() ? "running" : "idle", `agent ${label().agent}`]
     if (current) details.push(variant ? `${current} ${variant}` : current)
     if (contextUsage()) details.push(contextUsage())
     if (cost()) details.push(cost())
@@ -423,10 +432,10 @@ export function RunFooterView(props: RunFooterViewProps) {
   })
   const agentStatus = createMemo(() => {
     if (!footerDetails() || !prompt() || shell()) return undefined
-    return props.currentAgent()
+    return label().agent
   })
   const modelStatus = createMemo(() => {
-    const current = model()?.model ?? props.state().model.trim()
+    const current = label().model
     if (!footerDetails() || !prompt() || shell() || !current) return
     return {
       model: current,

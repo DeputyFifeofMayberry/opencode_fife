@@ -580,7 +580,7 @@ test("direct footer describes commands and context and shows the model provider"
   }
 })
 
-test("direct footer names Auto when the model has variants and none is picked", async () => {
+test("direct footer never invents a level when the model has variants and none is picked", async () => {
   const app = await renderFooter({
     providers: [provider()],
     currentModel: { providerID: "opencode", modelID: "gpt-5" },
@@ -589,7 +589,25 @@ test("direct footer names Auto when the model has variants and none is picked", 
   })
   try {
     await app.renderOnce()
-    expect(app.captureCharFrame()).toContain("Build · GPT-5 [auto] · opencode · ctrl+p menu")
+    expect(app.captureCharFrame()).toContain("Build · GPT-5 · opencode · ctrl+p menu")
+  } finally {
+    app.cleanup()
+  }
+})
+
+test("direct footer labels the step that actually ran", async () => {
+  const app = await renderFooter({
+    providers: [provider()],
+    currentModel: { providerID: "opencode", modelID: "gpt-5" },
+    variants: ["high", "minimal"],
+    state: {
+      first: true,
+      step: { sessionID: "ses_1", agent: "fast", providerID: "vercel", modelID: "minimax/m3", variant: "medium" },
+    },
+  })
+  try {
+    await app.renderOnce()
+    expect(app.captureCharFrame()).toContain("fast · minimax/m3 [medium] · opencode · ctrl+p menu")
   } finally {
     app.cleanup()
   }
