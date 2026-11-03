@@ -6,7 +6,10 @@ const BARE = new RegExp(
   "g",
 )
 const INLINE = /`([^`\n]+)`/g
-const FENCE = /(```[\s\S]*?```)/
+// Fenced blocks, closed or running to the end of a response that is still streaming.
+const FENCE = /(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$))/
+// Existing markdown links are left exactly as written.
+const MARKDOWN_LINK = /\[[^\]]*\]\([^)]*\)/g
 
 type Options = {
   cwd: string
@@ -21,7 +24,8 @@ function absolute(raw: string, cwd: string) {
 }
 
 function href(resolved: string) {
-  return "file:///" + encodeURI(resolved.replace(/\\/g, "/"))
+  // Parentheses would otherwise close the markdown destination early.
+  return "file:///" + encodeURI(resolved.replace(/\\/g, "/")).replace(/\(/g, "%28").replace(/\)/g, "%29")
 }
 
 function link(raw: string, options: Options) {
@@ -31,15 +35,19 @@ function link(raw: string, options: Options) {
 }
 
 function rewrite(segment: string, options: Options) {
-  // Inline code is replaced first so a backticked path keeps its spaces and is not
-  // re-matched by the bare pass.
   const links: string[] = []
-  const held = segment.replace(INLINE, (whole, inner: string) => {
-    const target = link(inner.trim(), options)
-    if (!target) return whole
-    links.push(target.markdown)
+  const hold = (markdown: string) => {
+    links.push(markdown)
     return `\u0000${links.length - 1}\u0000`
-  })
+  }
+  // Existing links and inline code are held first so the bare pass cannot re-match
+  // inside them; a backticked path keeps its spaces.
+  const held = segment
+    .replace(MARKDOWN_LINK, hold)
+    .replace(INLINE, (whole, inner: string) => {
+      const target = link(inner.trim(), options)
+      return target ? hold(target.markdown) : whole
+    })
   const linked = held.replace(BARE, (raw) => link(raw, options)?.markdown ?? raw)
   return linked.replace(/\u0000(\d+)\u0000/g, (_, index: string) => links[Number(index)]!)
 }

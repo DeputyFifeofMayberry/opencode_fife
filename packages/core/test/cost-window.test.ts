@@ -35,6 +35,17 @@ test("drops a predicate the compiler does not understand", () => {
   expect(compileWindow({ region: { equals: "eu" } })).toBeUndefined()
 })
 
+test("drops an any-branch rule whose branches cover different days", () => {
+  expect(
+    compileWindow({
+      any: [
+        { utc_days: { in: ["mon"] }, utc_hours: { gte: "01:00", lt: "04:00" } },
+        { utc_days: { in: ["fri"] }, utc_hours: { gte: "06:00", lt: "10:00" } },
+      ],
+    }),
+  ).toBeUndefined()
+})
+
 test("applies the factor inside the first weekday window", () => {
   expect(multiplierAt(deepseek, monday(2))).toBe(2)
 })

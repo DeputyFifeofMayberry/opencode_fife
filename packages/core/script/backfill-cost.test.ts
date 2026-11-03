@@ -50,3 +50,7 @@ test("never rewrites a row the endpoint priced", () => {
 test("skips a row whose model is not in the catalog", () => {
   expect(reprice({ ...row(monday(2), { estimated: 0.15 }), modelID: "gone" }, catalog)).toBe("skipped")
 })
+
+test("skips a message that mixes provider and estimated costs", () => {
+  expect(reprice(row(monday(2), { estimated: 0.1, provider: 0.05 }), catalog)).toBe("skipped")
+})

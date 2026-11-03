@@ -1,8 +1,18 @@
 import { isPeak, type CostMultiplier } from "@opencode/util/cost-window"
 
-/** Peak/off-peak state for the price window that currently governs a model. */
-export function pricingStatus(multipliers: readonly CostMultiplier[] | undefined, at: number) {
-  return isPeak(multipliers, at) ? { peak: true, label: "Peak" } : { peak: false, label: "Off-peak" }
+/**
+ * Peak/off-peak state, but only when every price window in play agrees. Models
+ * in the catalog carry different windows, so a single badge that picked one of
+ * them could label a request it does not govern.
+ */
+export function pricingStatus(
+  windows: readonly (readonly CostMultiplier[] | undefined)[],
+  at: number,
+): { peak: boolean; label: string } | undefined {
+  const states = windows.map((multipliers) => isPeak(multipliers, at))
+  if (!states.length) return undefined
+  if (states.some((state) => state !== states[0])) return undefined
+  return states[0] ? { peak: true, label: "Peak" } : { peak: false, label: "Off-peak" }
 }
 
 /**

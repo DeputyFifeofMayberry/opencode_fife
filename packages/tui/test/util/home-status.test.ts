@@ -15,11 +15,11 @@ const deepseek = [
 const monday = (hour: number) => Date.UTC(2026, 10, 2, hour)
 
 test("reports peak inside the window", () => {
-  expect(pricingStatus(deepseek, monday(2))).toEqual({ peak: true, label: "Peak" })
+  expect(pricingStatus([deepseek], monday(2))).toEqual({ peak: true, label: "Peak" })
 })
 
 test("reports off-peak outside the window", () => {
-  expect(pricingStatus(deepseek, monday(5))).toEqual({ peak: false, label: "Off-peak" })
+  expect(pricingStatus([deepseek], monday(5))).toEqual({ peak: false, label: "Off-peak" })
 })
 
 test("sums root sessions only, because a root total already includes its children", () => {
@@ -30,4 +30,18 @@ test("sums root sessions only, because a root total already includes its childre
 
 test("returns zero for no sessions", () => {
   expect(totalSpend([], () => 1)).toBe(0)
+})
+
+test("reports nothing when the models in play disagree about peak", () => {
+  const evening = [
+    {
+      window: { days: [], ranges: [{ from: "06:00", to: "10:00" }], skipHolidays: false },
+      factor: 2,
+    },
+  ]
+  expect(pricingStatus([deepseek, evening], monday(2))).toBeUndefined()
+})
+
+test("reports the shared state when every model agrees", () => {
+  expect(pricingStatus([deepseek, deepseek], monday(2))).toEqual({ peak: true, label: "Peak" })
 })

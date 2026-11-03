@@ -4,9 +4,11 @@ import { linkifyDocumentPaths, lastDocumentPath } from "../../src/util/document-
 const cwd = "Y:/CodingProjects/opencode_fife"
 const planAbsolute = "Y:/CodingProjects/opencode_fife/docs/plan.md"
 const spacedAbsolute = "Y:/CodingProjects/opencode_fife/docs/my plan.md"
+const parenAbsolute = "Y:/CodingProjects/opencode_fife/docs/report(1).md"
 
 const normalize = (value: string) => value.replace(/\\/g, "/")
-const exists = (value: string) => normalize(value) === planAbsolute || normalize(value) === spacedAbsolute
+const exists = (value: string) =>
+  [planAbsolute, spacedAbsolute, parenAbsolute].includes(normalize(value))
 const options = { cwd, exists }
 
 test("linkifies an existing relative path in prose", () => {
@@ -53,4 +55,25 @@ test("returns the last existing path across messages, newest first", () => {
 
 test("returns undefined when no message references an existing path", () => {
   expect(lastDocumentPath([{ text: "docs/missing.md" }], options)).toBeUndefined()
+})
+
+test("leaves an existing markdown link alone", () => {
+  const content = "see [the plan](docs/plan.md) now"
+  expect(linkifyDocumentPaths(content, options)).toBe(content)
+})
+
+test("encodes a parenthesis in an inline-code path so the destination cannot break", () => {
+  expect(linkifyDocumentPaths("see `docs/report(1).md`", options)).toBe(
+    "see [docs/report(1).md](file:///Y:/CodingProjects/opencode_fife/docs/report%281%29.md)",
+  )
+})
+
+test("leaves a path inside a tilde fence untouched", () => {
+  const content = ["~~~", "docs/plan.md", "~~~"].join("\n")
+  expect(linkifyDocumentPaths(content, options)).toBe(content)
+})
+
+test("leaves an unterminated fence's tail untouched", () => {
+  const content = ["```", "docs/plan.md"].join("\n")
+  expect(linkifyDocumentPaths(content, options)).toBe(content)
 })

@@ -1,5 +1,5 @@
 import { Plugin } from "@opencode/plugin/tui"
-import { createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js"
+import { createMemo, Match, Show, Switch } from "solid-js"
 import { useTerminalDimensions } from "@opentui/solid"
 import { usePlugin } from "../../plugin/context"
 import { Slot } from "../../plugin/render"
@@ -80,23 +80,14 @@ function Plugins(props: { context: Plugin.Context }) {
 function Pricing(props: { context: Plugin.Context }) {
   const dimensions = useTerminalDimensions()
   const visibility = createMemo(() => homeFooterVisibility(dimensions().width))
-  const [now, setNow] = createSignal(Date.now())
-  onMount(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60_000)
-    onCleanup(() => clearInterval(timer))
-  })
-  // The badge and the charged price read the same compiled window, so they cannot disagree.
-  const multipliers = createMemo(() => {
-    const models = props.context.data.location.model.list(props.context.location) ?? []
-    for (const model of models) {
-      for (const cost of model.cost) if (cost.multipliers?.length) return cost.multipliers
-    }
-    return undefined
-  })
-  const status = createMemo(() => {
-    const value = multipliers()
-    return value ? pricingStatus(value, now()) : undefined
-  })
+  // The badge and the charged price read the same compiled windows, so they cannot disagree.
+  // It is evaluated when the screen renders rather than by a background timer.
+  const windows = createMemo(() =>
+    (props.context.data.location.model.list(props.context.location) ?? []).flatMap((model) =>
+      model.cost.flatMap((cost) => (cost.multipliers?.length ? [cost.multipliers] : [])),
+    ),
+  )
+  const status = createMemo(() => pricingStatus(windows(), Date.now()))
   const spend = createMemo(() =>
     totalSpend(props.context.data.session.list(), (id) => props.context.data.session.cost(id)),
   )

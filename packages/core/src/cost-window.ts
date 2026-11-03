@@ -40,14 +40,20 @@ function compileNode(node: Predicate): Draft | undefined {
     }
     if (key === "any") {
       if (!Array.isArray(raw)) return undefined
+      const daySets: string[] = []
       for (const child of raw) {
         if (!isRecord(child)) return undefined
         const inner = compileNode(child)
         if (!inner) return undefined
+        daySets.push([...new Set(inner.days)].sort().join(","))
         draft.days.push(...inner.days)
         draft.ranges.push(...inner.ranges)
         draft.skipHolidays ||= inner.skipHolidays
       }
+      // Different branches covering different days cannot share one day set, and a branch
+      // without days would be wrongly narrowed by the others.
+      const distinct = new Set(daySets.filter((value) => value !== ""))
+      if (distinct.size > 1 || (distinct.size === 1 && daySets.includes(""))) return undefined
       continue
     }
     if (key === "not") {

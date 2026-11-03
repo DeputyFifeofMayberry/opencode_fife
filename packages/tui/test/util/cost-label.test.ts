@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { costLabel } from "../../src/util/cost-label"
+import { anyUnpriced, costLabel } from "../../src/util/cost-label"
 
 test("formats a fully priced session", () => {
   expect(costLabel(0.42, false)).toBe("$0.42")
@@ -15,4 +15,12 @@ test("shows a dash when every step is unpriced", () => {
 
 test("omits the segment when nothing has been spent or counted", () => {
   expect(costLabel(0, false)).toBeUndefined()
+})
+
+test("detects unpriced usage in any session of a family", () => {
+  expect(anyUnpriced([{}, { unpriced: 2 }])).toBe(true)
+})
+
+test("treats a family without unpriced steps as fully priced", () => {
+  expect(anyUnpriced([{}, undefined])).toBe(false)
 })

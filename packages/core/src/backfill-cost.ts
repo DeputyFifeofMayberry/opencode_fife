@@ -37,6 +37,10 @@ function prices(model: ModelCost | undefined) {
 /** The corrected cost for one stored step, or `skipped` when it cannot be rebuilt. */
 export function reprice(stored: StoredCost, catalog: Catalog) {
   if (stored.costProvenance.estimated === undefined) return { cost: stored.cost, changed: false }
+  // Message provenance merges every step it covers. A message that also holds provider-priced
+  // or unpriced steps cannot be rebuilt from its tokens alone.
+  if (stored.costProvenance.provider !== undefined || stored.costProvenance.unpriced !== undefined)
+    return "skipped" as const
   const model = catalog[stored.providerID]?.models?.[stored.modelID]?.cost
   const rate = prices(model)
   if (!rate) return "skipped" as const

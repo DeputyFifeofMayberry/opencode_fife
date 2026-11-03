@@ -40,9 +40,14 @@ export function PromptFooter(props: {
       session.revert?.messageID,
     )
     const cost = props.context.data.session.cost(props.sessionID)
-    const unpriced = props.context.data.session.message
-      .list(props.sessionID)
-      .some((message) => message.type === "assistant" && (message.costProvenance?.unpriced ?? 0) > 0)
+    // A root session's total folds in its children, so their unpriced steps must count too.
+    const unpriced = props.context.data.session
+      .family(props.sessionID)
+      .some((id) =>
+        props.context.data.session.message
+          .list(id)
+          .some((message) => message.type === "assistant" && (message.costProvenance?.unpriced ?? 0) > 0),
+      )
     return [usage ? formatContextUsage(usage.tokens, usage.percent) : undefined, costLabel(cost, unpriced)].filter(
       (item): item is string => Boolean(item),
     )
