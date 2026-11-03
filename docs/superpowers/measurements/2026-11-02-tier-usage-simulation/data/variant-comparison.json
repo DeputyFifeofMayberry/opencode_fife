@@ -1,0 +1,166 @@
+{
+  "comparedAt": "2026-11-03T03:02:55.663Z",
+  "model": "vercel/openai/gpt-6.1-terra",
+  "xhigh": {
+    "n": 9,
+    "perDispatch": [
+      {
+        "id": "ses_e61426038ffew3w827VHsvg51v",
+        "cost": 0.092067,
+        "steps": 5
+      },
+      {
+        "id": "ses_e61424810ffeYBhbHYoSO52xWy",
+        "cost": 0.020915,
+        "steps": 5
+      },
+      {
+        "id": "ses_e614246e2ffe4NMoqypHNG1gv2",
+        "cost": 0.068606,
+        "steps": 5
+      },
+      {
+        "id": "ses_e6141f71affekRaqSzk3juawJj",
+        "cost": 0.037107,
+        "steps": 5
+      },
+      {
+        "id": "ses_e6141a4d1ffeQyBXkrDvrV1P1x",
+        "cost": 0.028461,
+        "steps": 4
+      },
+      {
+        "id": "ses_e61419223ffe42vs4yUO0rB3Bd",
+        "cost": 0.02452,
+        "steps": 4
+      },
+      {
+        "id": "ses_e61415d5bffeInBAlXRjS1BXdc",
+        "cost": 0.037411,
+        "steps": 5
+      },
+      {
+        "id": "ses_e61413103ffecDbZFx8R2ptLlh",
+        "cost": 0.027121,
+        "steps": 5
+      },
+      {
+        "id": "ses_e61411b92ffecsrfHHDa4cd1ei",
+        "cost": 0.039443,
+        "steps": 4
+      }
+    ],
+    "mean": 0.041739,
+    "median": 0.037107,
+    "p90": 0.092067,
+    "min": 0.020915,
+    "max": 0.092067,
+    "total": 0.375651,
+    "steps": 42,
+    "input": 126,
+    "output": 4080,
+    "reasoning": 12262,
+    "cacheRead": 934483,
+    "cacheWrite": 197673,
+    "variants": [
+      "xhigh"
+    ]
+  },
+  "high": {
+    "n": 9,
+    "perDispatch": [
+      {
+        "id": "ses_e60a5ba12ffeNWzZN0khG3L5Hz",
+        "cost": 0.055274,
+        "steps": 5
+      },
+      {
+        "id": "ses_e60a5a4b4ffePNrNjFlCueiupj",
+        "cost": 0.016095,
+        "steps": 5
+      },
+      {
+        "id": "ses_e60a58f57ffe3DJ4b8dIwAJkGJ",
+        "cost": 0.040423,
+        "steps": 6
+      },
+      {
+        "id": "ses_e60a54fccffe5CNAxEatyTp1o3",
+        "cost": 0.036836,
+        "steps": 7
+      },
+      {
+        "id": "ses_e60a52437ffe7JRcI7KhJwVvM3",
+        "cost": 0.018975,
+        "steps": 5
+      },
+      {
+        "id": "ses_e60a4f0daffekrBYpze9PBpuYB",
+        "cost": 0.022341,
+        "steps": 5
+      },
+      {
+        "id": "ses_e60a4c828ffeya2fnDd6p7pNn1",
+        "cost": 0.02737,
+        "steps": 4
+      },
+      {
+        "id": "ses_e60a4c6ebffe06PRHaRgCS7ovi",
+        "cost": 0.02035,
+        "steps": 5
+      },
+      {
+        "id": "ses_e60a49ea2ffeYGl3W7bTEdwc4t",
+        "cost": 0.024841,
+        "steps": 2
+      }
+    ],
+    "mean": 0.029167,
+    "median": 0.024841,
+    "p90": 0.055274,
+    "min": 0.016095,
+    "max": 0.055274,
+    "total": 0.262505,
+    "steps": 44,
+    "input": 132,
+    "output": 3980,
+    "reasoning": 6007,
+    "cacheRead": 941163,
+    "cacheWrite": 132304,
+    "variants": [
+      "high"
+    ]
+  },
+  "delta": {
+    "meanPct": -30.1,
+    "medianPct": -33.1,
+    "totalPct": -30.1,
+    "monthlyAt9PerDay": {
+      "xhigh": 11.27,
+      "high": 7.88
+    },
+    "monthlyFromMax": {
+      "xhigh": 24.86,
+      "high": 14.92
+    }
+  },
+  "mechanism": {
+    "reasoningPerStep": {
+      "xhigh": 292,
+      "high": 136.5
+    },
+    "cacheWritePerStep": {
+      "xhigh": 4706.5,
+      "high": 3006.9
+    },
+    "note": "Reasoning tokens become context, so lower effort also reduces cache writes on later steps. The two effects together account for the whole delta."
+  },
+  "integrity": {
+    "variantsObservedHigh": [
+      "high"
+    ],
+    "noEffortPolicyInterference": true,
+    "stepsXhigh": 42,
+    "stepsHigh": 44
+  }
+}

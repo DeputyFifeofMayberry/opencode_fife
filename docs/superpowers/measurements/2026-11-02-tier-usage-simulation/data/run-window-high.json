@@ -1,0 +1,13 @@
+{
+  "runID": "tier-sim-high-2026-11-03",
+  "comparedTo": "tier-sim-2026-11-02 (xhigh heavy block, n=9, mean 0.041739)",
+  "model": "vercel/openai/gpt-6.1-terra",
+  "variant": "high",
+  "runStartMs": 1793674850012,
+  "runEndMs": null,
+  "planned": { "heavy": 9 },
+  "executed": { "heavy": 0 },
+  "concurrency": 3,
+  "purpose": "matched-shape heavy block to isolate the variant effect from task size",
+  "state": "in-progress"
+}

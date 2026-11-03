@@ -245,3 +245,41 @@ comparable heavy work, so the `operator-call` comparison cannot be costed.
 - **In-window cost of long-lived top-level sessions**, attributable to this window specifically.
   The period delta covers it in aggregate; the per-class split does not.
 - **Whether reasoning effort beyond the `variant` string was actually applied.**
+
+## 12. Variant change: `xhigh` → `high` (added after the run)
+
+The heavy tier was changed from `gpt-6.1-terra#xhigh` to `gpt-6.1-terra#high` after the
+original run, and the same nine task families were re-run to isolate the variant effect from
+task size. Raw data: `data/variant-comparison.json`, produced by `variant-compare.ts`.
+
+| | xhigh (n=9) | high (n=9) | delta |
+| --- | --- | --- | --- |
+| mean | 0.041739 | 0.029167 | **−30.1%** |
+| median | 0.037107 | 0.024841 | −33.1% |
+| p90 (= max) | 0.092067 | 0.055274 | −40.0% |
+| total | 0.375651 | 0.262505 | −30.1% |
+| steps | 42 | 44 | +4.8% |
+| reasoning tokens | 12,262 | 6,007 | −51.0% |
+| cache write tokens | 197,673 | 132,304 | −33.1% |
+| cache read tokens | 934,483 | 941,163 | +0.7% |
+| output tokens | 4,080 | 3,980 | −2.4% |
+| monthly at 9/day | $11.27 | **$7.88** | −30.1% |
+| monthly from max | $24.86 | $14.92 | −40.0% |
+
+**Why the saving exceeded the reasoning share.** Reasoning was 16.3% of xhigh cost, so the
+direct effect can only explain half of a 30% drop. The rest is a second-order effect:
+reasoning tokens become part of the conversation context, so less reasoning means less cache
+written on every later step. Cache writes fell 33% per dispatch while cache reads stayed flat.
+Per dispatch, reasoning saved ~$0.0035 and cache writes ~$0.0091, totalling ~$0.0126 against
+an observed difference of $0.01257. The mechanism accounts for the whole delta.
+
+**Sample and status.** n=9 per arm, same task families, steps 42 vs 44, so task size is
+controlled. All 44 `high` steps recorded `variant: "high"` with no mid-session switch, so the
+effort policy did not interfere — the concern that `high` is inside the policy's vocabulary
+did not materialise in this sample. The two blocks ran at different times, so provider-side
+caching state is not identical; and nine synthetic tasks still do not represent real work.
+
+**Consequence for the decision.** Heavy monthly falls from $11.27 to **$7.88** at 9/day, and
+the band stays `keep-terra-xhigh` — the threshold comparison is unchanged. The
+`decision.json` in this directory still reflects the original xhigh run; this section and
+`variant-comparison.json` supersede its heavy figures.
