@@ -57,6 +57,8 @@ export const Definitions = {
   "command.palette.show": keybind("ctrl+p", "List available commands"),
   "help.show": keybind("none", "Open help dialog"),
   "docs.open": keybind("none", "Open documentation"),
+  "docs.open.last": keybind("ctrl+y", "Open the last referenced document"),
+  "docs.open.external": keybind("ctrl+shift+o", "Open the last referenced document externally"),
   "opencode.settings": keybind("none", "Open settings"),
   "server.pair": keybind("none", "Pair device"),
   "service.restart": keybind("none", "Restart service"),

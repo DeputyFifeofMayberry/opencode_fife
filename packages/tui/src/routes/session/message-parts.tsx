@@ -1,16 +1,19 @@
 import { createMemo, createSignal, Match, Show, Switch } from "solid-js"
 import { RGBA, TextAttributes, type MouseEvent } from "@opentui/core"
 import { useRenderer, type JSX } from "@opentui/solid"
+import { statSync } from "node:fs"
 import type {
   SessionMessageAssistant,
   SessionMessageAssistantReasoning,
   SessionMessageAssistantText,
 } from "@opencode/client"
 import { Spinner } from "../../component/spinner"
+import { useData } from "../../context/data"
 import { createSyntaxStyleMemo, useTheme, useThemes } from "../../context/theme"
 import { reasoningSummary } from "../../context/thinking"
 import { usePlugin } from "../../plugin/context"
 import { SplitBorder } from "../../ui/border"
+import { linkifyDocumentPaths } from "../../util/document-path"
 import { Locale } from "../../util/locale"
 import { use } from "./render-context"
 import { generateThinkingSyntax } from "./thinking-syntax"
@@ -177,8 +180,21 @@ export function TextPart(props: {
 }) {
   const ctx = use()
   const theme = useTheme()
+  const data = useData()
   const { currentSyntax: syntax } = useThemes()
   const plugins = usePlugin()
+  const checked = new Map<string, boolean>()
+  const exists = (value: string) => {
+    const known = checked.get(value)
+    if (known !== undefined) return known
+    const found = statSync(value, { throwIfNoEntry: false })?.isFile() ?? false
+    checked.set(value, found)
+    return found
+  }
+  const content = createMemo(() => {
+    const directory = data.session.get(ctx.sessionID)?.location.directory ?? process.cwd()
+    return linkifyDocumentPaths(props.part.text.trim(), { cwd: directory, exists })
+  })
   return (
     <Show when={props.part.text.trim()}>
       <box paddingLeft={3} flexShrink={0}>
@@ -186,7 +202,7 @@ export function TextPart(props: {
         <markdown
           syntaxStyle={syntax()}
           renderNode={plugins.markdown()}
-          content={props.part.text.trim()}
+          content={content()}
           streaming={props.message.time.completed === undefined}
           internalBlockMode="top-level"
           tableOptions={{ style: "grid", cellPaddingX: 1 }}

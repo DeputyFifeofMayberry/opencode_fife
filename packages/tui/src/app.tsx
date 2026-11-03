@@ -82,6 +82,12 @@ import { clampSessionTabsWidth, sessionTabsFitVertically, SESSION_SIDEBAR_WIDTH 
 import { createPaneResize } from "./ui/pane-resize"
 import { PaneResizeHandle } from "./ui/pane-resize-handle"
 import { clickedLink } from "./ui/link"
+import { statSync } from "node:fs"
+import { fileURLToPath } from "node:url"
+import { DialogDocument } from "./component/dialog-document"
+import { lastDocumentPath } from "./util/document-path"
+
+const fileExists = (value: string) => statSync(value, { throwIfNoEntry: false })?.isFile() ?? false
 import { ThemeErrorToast } from "./component/theme-error-toast"
 import { createThemeSource, ThemeProvider, useTheme, useThemes } from "./context/theme"
 import { Home } from "./routes/home"
@@ -92,7 +98,7 @@ import { Toast, ToastProvider, useToast } from "./ui/toast"
 import { isFallbackTitle } from "@opencode/util/session-title-fallback"
 import * as Model from "./util/model"
 import { ArgsProvider, useArgs, type Args } from "./context/args"
-import { openUrl } from "@opencode/util/open"
+import { openPath, openUrl } from "@opencode/util/open"
 import { PromptRefProvider, usePromptRef } from "./context/prompt"
 import { Config, ConfigProvider, useConfig } from "./config"
 import { newSessionLocation } from "./config/new-session-location"
@@ -114,7 +120,7 @@ import { PanelProvider, usePanel } from "./context/panel"
 import { SessionFrame } from "./component/session-frame"
 import { createTuiClipboard } from "./clipboard"
 
-const appGlobalBindingCommands = ["session.list", "session.new", "open.menu"] as const
+const appGlobalBindingCommands = ["session.list", "session.new", "open.menu", "docs.open.last", "docs.open.external"] as const
 
 const sessionTabBindingCommands = [
   "session.tab.next",
@@ -516,6 +522,18 @@ function App() {
   const plugins = usePlugin()
   const clipboard = useClipboard()
   const terminalEnvironment = useTuiTerminalEnvironment()
+  const lastDocument = () => {
+    if (route.data.type !== "session") return undefined
+    const session = data.session.get(route.data.sessionID)
+    if (!session) return undefined
+    const messages = data.session.message
+      .list(route.data.sessionID)
+      .filter((message) => message.type === "assistant")
+      .map((message) => ({
+        text: message.content.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
+      }))
+    return lastDocumentPath(messages, { cwd: session.location.directory, exists: fileExists })
+  }
   let paletteTimer: ReturnType<typeof setTimeout> | undefined
   const afterFrame = () => {
     // The native writer can still be flushing the frame when FRAME fires. Keep OSC probes behind visible app output.
@@ -1175,6 +1193,26 @@ function App() {
         category: "System",
       },
       {
+        name: "docs.open.last",
+        title: "Open the last referenced document",
+        run: () => {
+          const path = lastDocument()
+          if (!path) return
+          dialog.replace(() => <DialogDocument path={path} />)
+        },
+        category: "System",
+      },
+      {
+        name: "docs.open.external",
+        title: "Open the last referenced document externally",
+        run: () => {
+          const path = lastDocument()
+          if (!path) return
+          openPath(path).catch(toast.error)
+        },
+        category: "System",
+      },
+      {
         name: "app.exit",
         title: "Exit the app",
         slash: { name: "exit", aliases: ["quit", "q"] },
@@ -1417,6 +1455,10 @@ function App() {
       }}
       onMouseUp={(event) => {
         const url = clickedLink(renderer, event)
+        if (url?.startsWith("file://")) {
+          dialog.replace(() => <DialogDocument path={fileURLToPath(url)} />)
+          return
+        }
         if (url) return void openUrl(url).catch(toast.error)
         if (copyOnSelectEnabled()) Selection.copyOnSelectRelease(event, renderer, toast, clipboard)
       }}
