@@ -108,13 +108,14 @@ Per-dispatch means, with the cost share each token class contributes at the deri
 | model | variant | input | output | reasoning | cache_read | cache_write | cost USD | dominant_term |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | gpt-6.1-terra | xhigh | 14 | 453 | 1362 | 103831 | 21964 | 0.041739 | `cache_write` (65.8%) |
-| deepseek-v4.1-flash-1017 | max | 3337 | 664 | 0 | 100198 | 0 | 0.002500 | `cache_read` (41.4%) |
+| deepseek-v4.1-flash-1017 | max | 3337 | 664 | 0 | 100198 | 0 | 0.002500 | `input` (40.1%) |
 | minimax-m3.1-flash | medium | 10427 | 1825 | 0 | 55677 | 0 | 0.003494 | `input` (44.7%) |
 
 Heavy is qualitatively different from the other two. It carries **14 fresh input tokens** and
 ~22k cache-**write** tokens: the prompt is almost entirely cache traffic, and cache writes
 are 66% of the bill. Heavy cost therefore tracks context size, not task difficulty or output
-length. The other two tiers are dominated by fresh input and cache reads.
+length. Medium and fast are dominated by fresh input (40.1% and 44.7%), with cache reads a
+minority share.
 
 All three tiers show 4–5 steps per dispatch on average, but the distributions differ: heavy
 was uniformly 4–5 steps, so its measured spread understates what real work would produce.
