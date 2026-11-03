@@ -93,11 +93,8 @@ function Pricing(props: { context: Plugin.Context }) {
   )
 
   return (
-    <Show when={visibility().pricing}>
+    <Show when={visibility().pricing && (status() || costLabel(spend(), false))}>
       <box gap={1} flexDirection="row" flexShrink={0}>
-        <text fg={props.context.theme.text.muted}>
-          dbg n={props.context.data.session.list().length} s={spend().toFixed(4)} m={windows().length}
-        </text>
         <Show when={status()}>
           {(value) => (
             <text
