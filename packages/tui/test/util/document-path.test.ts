@@ -62,6 +62,18 @@ test("leaves an existing markdown link alone", () => {
   expect(linkifyDocumentPaths(content, options)).toBe(content)
 })
 
+test("leaves a markdown link inside inline code alone", () => {
+  const content = "see `[the plan](docs/plan.md)` now"
+  const guarded = {
+    cwd,
+    exists: (value: string) => {
+      if (value.includes("\u0000")) throw new Error("path contains a null byte")
+      return exists(value)
+    },
+  }
+  expect(linkifyDocumentPaths(content, guarded)).toBe(content)
+})
+
 test("encodes a parenthesis in an inline-code path so the destination cannot break", () => {
   expect(linkifyDocumentPaths("see `docs/report(1).md`", options)).toBe(
     "see [docs/report(1).md](file:///Y:/CodingProjects/opencode_fife/docs/report%281%29.md)",
