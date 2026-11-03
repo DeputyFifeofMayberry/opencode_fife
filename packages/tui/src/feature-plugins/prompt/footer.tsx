@@ -6,11 +6,7 @@ import { TextAttributes } from "@opentui/core"
 import { useInteractivity } from "../../context/interactivity"
 import { stringWidth } from "../../util/string-width"
 import { createGoal, GoalStatus } from "./goal"
-
-const money = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-})
+import { costLabel } from "../../util/cost-label"
 
 export function PromptFooter(props: {
   context: Plugin.Context
@@ -44,10 +40,12 @@ export function PromptFooter(props: {
       session.revert?.messageID,
     )
     const cost = props.context.data.session.cost(props.sessionID)
-    return [
-      usage ? formatContextUsage(usage.tokens, usage.percent) : undefined,
-      cost > 0 ? money.format(cost) : undefined,
-    ].filter((item): item is string => Boolean(item))
+    const unpriced = props.context.data.session.message
+      .list(props.sessionID)
+      .some((message) => message.type === "assistant" && (message.costProvenance?.unpriced ?? 0) > 0)
+    return [usage ? formatContextUsage(usage.tokens, usage.percent) : undefined, costLabel(cost, unpriced)].filter(
+      (item): item is string => Boolean(item),
+    )
   })
   const live = createMemo(() => Boolean(subagents() || shells()))
   const goal = createGoal(props.context, () => props.sessionID)
