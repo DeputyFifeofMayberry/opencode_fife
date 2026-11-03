@@ -1,0 +1,82 @@
+{
+  "heavyN": 9,
+  "heavyKey": "heavy | vercel/openai/gpt-6.1-terra#xhigh",
+  "heavyMean": 0.041739,
+  "heavyMedian": 0.037107,
+  "heavyP90": 0.092067,
+  "heavyMax": 0.092067,
+  "heavyCI95": [
+    0.029108711111111112,
+    0.057234461111111114
+  ],
+  "p90IsMax": true,
+  "validationFactor": 1,
+  "validationStatus": "not-needed",
+  "monthlyRaw": 11.2695,
+  "monthlyMean": 11.2695,
+  "monthlyP90": 24.8581,
+  "monthlyCI95": [
+    7.8594,
+    15.4533
+  ],
+  "band": "keep-terra-xhigh",
+  "bandCertain": true,
+  "scenarios": [
+    {
+      "perDay": 3,
+      "atMean": 3.7565,
+      "atMedian": 3.3396,
+      "atMax": 8.286
+    },
+    {
+      "perDay": 6,
+      "atMean": 7.513,
+      "atMedian": 6.6793,
+      "atMax": 16.5721
+    },
+    {
+      "perDay": 9,
+      "atMean": 11.2695,
+      "atMedian": 10.0189,
+      "atMax": 24.8581
+    },
+    {
+      "perDay": 18,
+      "atMean": 22.5391,
+      "atMedian": 20.0379,
+      "atMax": 49.7162
+    }
+  ],
+  "fastMonthly": 4.7168,
+  "fastMonthlyBasis": "cohort fast tier mean x 45/day x 30",
+  "state": "completed",
+  "scopeReduced": {
+    "planned": {
+      "fast": 15,
+      "medium": 15,
+      "heavy": 9
+    },
+    "original": {
+      "fast": 45,
+      "medium": 39,
+      "heavy": 9
+    },
+    "approvedBy": "user, 2026-11-02, message '15/15/9'"
+  },
+  "fallbacks": 0,
+  "mixedSessions": 0,
+  "cohortSize": 39,
+  "rationale": [
+    "Heavy measured on 9 dispatches of heavy | vercel/openai/gpt-6.1-terra#xhigh at a mean of $0.041739 (median $0.037107).",
+    "Validation factor is 1 because validationStatus is \"not-needed\": no invoice was available, so the projection is the unadjusted local estimate.",
+    "p90 is the maximum observation (n<10), not a 90th percentile.",
+    "Fast costs about $4.7168/month at 45/day, which the spec assumed was free.",
+    "The band is keep-terra-xhigh on the interval [7.8594,15.4533], not on the point estimate.",
+    "Scope was reduced to 15/15/9 from 45/39/9 by explicit approval; heavy kept its n because it is the decision input."
+  ],
+  "smallSample": {
+    "heavyN": 9,
+    "p90IsOrderStatistic": true,
+    "note": "With n<10 the p90 is the largest observation. The interval, not the point estimate, carries the band."
+  }
+}

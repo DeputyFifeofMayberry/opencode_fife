@@ -5,99 +5,47 @@
     "heavy": "vercel/openai/gpt-6.1-terra#xhigh"
   },
   "byKey": {
-    "vercel/minimax/minimax-m3.1-flash#medium": {
-      "steps": 11,
-      "costUSD": 0.011682
+    "vercel/openai/gpt-6.1-terra#xhigh": {
+      "steps": 42,
+      "costUSD": 0.375651
     },
     "vercel/deepseek/deepseek-v4.1-flash-1017#max": {
-      "steps": 12,
-      "costUSD": 0.04346
+      "steps": 75,
+      "costUSD": 0.037494
     },
-    "vercel/openai/gpt-6.1-terra#xhigh": {
-      "steps": 4,
-      "costUSD": 0.041375
+    "vercel/minimax/minimax-m3.1-flash#medium": {
+      "steps": 62,
+      "costUSD": 0.052409
     },
     "deepseek/deepseek-flash#default": {
-      "steps": 2327,
-      "costUSD": 3.17244
-    },
-    "vercel/deepseek/deepseek-v4.1-flash-1017#none": {
-      "steps": 2,
-      "costUSD": 0.003194
-    },
-    "vercel/reflection/beam-free#low": {
-      "steps": 3,
-      "costUSD": 0
-    },
-    "opencode/beam-free#low": {
-      "steps": 1,
-      "costUSD": 0
-    },
-    "vercel/openai/gpt-6.1-terra-fast#xhigh": {
-      "steps": 4,
-      "costUSD": 0.106515
-    },
-    "zai-coding-plan/glm-5.3-flash#low": {
-      "steps": 114,
-      "costUSD": 0
-    },
-    "deepseek/deepseek-flash#max": {
-      "steps": 59,
-      "costUSD": 0.173382
-    },
-    "deepseek/deepseek-flash#high": {
-      "steps": 373,
-      "costUSD": 0.494261
-    },
-    "opencode/glm-5.3-flash-free#low": {
-      "steps": 190,
-      "costUSD": 0
-    },
-    "zai-coding-plan/glm-5.3-flash#default": {
-      "steps": 142,
-      "costUSD": 0
-    },
-    "zai-coding-plan/glm-5.3-flash#max": {
-      "steps": 87,
-      "costUSD": 0
-    },
-    "opencode/flint-40b-free#unspecified": {
-      "steps": 4,
-      "costUSD": 0
-    },
-    "deepseek/deepseek-flash#low": {
-      "steps": 3,
-      "costUSD": 0.001718
-    },
-    "opencode/glm-5.3-flash-free#max": {
-      "steps": 3,
-      "costUSD": 0
-    },
-    "opencode/deepseek-v4.1-flash-free#default": {
-      "steps": 98,
-      "costUSD": 0
-    },
-    "opencode/deepseek-v4.1-flash-free#low": {
-      "steps": 87,
-      "costUSD": 0
+      "steps": 79,
+      "costUSD": 0.092197
     }
   },
-  "byTierKey": {},
+  "byTierKey": {
+    "fast | vercel/minimax/minimax-m3.1-flash#medium": {
+      "n": 15,
+      "costUSD": 0.052409,
+      "steps": 62
+    },
+    "medium | vercel/deepseek/deepseek-v4.1-flash-1017#max": {
+      "n": 15,
+      "costUSD": 0.037494,
+      "steps": 75
+    },
+    "heavy | vercel/openai/gpt-6.1-terra#xhigh": {
+      "n": 9,
+      "costUSD": 0.375651,
+      "steps": 42
+    }
+  },
   "mixedSessions": [],
   "fallbacks": [],
   "provenance": {
     "estimated": {
-      "steps": 3088,
-      "costUSD": 4.048028
-    },
-    "unknown": {
-      "steps": 66,
-      "costUSD": 0
-    },
-    "provider": {
-      "steps": 370,
-      "costUSD": 0
+      "steps": 258,
+      "costUSD": 0.557752
     }
   },
-  "cohortSize": 0
+  "cohortSize": 39
 }

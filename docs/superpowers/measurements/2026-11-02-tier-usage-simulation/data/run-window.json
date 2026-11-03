@@ -1,14 +1,16 @@
 {
   "runID": "tier-sim-2026-11-02",
   "runStartMs": 1793663082059,
-  "runEndMs": null,
-  "planned": { "fast": 45, "medium": 39, "heavy": 9 },
-  "executed": { "fast": 11, "medium": 0, "heavy": 0 },
-  "measured": { "fastSpendUSD": 0.045772, "fastMeanUSD": 0.004161 },
+  "runEndMs": 1793664710387,
+  "planned": { "fast": 15, "medium": 15, "heavy": 9 },
+  "plannedOriginal": { "fast": 45, "medium": 39, "heavy": 9 },
+  "scopeApprovedBy": "user, 2026-11-02, message '15/15/9'",
+  "executed": { "fast": 15, "medium": 15, "heavy": 9 },
+  "measured": { "spendUSD": 0.445128 },
   "concurrency": 3,
   "perDispatchCeilingUSD": 0.9,
-  "stoppedEarly": "pending-scope-decision",
-  "state": "paused",
+  "stoppedEarly": null,
+  "state": "completed",
   "billing": "unavailable - no dashboard access; reconciliation will be inconclusive",
-  "note": "Fast block partially dispatched. Remaining 82 dispatches paused pending a decision on full vs reduced sample."
+  "periodBoundary": "run started 2026-11-02T23:44Z and ended 2026-11-03T00:11Z, crossing a UTC day boundary; a daily-grain invoice would not align with this window"
 }

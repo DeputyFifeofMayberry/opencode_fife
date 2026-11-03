@@ -1,0 +1,179 @@
+{
+  "takenAt": 1793664710387,
+  "iso": "2026-11-03T00:11:50.387Z",
+  "versions": {
+    "bun": "1.4.4",
+    "opencode": {
+      "version": "0.0.0-dev-20261102.101626"
+    }
+  },
+  "timingsRows": 148,
+  "lastDispatchStartedAt": 1793664672876,
+  "sessionCount": {
+    "n": 221
+  },
+  "sessionCost": {
+    "c": 4.742276
+  },
+  "byClass": [
+    {
+      "k": "child",
+      "n": 156,
+      "c": 1.401302
+    },
+    {
+      "k": "top",
+      "n": 65,
+      "c": 3.340975
+    }
+  ],
+  "byAgent": [
+    {
+      "agent": "fast",
+      "n": 76,
+      "c": 0.069003
+    },
+    {
+      "agent": "medium",
+      "n": 54,
+      "c": 0.599472
+    },
+    {
+      "agent": null,
+      "n": 47,
+      "c": 0.147322
+    },
+    {
+      "agent": "heavy",
+      "n": 20,
+      "c": 0.68491
+    },
+    {
+      "agent": "build",
+      "n": 16,
+      "c": 3.190341
+    },
+    {
+      "agent": "general",
+      "n": 4,
+      "c": 0.047917
+    },
+    {
+      "agent": "plan",
+      "n": 2,
+      "c": 0.003312
+    },
+    {
+      "agent": "explore",
+      "n": 2,
+      "c": 0
+    }
+  ],
+  "byModel": [
+    {
+      "model": "{\"id\":\"deepseek-flash\",\"providerID\":\"deepseek\"}",
+      "n": 54,
+      "c": 3.312432
+    },
+    {
+      "model": "{\"id\":\"glm-5.3-flash-free\",\"providerID\":\"opencode\",\"variant\":\"low\"}",
+      "n": 49,
+      "c": 0
+    },
+    {
+      "model": "{\"providerID\":\"deepseek\",\"id\":\"deepseek-flash\",\"variant\":\"high\"}",
+      "n": 28,
+      "c": 0.494261
+    },
+    {
+      "model": "{\"providerID\":\"vercel\",\"id\":\"minimax/minimax-m3.1-flash\",\"variant\":\"medium\"}",
+      "n": 17,
+      "c": 0.064091
+    },
+    {
+      "model": "{\"providerID\":\"vercel\",\"id\":\"deepseek/deepseek-v4.1-flash-1017\",\"variant\":\"max\"}",
+      "n": 17,
+      "c": 0.080954
+    },
+    {
+      "model": "{\"id\":\"deepseek-flash\",\"providerID\":\"deepseek\",\"variant\":\"max\"}",
+      "n": 13,
+      "c": 0.087424
+    },
+    {
+      "model": "{\"providerID\":\"vercel\",\"id\":\"openai/gpt-6.1-terra\",\"variant\":\"xhigh\"}",
+      "n": 10,
+      "c": 0.417027
+    },
+    {
+      "model": "{\"providerID\":\"deepseek\",\"id\":\"deepseek-flash\"}",
+      "n": 8,
+      "c": 0.020645
+    },
+    {
+      "model": "{\"id\":\"glm-5.3-flash\",\"providerID\":\"zai-coding-plan\",\"variant\":\"low\"}",
+      "n": 7,
+      "c": 0.016286
+    },
+    {
+      "model": "{\"id\":\"deepseek-flash\",\"providerID\":\"deepseek\",\"variant\":\"default\"}",
+      "n": 3,
+      "c": 0.047917
+    },
+    {
+      "model": "{\"providerID\":\"vercel\",\"id\":\"openai/gpt-6.1-terra-fast\",\"variant\":\"xhigh\"}",
+      "n": 2,
+      "c": 0.106515
+    },
+    {
+      "model": "{\"providerID\":\"deepseek\",\"id\":\"deepseek-flash\",\"variant\":\"max\"}",
+      "n": 2,
+      "c": 0.085985
+    },
+    {
+      "model": "{\"id\":\"glm-5.3-flash\",\"providerID\":\"zai-coding-plan\",\"variant\":\"max\"}",
+      "n": 2,
+      "c": 0
+    },
+    {
+      "model": "{\"id\":\"deepseek-v4.1-flash-free\",\"providerID\":\"opencode\",\"variant\":\"low\"}",
+      "n": 2,
+      "c": 0
+    },
+    {
+      "model": "{\"providerID\":\"vercel\",\"id\":\"deepseek/deepseek-v4.1-flash-1017\",\"variant\":\"none\"}",
+      "n": 1,
+      "c": 0.003194
+    },
+    {
+      "model": "{\"id\":\"reflection/beam-free\",\"providerID\":\"vercel\",\"variant\":\"low\"}",
+      "n": 1,
+      "c": 0
+    },
+    {
+      "model": "{\"id\":\"glm-5.3-flash-free\",\"providerID\":\"opencode\",\"variant\":\"max\"}",
+      "n": 1,
+      "c": 0.003827
+    },
+    {
+      "model": "{\"id\":\"deepseek-v4.1-flash-free\",\"providerID\":\"opencode\",\"variant\":\"default\"}",
+      "n": 1,
+      "c": 0
+    },
+    {
+      "model": "{\"id\":\"deepseek-flash\",\"providerID\":\"deepseek\",\"variant\":\"low\"}",
+      "n": 1,
+      "c": 0.001718
+    },
+    {
+      "model": "{\"id\":\"beam-free\",\"providerID\":\"opencode\",\"variant\":\"low\"}",
+      "n": 1,
+      "c": 0
+    },
+    {
+      "model": null,
+      "n": 1,
+      "c": 0
+    }
+  ]
+}

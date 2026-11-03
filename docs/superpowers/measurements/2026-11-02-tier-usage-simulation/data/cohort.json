@@ -1,30 +1,114 @@
 {
-  "logState": "absent",
-  "runWindow": null,
-  "dispatchingSessionIDs": [],
-  "byTier": {},
+  "logState": "present",
+  "runWindow": {
+    "runID": "tier-sim-2026-11-02",
+    "runStartMs": 1793663082059,
+    "runEndMs": 1793664710387,
+    "planned": {
+      "fast": 15,
+      "medium": 15,
+      "heavy": 9
+    },
+    "plannedOriginal": {
+      "fast": 45,
+      "medium": 39,
+      "heavy": 9
+    },
+    "scopeApprovedBy": "user, 2026-11-02, message '15/15/9'",
+    "executed": {
+      "fast": 15,
+      "medium": 15,
+      "heavy": 9
+    },
+    "measured": {
+      "spendUSD": 0.445128
+    },
+    "concurrency": 3,
+    "perDispatchCeilingUSD": 0.9,
+    "stoppedEarly": null,
+    "state": "completed",
+    "billing": "unavailable - no dashboard access; reconciliation will be inconclusive",
+    "periodBoundary": "run started 2026-11-02T23:44Z and ended 2026-11-03T00:11Z, crossing a UTC day boundary; a daily-grain invoice would not align with this window"
+  },
+  "dispatchingSessionIDs": [
+    "ses_e6159229cffe21viRR85bQQ2Xu",
+    "ses_e615909cbffePiXWuh23t0wMyf",
+    "ses_e6158f7f0ffed5NN0YTwC4xXgb",
+    "ses_e6158c66effexPD0tGMBvzSDNT",
+    "ses_e6158b633ffelgDrn3voSl7b38",
+    "ses_e6158a48fffe4XnR6cZJ9hj8SY",
+    "ses_e615876d9ffeRspJWZUMszfE51",
+    "ses_e61584340ffeAeZvVb8fI95k7e",
+    "ses_e615828baffelXD0ceaqb8vXGy",
+    "ses_e61580162ffe3m60IpW4xoisHc",
+    "ses_e6157f00fffeymgGTd0NmeEx4h",
+    "ses_e6143ccb3ffeY1FdkmzSPyHZHf",
+    "ses_e6143bc0effe5TNPoEB0ZhFUnn",
+    "ses_e6143ab2fffeHgBMWKLFs7nG1P",
+    "ses_e61439851ffeWHUmrLNVAnJL2k",
+    "ses_e61437e01ffeBiSrXYV9UvGom1",
+    "ses_e61436cafffeZlojX1JGvd6x4J",
+    "ses_e61434ee5ffe2RAzX2XcVrZeQc",
+    "ses_e61433bc5ffezfcKOwyUGCHYQD",
+    "ses_e61432b4effe7CowtnEp6m3AjY",
+    "ses_e61431686ffeJ9gGcMysKD4qmW",
+    "ses_e6143154fffevgYQbJDdz3bA2M",
+    "ses_e614302c2ffeEO4sY4rryc6hKL",
+    "ses_e6142e9fbffebwBpjz965FEO7f",
+    "ses_e6142e8b8ffeakVFjFuk8XPdoZ",
+    "ses_e6142bb36ffe0UreSzlKhnHZMn",
+    "ses_e6142ba06ffeVPiRvBir46Anjj",
+    "ses_e6142a862ffe9XXW96BPbWoLtQ",
+    "ses_e61429467ffeCxmf1Ohz88V6Nh",
+    "ses_e61429339ffes3S516yqDz9iJS",
+    "ses_e61426038ffew3w827VHsvg51v",
+    "ses_e61424810ffeYBhbHYoSO52xWy",
+    "ses_e614246e2ffe4NMoqypHNG1gv2",
+    "ses_e6141f71affekRaqSzk3juawJj",
+    "ses_e6141a4d1ffeQyBXkrDvrV1P1x",
+    "ses_e61419223ffe42vs4yUO0rB3Bd",
+    "ses_e61415d5bffeInBAlXRjS1BXdc",
+    "ses_e61413103ffecDbZFx8R2ptLlh",
+    "ses_e61411b92ffecsrfHHDa4cd1ei"
+  ],
+  "byTier": {
+    "fast": {
+      "n": 15,
+      "costUSD": 0.052409,
+      "steps": 62
+    },
+    "medium": {
+      "n": 15,
+      "costUSD": 0.037494,
+      "steps": 75
+    },
+    "heavy": {
+      "n": 9,
+      "costUSD": 0.375651,
+      "steps": 42
+    }
+  },
   "nonTierChildren": {
-    "n": 6,
-    "cost": 0.047917,
-    "agents": [
-      "explore",
-      "general"
-    ]
+    "n": 0,
+    "cost": 0,
+    "agents": []
   },
   "topLevel": {
-    "n": 65,
-    "cost": 3.210492,
-    "createdAfterRunStart": null
+    "n": 0,
+    "cost": 0,
+    "createdAfterRunStart": 0
   },
   "totals": {
-    "sessionCount": 182,
-    "sessionCost": 4.146239
+    "sessionCount": 39,
+    "sessionCost": 0.465554
   },
   "checks": {
-    "cohortSize": 0,
-    "dispatchRowsForCohort": 0,
+    "cohortSize": 39,
+    "dispatchRowsForCohort": 39,
     "cohortWithoutDispatchRow": 0,
-    "dispatchRowsOutsideCohort": 111,
-    "projectIDs": []
+    "dispatchRowsOutsideCohort": 0,
+    "projectIDs": [
+      "9e87c6c40757c2d71e737f3f03cf356ad53d1b81"
+    ]
   }
 }

@@ -1,93 +1,86 @@
 {
-  "window": null,
-  "localUSD": null,
+  "window": {
+    "runID": "tier-sim-2026-11-02",
+    "runStartMs": 1793663082059,
+    "runEndMs": 1793664710387,
+    "planned": {
+      "fast": 15,
+      "medium": 15,
+      "heavy": 9
+    },
+    "plannedOriginal": {
+      "fast": 45,
+      "medium": 39,
+      "heavy": 9
+    },
+    "scopeApprovedBy": "user, 2026-11-02, message '15/15/9'",
+    "executed": {
+      "fast": 15,
+      "medium": 15,
+      "heavy": 9
+    },
+    "measured": {
+      "spendUSD": 0.445128
+    },
+    "concurrency": 3,
+    "perDispatchCeilingUSD": 0.9,
+    "stoppedEarly": null,
+    "state": "completed",
+    "billing": "unavailable - no dashboard access; reconciliation will be inconclusive",
+    "periodBoundary": "run started 2026-11-02T23:44Z and ended 2026-11-03T00:11Z, crossing a UTC day boundary; a daily-grain invoice would not align with this window"
+  },
+  "localUSD": 0.608567,
   "billedUSD": null,
   "deltaUSD": null,
   "deltaPct": null,
   "verdict": "inconclusive",
   "derivedRates": {
-    "vercel/minimax/minimax-m3.1-flash#medium": {
-      "status": "underdetermined",
-      "rank": 3,
-      "equations": 11,
-      "note": "rank-deficient and not in the terra family; no rate is reported"
+    "vercel/openai/gpt-6.1-terra#xhigh": {
+      "status": "solved",
+      "rank": 4,
+      "equations": 42,
+      "rates": {
+        "input": 0.9999999999995453,
+        "output": 5,
+        "cacheRead": 0.0500000000000001,
+        "cacheWrite": 1.2500000000000002
+      },
+      "residual": 1.6653345369377348e-16
     },
     "vercel/deepseek/deepseek-v4.1-flash-1017#max": {
       "status": "underdetermined",
       "rank": 3,
-      "equations": 12,
+      "equations": 75,
       "note": "rank-deficient and not in the terra family; no rate is reported"
     },
-    "vercel/openai/gpt-6.1-terra#xhigh": {
-      "status": "solved",
-      "rank": 4,
-      "equations": 4,
-      "rates": {
-        "input": 0.9999999990195647,
-        "output": 4.999999999999634,
-        "cacheRead": 0.0500000000001537,
-        "cacheWrite": 1.2500000000001703
-      },
-      "residual": 2.7755575615628914e-16
+    "vercel/minimax/minimax-m3.1-flash#medium": {
+      "status": "underdetermined",
+      "rank": 3,
+      "equations": 62,
+      "note": "rank-deficient and not in the terra family; no rate is reported"
     },
     "deepseek/deepseek-flash#default": {
       "status": "underdetermined",
       "rank": 3,
-      "equations": 2323,
-      "note": "rank-deficient and not in the terra family; no rate is reported"
-    },
-    "vercel/deepseek/deepseek-v4.1-flash-1017#none": {
-      "status": "underdetermined",
-      "rank": 2,
-      "equations": 2,
-      "note": "rank-deficient and not in the terra family; no rate is reported"
-    },
-    "vercel/openai/gpt-6.1-terra-fast#xhigh": {
-      "status": "solved",
-      "rank": 4,
-      "equations": 4,
-      "rates": {
-        "input": 1.9999999997417035,
-        "output": 9.999999999999945,
-        "cacheRead": 0.1000000000000445,
-        "cacheWrite": 2.5000000000000457
-      },
-      "residual": 1.3877787807814457e-17
-    },
-    "deepseek/deepseek-flash#max": {
-      "status": "underdetermined",
-      "rank": 3,
-      "equations": 59,
-      "note": "rank-deficient and not in the terra family; no rate is reported"
-    },
-    "deepseek/deepseek-flash#high": {
-      "status": "underdetermined",
-      "rank": 3,
-      "equations": 372,
-      "note": "rank-deficient and not in the terra family; no rate is reported"
-    },
-    "deepseek/deepseek-flash#low": {
-      "status": "underdetermined",
-      "rank": 3,
-      "equations": 3,
+      "equations": 79,
       "note": "rank-deficient and not in the terra family; no rate is reported"
     }
   },
-  "localHeavy": 0,
-  "localNonHeavy": null,
-  "heavyOutsideCohort": 11,
+  "localHeavy": 0.375651,
+  "localNonHeavy": 0.232916,
+  "heavyOutsideCohort": 0,
   "validationFactor": 1,
   "validationStatus": "not-needed",
   "split": {
-    "cohortUSD": 0,
-    "nonTierChildUSD": 0.047917,
-    "topLevelUSD": 3.210492,
-    "topLevelCreatedAfterRunStart": null,
-    "totalUSD": 4.146239,
-    "tierShare": 0
+    "cohortUSD": 0.465554,
+    "nonTierChildUSD": 0,
+    "topLevelUSD": 0,
+    "topLevelCreatedAfterRunStart": 0,
+    "totalUSD": 0.465554,
+    "tierShare": 1
   },
-  "fastMonthly": 7.8854,
+  "fastMonthly": 4.7168,
   "fastMonthlyStatus": "measured",
-  "allFastMeanMonthly": 0.6331,
+  "allFastMeanMonthly": 4.7168,
   "fastMeanBasis": "intended identity vercel/minimax/minimax-m3.1-flash#medium"
 }
