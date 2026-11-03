@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { stepLabel } from "../../src/mini/step-label"
+import { preferredStep, stepLabel } from "../../src/mini/step-label"
 
 const fallback = { agent: "build", model: "deepseek-flash", variant: undefined as string | undefined }
 
@@ -20,5 +20,22 @@ describe("step label", () => {
       model: "m",
       variant: undefined,
     })
+  })
+})
+
+describe("preferred step", () => {
+  const parent = { sessionID: "ses_root", agent: "build", providerID: "p", modelID: "root" }
+  const child = { sessionID: "ses_child", agent: "medium", providerID: "q", modelID: "child", variant: "max" }
+
+  test("prefers a running child over the parent", () => {
+    expect(preferredStep({ parent, tabs: [{ status: "running", step: child }] })).toEqual(child)
+  })
+
+  test("ignores a finished child's last step", () => {
+    expect(preferredStep({ parent, tabs: [{ status: "completed", step: child }] })).toEqual(parent)
+  })
+
+  test("falls back when a running child has no step yet", () => {
+    expect(preferredStep({ parent, tabs: [{ status: "running" }] })).toEqual(parent)
   })
 })

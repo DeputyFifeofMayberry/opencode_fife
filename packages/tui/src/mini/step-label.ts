@@ -11,3 +11,15 @@ export function stepLabel(
   if (step === undefined) return fallback
   return { agent: step.agent, model: step.modelID, variant: step.variant }
 }
+
+/**
+ * The step to show: a running delegated step wins over the parent's own, since
+ * that is the work currently spending money. A finished child's last step is
+ * not "running now".
+ */
+export function preferredStep(input: {
+  parent?: StepIdentity
+  tabs: ReadonlyArray<{ status: string; step?: StepIdentity }>
+}): StepIdentity | undefined {
+  return input.tabs.find((tab) => tab.status === "running" && tab.step !== undefined)?.step ?? input.parent
+}

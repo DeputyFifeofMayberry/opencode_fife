@@ -327,6 +327,8 @@ export type FooterSubagentTab = {
   status: "running" | "completed" | "cancelled" | "error"
   background?: boolean
   title?: string
+  /** The step this child is running now, when one is live. */
+  step?: StepIdentity
 }
 
 export type FooterSubagentDetail = {

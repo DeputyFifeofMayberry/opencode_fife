@@ -35,7 +35,7 @@ import { footerStatuslinePolicy } from "./footer.width"
 import { Keymap } from "../context/keymap"
 import type { ClipboardService } from "../context/clipboard"
 import { modelInfo } from "./variant.shared"
-import { stepLabel } from "./step-label"
+import { stepLabel, preferredStep } from "./step-label"
 import { monoShortcut } from "./mono"
 import { stringWidth } from "../util/string-width"
 import { formatContextUsage } from "../util/session"
@@ -239,7 +239,7 @@ export function RunFooterView(props: RunFooterViewProps) {
   // The last step that actually ran names itself; before the first step, the
   // session's next-request identity stands in. There is no "auto" state.
   const label = createMemo(() =>
-    stepLabel(props.state().step, {
+    stepLabel(preferredStep({ parent: props.state().step, tabs: subagent().tabs }), {
       agent: props.currentAgent(),
       model: model()?.model ?? props.state().model.trim(),
       variant: props.currentVariant(),

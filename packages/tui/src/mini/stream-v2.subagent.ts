@@ -24,6 +24,7 @@ import type {
   SessionMessageUser,
 } from "@opencode/client/promise"
 import { Locale } from "../util/locale"
+import { stepIdentity } from "./step-identity"
 import { createFragmentReconciler, fragmentRef, type FragmentReconciler } from "./stream-v2.fragment"
 import { toolImageCommits, userImageCommits } from "./stream-v2.image"
 import type {
@@ -32,6 +33,7 @@ import type {
   FooterSubagentTab,
   MiniFormRequest,
   MiniPermissionRequest,
+  StepIdentity,
   StreamCommit,
 } from "./types"
 import { canonicalToolName, normalizeTool, toolOutputText, toolView } from "./tool"
@@ -121,6 +123,7 @@ type ChildState = {
   hydrated: boolean
   detailStale: boolean
   blockersHydrated: boolean
+  step?: StepIdentity
 }
 
 export type SubagentTrackerInput = {
@@ -197,6 +200,7 @@ function tab(child: ChildState): FooterSubagentTab {
     status: child.status,
     background: child.background ? true : undefined,
     title: child.title,
+    step: child.step,
   }
 }
 
@@ -676,6 +680,7 @@ export function createSubagentTracker(input: SubagentTrackerInput): SubagentTrac
     }
     if (event.type === "session.step.started") {
       touch(child, event.created)
+      child.step = stepIdentity(event.data)
       if (child.label === FALLBACK_LABEL && event.data.agent) child.label = Locale.titlecase(event.data.agent)
       if (child.status !== "running") child.status = "running"
       input.emit()
@@ -900,8 +905,13 @@ export function createSubagentTracker(input: SubagentTrackerInput): SubagentTrac
       input.emit()
       return
     }
-    if (event.type === "session.step.ended") return
+    if (event.type === "session.step.ended") {
+      child.step = undefined
+      input.emit()
+      return
+    }
     if (event.type === "session.step.failed") {
+      child.step = undefined
       setFrame(child, `error:${event.data.assistantMessageID}`, {
         kind: "error",
         source: "system",
