@@ -14,13 +14,13 @@
   "mcp": {
     "servers": {
       // Docs lookup for bleeding-edge deps (Effect 4, drizzle rc, TS 7.1).
-      // Opt in by flipping disabled to false; config edits apply live, no restart. Works keyless
-      // with rate limits; if you have a CONTEXT7_API_KEY, add a Bearer header yourself — missing
+      // Enabled: connects at startup with the other MCP servers. Works keyless with rate
+      // limits; if you have a CONTEXT7_API_KEY, add a Bearer header yourself — missing
       // {env:...} variables substitute an empty string, so never ship one here unconditionally.
       "context7": {
         "type": "remote",
         "url": "https://mcp.context7.com/mcp",
-        "disabled": true
+        "disabled": false
       },
       // Live browser DevTools for packages/app + console debugging. Requires a local Chrome install.
       "chrome-devtools": {
