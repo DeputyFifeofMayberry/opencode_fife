@@ -16287,6 +16287,9 @@
               }
             ]
           },
+          "variant": {
+            "type": "string"
+          },
           "request": {
             "type": "object",
             "properties": {
@@ -16834,7 +16837,7 @@
               },
               "mode": {
                 "type": "string",
-                "enum": ["static", "adaptive"]
+                "enum": ["static", "adaptive", "frozen"]
               },
               "base_level": {
                 "type": "string",
@@ -23076,7 +23079,7 @@
         "properties": {
           "mode": {
             "type": "string",
-            "enum": ["static", "adaptive"]
+            "enum": ["static", "adaptive", "frozen"]
           },
           "agent": {
             "type": "string"
@@ -23087,7 +23090,7 @@
           },
           "control": {
             "type": "string",
-            "enum": ["manual", "automatic"]
+            "enum": ["manual", "automatic", "fixed"]
           },
           "model": {
             "anyOf": [
