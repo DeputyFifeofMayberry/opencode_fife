@@ -155,6 +155,90 @@ test("keeps consecutive close controls fixed across overflow window changes", as
   }
 })
 
+test("closes the tab when the click lands one cell left of the close mark", async () => {
+  const [active] = createSignal("first")
+  const closed: Array<string | undefined> = []
+  const controller = {
+    tabs: () => [
+      { sessionID: "first", title: "First" },
+      { sessionID: "second", title: "Second" },
+    ],
+    current: active,
+    select() {},
+    close: (sessionID?: string) => closed.push(sessionID),
+    move() {},
+    status: () => EMPTY_SESSION_TAB_STATUS,
+  } satisfies SessionTabsController
+  const app = await testRender(
+    () => (
+      <TestTuiContexts>
+        <ConfigProvider config={createTuiResolvedConfig({ tabs: { mode: "on" } })}>
+          <ThemeProvider mode="dark" source={emptyThemeSource}>
+            <SessionTabs controller={controller} animations={false} />
+          </ThemeProvider>
+        </ConfigProvider>
+      </TestTuiContexts>
+    ),
+    { width: 60, height: 2 },
+  )
+
+  try {
+    app.renderer.start()
+    await app.waitForFrame((frame) => frame.includes("Second"))
+    await app.mockMouse.moveTo(40, 0)
+    await app.waitForFrame((frame) => frame.includes("✕"))
+    const column = Array.from(app.captureCharFrame().split("\n")[0] ?? "").indexOf("✕")
+    expect(column).toBeGreaterThan(0)
+
+    await app.mockMouse.click(column - 1, 0)
+    expect(closed).toEqual(["second"])
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+test("does not close when the click lands two cells left of the close mark", async () => {
+  const [active, setActive] = createSignal("first")
+  const closed: Array<string | undefined> = []
+  const controller = {
+    tabs: () => [
+      { sessionID: "first", title: "First" },
+      { sessionID: "second", title: "Second" },
+    ],
+    current: active,
+    select: setActive,
+    close: (sessionID?: string) => closed.push(sessionID),
+    move() {},
+    status: () => EMPTY_SESSION_TAB_STATUS,
+  } satisfies SessionTabsController
+  const app = await testRender(
+    () => (
+      <TestTuiContexts>
+        <ConfigProvider config={createTuiResolvedConfig({ tabs: { mode: "on" } })}>
+          <ThemeProvider mode="dark" source={emptyThemeSource}>
+            <SessionTabs controller={controller} animations={false} />
+          </ThemeProvider>
+        </ConfigProvider>
+      </TestTuiContexts>
+    ),
+    { width: 60, height: 2 },
+  )
+
+  try {
+    app.renderer.start()
+    await app.waitForFrame((frame) => frame.includes("Second"))
+    await app.mockMouse.moveTo(40, 0)
+    await app.waitForFrame((frame) => frame.includes("✕"))
+    const column = Array.from(app.captureCharFrame().split("\n")[0] ?? "").indexOf("✕")
+    expect(column).toBeGreaterThan(1)
+
+    await app.mockMouse.click(column - 2, 0)
+    expect(closed).toEqual([])
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
 test("reflows held tabs when the pointer leaves the strip", async () => {
   const [active, setActive] = createSignal("first")
   const [items, setItems] = createSignal([

@@ -1717,9 +1717,9 @@ function HorizontalSessionTabs(props: {
                 </title_shimmer>
                 <text
                   position="absolute"
-                  right={1}
+                  right={0}
                   zIndex={2}
-                  width={1}
+                  width={3}
                   fg={closeHovered() ? theme.text.base : closeColor()}
                   selectable={false}
                   onMouseOver={() => setCloseHovered(true)}
@@ -1740,7 +1740,7 @@ function HorizontalSessionTabs(props: {
                     tabs.close(tab === NEW_SESSION_TAB ? undefined : tab.sessionID)
                   }}
                 >
-                  {hovered() === tab.sessionID ? "✕" : ""}
+                  {hovered() === tab.sessionID ? " ✕ " : ""}
                 </text>
               </box>
             </box>
