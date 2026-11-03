@@ -1,4 +1,5 @@
 import type { Model } from "@opencode/schema/model"
+import { isPeak, multiplierAt } from "@opencode/util/cost-window"
 
 /**
  * Compiles a catalog price predicate into the window the pricing code evaluates.
@@ -6,18 +7,10 @@ import type { Model } from "@opencode/schema/model"
  * unrecognised predicate can never change a price.
  */
 
-const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
-
-type Predicate = Readonly<Record<string, unknown>>
-export type Options = { holidays?: ReadonlySet<string> }
-
-const isRecord = (value: unknown): value is Predicate =>
+const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
 
-const toMinutes = (value: string) => {
-  const [hours, minutes] = value.split(":")
-  return Number(hours) * 60 + Number(minutes ?? 0)
-}
+type Predicate = Readonly<Record<string, unknown>>
 
 type Draft = {
   days: string[]
@@ -63,7 +56,8 @@ function compileNode(node: Predicate): Draft | undefined {
       continue
     }
     if (key === "utc_days") {
-      const days = isRecord(raw) && Array.isArray(raw.in) ? raw.in.filter((day): day is string => typeof day === "string") : []
+      const days =
+        isRecord(raw) && Array.isArray(raw.in) ? raw.in.filter((day): day is string => typeof day === "string") : []
       if (!days.length) return undefined
       draft.days.push(...days)
       continue
@@ -93,33 +87,4 @@ export function compileWindow(node: Predicate): Model.CostWindow | undefined {
   }
 }
 
-/** The factor of the first multiplier whose window contains this instant, or 1. */
-export function multiplierAt(
-  multipliers: readonly Model.CostMultiplier[] | undefined,
-  at: number,
-  options: Options = {},
-): number {
-  const date = new Date(at)
-  const day = DAYS[date.getUTCDay()]!
-  const clock = date.getUTCHours() * 60 + date.getUTCMinutes()
-  const holidays = options.holidays ?? new Set<string>()
-  const stamp = date.toISOString().slice(0, 10)
-
-  for (const multiplier of multipliers ?? []) {
-    const window = multiplier.window
-    if (window.days.length && !window.days.includes(day)) continue
-    if (window.skipHolidays && holidays.has(stamp)) continue
-    if (!window.ranges.some((range) => clock >= toMinutes(range.from) && clock < toMinutes(range.to))) continue
-    return multiplier.factor
-  }
-  return 1
-}
-
-/** True when a request made at this instant is priced above the base rate. */
-export function isPeak(
-  multipliers: readonly Model.CostMultiplier[] | undefined,
-  at: number,
-  options: Options = {},
-): boolean {
-  return multiplierAt(multipliers, at, options) > 1
-}
+export { isPeak, multiplierAt }
