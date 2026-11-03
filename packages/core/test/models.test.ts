@@ -456,6 +456,40 @@ describe("ModelsDev Service", () => {
     }),
   )
 
+  it.live("keeps time-of-day multipliers on cost and drops service-tier ones", () =>
+    Effect.gen(function* () {
+      const cache = makeCache()
+      writeCache(cache, {
+        acme: {
+          ...fixture.acme,
+          models: {
+            "acme-1": sourceModel("acme-1", {
+              cost: {
+                text: { input: { price: 1 }, output: { price: 2 } },
+                multipliers: [
+                  { when: { service_tier: { equals: "priority" } }, factor: 2 },
+                  { when: { utc_hours: { gte: "01:00", lt: "04:00" }, utc_days: { in: ["mon"] } }, factor: 2 },
+                ],
+              },
+            }),
+          },
+        },
+      })
+      const state = yield* Ref.make(initialState)
+      const [acme] = yield* provided(
+        state,
+        cache,
+        ModelsDev.Service.use((service) => service.get()),
+      )
+      expect(acme?.models[0]?.cost[0]?.multipliers).toEqual([
+        {
+          window: { days: ["mon"], ranges: [{ from: "01:00", to: "04:00" }], skipHolidays: false },
+          factor: 2,
+        },
+      ])
+    }),
+  )
+
   it.effect("skips APIs whose opencode entrypoint this build doesn't have", () =>
     Effect.gen(function* () {
       const unknown = (path: string) => ({

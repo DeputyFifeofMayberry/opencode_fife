@@ -5,6 +5,7 @@ import { MaxTokensField, MediaInput } from "@opencode/schema/model-compatibility
 import { ModelsDev } from "@opencode/schema/models-dev"
 import { Money } from "@opencode/schema/money"
 import { App } from "./app.js"
+import { compileWindow } from "./cost-window.js"
 import { Hash } from "@opencode/util/hash"
 import { FSUtil } from "@opencode/util/fs-util"
 import { Bus } from "./bus.js"
@@ -309,15 +310,24 @@ const zero = Money.USDPerMillionTokens.zero
 // (service tier, time of day…) are left out.
 function cost(input: SourceCost | undefined): Model.Info["cost"] {
   const text = input?.text
+  // Service-tier multipliers are already baked into each mode's prices; only the
+  // time-based ones survive to be applied when a request is priced.
+  const multipliers = (input?.multipliers ?? []).flatMap((item) => {
+    if ("service_tier" in item.when) return []
+    const window = compileWindow(item.when)
+    return window && typeof item.factor === "number" ? [{ window, factor: item.factor }] : []
+  })
+  const extra = multipliers.length ? { multipliers } : {}
   const perToken = (unit: string | undefined) => unit === undefined || unit === "token"
   if (!text?.input || !text.output || !perToken(text.input.unit) || !perToken(text.output.unit))
-    return [{ input: zero, output: zero, cache: { read: zero, write: zero } }]
+    return [{ input: zero, output: zero, cache: { read: zero, write: zero }, ...extra }]
   const textInput = text.input
   const textOutput = text.output
   const base = {
     input: textInput.price,
     output: textOutput.price,
     cache: { read: textInput.cache?.read ?? zero, write: cacheWrite(textInput.cache) ?? zero },
+    ...extra,
   }
   // An override merges field by field, so a tier keeps every base price it doesn't set.
   const tiers = new Map<number, Model.Info["cost"][number]>()
@@ -378,6 +388,7 @@ function modeCost(model: SourceModel, base: Model.Info["cost"], name: string, mo
         read: scale(baseDefault.cache.read, ["text", "input", "cache", "read"]),
         write: scale(baseDefault.cache.write, ["text", "input", "cache", "write"]),
       },
+      ...(baseDefault.multipliers ? { multipliers: baseDefault.multipliers } : {}),
     },
     ...baseTiers,
   ]

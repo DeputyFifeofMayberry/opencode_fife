@@ -89,6 +89,22 @@ export const Capabilities = Schema.Struct({
     })),
   )
 
+export interface CostWindow extends Schema.Schema.Type<typeof CostWindow> {}
+export const CostWindow = Schema.Struct({
+  /** Lowercase three-letter UTC weekdays the window applies to; empty means every day. */
+  days: Schema.Array(Schema.String),
+  /** Inclusive start and exclusive end, as UTC "HH:mm". */
+  ranges: Schema.Array(Schema.Struct({ from: Schema.String, to: Schema.String })),
+  /** True when the rule excludes holiday dates the caller supplies. */
+  skipHolidays: Schema.Boolean,
+}).annotate({ identifier: "Model.CostWindow" })
+
+export interface CostMultiplier extends Schema.Schema.Type<typeof CostMultiplier> {}
+export const CostMultiplier = Schema.Struct({
+  window: CostWindow,
+  factor: Schema.Finite,
+}).annotate({ identifier: "Model.CostMultiplier" })
+
 export interface Cost extends Schema.Schema.Type<typeof Cost> {}
 export const Cost = Schema.Struct({
   tier: Schema.Struct({
@@ -101,6 +117,7 @@ export const Cost = Schema.Struct({
     read: Money.USDPerMillionTokens,
     write: Money.USDPerMillionTokens,
   }),
+  multipliers: Schema.Array(CostMultiplier).pipe(optional),
 }).annotate({ identifier: "Model.Cost" })
 
 export interface Variant extends Schema.Schema.Type<typeof Variant> {}
