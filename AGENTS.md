@@ -7,26 +7,14 @@
 
 ## Skills
 
-Skills load from three sources. On OpenCode V2 the precedence is project `.opencode/skills/` → personal `~/.config/opencode/skills/` → Superpowers (registered by its plugin). Five names exist in both the project and personal directories — `construction-humanizer`, `craft-prompting`, `eli5-skill`, `find-skills`, `walk-me-through` — and the project copy is the one that runs, so edit that copy or the change is invisible.
+Skills load from two sources. On OpenCode V2 the precedence is project `.opencode/skills/` → personal `~/.config/opencode/skills/`. Five names exist in both the project and personal directories — `construction-humanizer`, `craft-prompting`, `eli5-skill`, `find-skills`, `walk-me-through` — and the project copy is the one that runs, so edit that copy or the change is invisible.
 
-- **Superpowers** supplies the process: brainstorming, written plans, plan execution, TDD, debugging, code review, git worktrees, and the completion gate. Its skills use bare names (`brainstorming`, `writing-plans`), not the `superpowers:` prefix used inside plan documents.
 - **Project skills** supply repo knowledge and tooling: `unit-tests`, `tui-tests`, `app-e2e-tests`, `component-tests`, `effect`, `opencode-dev`, `rtl-aware-development`, and the writing and prompting skills.
-- **Personal skills** supply technique. Where one covers the same ground as a Superpowers process skill (`idea-refine`, `interview-me`, `spec-driven-development`, `planning-and-task-breakdown`, `incremental-implementation`, `debugging-and-error-recovery`, `code-review-and-quality`, `doubt-driven-development`, `using-agent-skills`), it is opt-in: use it when the user names it, or when the Superpowers skill genuinely does not fit.
+- **Personal skills** supply technique. Use a personal skill when the user names it, or when no project skill fits.
 
-When a task could use either system:
+Use a skill when its description matches the task. A question, a read-only inspection, or a one-line fix needs no skill.
 
-| Task | Skill |
-| --- | --- |
-| Design a feature, resolve ambiguity | `brainstorming` |
-| Write the plan | `writing-plans`, saved under `docs/superpowers/plans/` |
-| Execute an approved plan | `subagent-driven-development` for independent tasks, otherwise `executing-plans` |
-| Write the test first | `test-driven-development`; `test-design` for test size and structure |
-| Defect with an unknown cause | `systematic-debugging` |
-| Review a change | `requesting-code-review` or `receiving-code-review`; `code-review-and-quality` for a deeper multi-axis pass |
-| Claim a task complete | `verification-before-completion` plus `definition-of-done.md` |
-| Isolated worktree, or merge a finished branch | `using-git-worktrees`, `finishing-a-development-branch`; the branch and integration rules below still apply |
-
-A question, a read-only inspection, or a one-line fix skips the process skills. Plans already in `docs/superpowers/plans/` carry their own `REQUIRED SUB-SKILL` header; follow it.
+Plans under `docs/superpowers/` and `docs/plans/` are preserved historical artifacts; any `REQUIRED SUB-SKILL` headers in them refer to retired tooling and are not active instructions.
 
 `.opencode/references/` holds the standing checklists: `definition-of-done.md` (completion bar), `testing-patterns.md`, `orchestration-patterns.md` (slash-command and persona patterns), and the `security-`, `performance-`, `observability-`, and `accessibility-checklist.md` files. Read the matching one when a change touches that dimension.
 
@@ -39,7 +27,7 @@ A question, a read-only inspection, or a one-line fix skips the process skills. 
 - A dispatch states the goal, allowed paths, constraints, relevant context, output contract, and what to verify. Subagents start with fresh context, so restate anything they need.
 - Report what was delegated, why, and what came back. Do not hide child-session cost or failures.
 - Prefer existing slash commands for deterministic specialist workflows. `orchestration-patterns.md` covers slash-command and persona patterns.
-- High-risk or ambiguous work: plan first (`brainstorming` → `writing-plans`) and get approval before implementing.
+- High-risk or ambiguous work: plan first and get approval before implementing.
 
 ## Workflow
 
@@ -251,7 +239,7 @@ const table = sqliteTable("session", {
 - Test the actual implementation; never duplicate logic into tests.
 - Tests never run from repo root (guard: `do-not-run-tests-from-root`); run from package directories (e.g. `packages/core`).
 - Before writing or changing tests, read the matching `.opencode/skills` skill: `unit-tests` (bun test), `tui-tests` (OpenTUI renderer tests), `app-e2e-tests` (Playwright, `packages/app/e2e`), `component-tests` (Playwright on stories, `packages/stories`) — they cover known CI slowness/flakiness causes.
-- Write the failing test first (`test-driven-development`); use `test-design` when the question is test size, structure, or flakiness rather than the red-green loop.
+- Write the failing test first; use `test-design` when the question is test size, structure, or flakiness rather than the red-green loop.
 
 ## Checks
 
