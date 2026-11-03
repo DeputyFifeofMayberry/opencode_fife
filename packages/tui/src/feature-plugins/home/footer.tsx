@@ -11,7 +11,7 @@ export function homeFooterVisibility(width: number) {
     mcpCommand: width >= 64,
     pluginCommand: width >= 80,
     version: width >= 64,
-    pricing: width >= 96,
+    pricing: width >= 80,
   }
 }
 
@@ -93,23 +93,21 @@ function Pricing(props: { context: Plugin.Context }) {
   )
 
   return (
-    <Show when={visibility().pricing && status()}>
-      {(value) => (
-        <box gap={1} flexDirection="row" flexShrink={0}>
-          <text
-            fg={
-              value().peak
-                ? props.context.theme.text.feedback.warning.base
-                : props.context.theme.text.muted
-            }
-          >
-            ⊙ {value().label}
-          </text>
-          <Show when={costLabel(spend(), false)}>
-            {(label) => <text fg={props.context.theme.text.muted}>{label()} spend</text>}
-          </Show>
-        </box>
-      )}
+    <Show when={visibility().pricing && (status() || costLabel(spend(), false))}>
+      <box gap={1} flexDirection="row" flexShrink={0}>
+        <Show when={status()}>
+          {(value) => (
+            <text
+              fg={value().peak ? props.context.theme.text.feedback.warning.base : props.context.theme.text.muted}
+            >
+              ⊙ {value().label}
+            </text>
+          )}
+        </Show>
+        <Show when={costLabel(spend(), false)}>
+          {(label) => <text fg={props.context.theme.text.muted}>{label()} spend</text>}
+        </Show>
+      </box>
     </Show>
   )
 }

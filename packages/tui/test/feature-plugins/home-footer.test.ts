@@ -22,11 +22,11 @@ describe("home footer visibility", () => {
       mcpCommand: true,
       pluginCommand: true,
       version: true,
-      pricing: false,
+      pricing: true,
     })
   })
 
-  test("adds the pricing strip only where the version string still fits", () => {
+  test("adds the pricing strip once the row has room for it", () => {
     expect(homeFooterVisibility(96)).toEqual({
       mcpCommand: true,
       pluginCommand: true,
