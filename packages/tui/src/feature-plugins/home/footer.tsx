@@ -1,14 +1,17 @@
 import { Plugin } from "@opencode/plugin/tui"
-import { createMemo, Match, Show, Switch } from "solid-js"
+import { createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js"
 import { useTerminalDimensions } from "@opentui/solid"
 import { usePlugin } from "../../plugin/context"
 import { Slot } from "../../plugin/render"
+import { costLabel } from "../../util/cost-label"
+import { pricingStatus, totalSpend } from "../../util/home-status"
 
 export function homeFooterVisibility(width: number) {
   return {
     mcpCommand: width >= 64,
     pluginCommand: width >= 80,
     version: width >= 64,
+    pricing: width >= 96,
   }
 }
 
@@ -74,6 +77,52 @@ function Plugins(props: { context: Plugin.Context }) {
   )
 }
 
+function Pricing(props: { context: Plugin.Context }) {
+  const dimensions = useTerminalDimensions()
+  const visibility = createMemo(() => homeFooterVisibility(dimensions().width))
+  const [now, setNow] = createSignal(Date.now())
+  onMount(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60_000)
+    onCleanup(() => clearInterval(timer))
+  })
+  // The badge and the charged price read the same compiled window, so they cannot disagree.
+  const multipliers = createMemo(() => {
+    const models = props.context.data.location.model.list(props.context.location) ?? []
+    for (const model of models) {
+      for (const cost of model.cost) if (cost.multipliers?.length) return cost.multipliers
+    }
+    return undefined
+  })
+  const status = createMemo(() => {
+    const value = multipliers()
+    return value ? pricingStatus(value, now()) : undefined
+  })
+  const spend = createMemo(() =>
+    totalSpend(props.context.data.session.list(), (id) => props.context.data.session.cost(id)),
+  )
+
+  return (
+    <Show when={visibility().pricing && status()}>
+      {(value) => (
+        <box gap={1} flexDirection="row" flexShrink={0}>
+          <text
+            fg={
+              value().peak
+                ? props.context.theme.text.feedback.warning.base
+                : props.context.theme.text.muted
+            }
+          >
+            ⊙ {value().label}
+          </text>
+          <Show when={costLabel(spend(), false)}>
+            {(label) => <text fg={props.context.theme.text.muted}>{label()} spend</text>}
+          </Show>
+        </box>
+      )}
+    </Show>
+  )
+}
+
 function View(props: { context: Plugin.Context }) {
   const dimensions = useTerminalDimensions()
   const visibility = createMemo(() => homeFooterVisibility(dimensions().width))
@@ -93,6 +142,7 @@ function View(props: { context: Plugin.Context }) {
         <Mcp context={props.context} />
         <Plugins context={props.context} />
         <Slot path="home.footer.status" />
+        <Pricing context={props.context} />
         <box flexGrow={1} />
         <Show when={visibility().version}>
           <box flexShrink={0}>
