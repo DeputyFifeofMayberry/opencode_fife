@@ -9,7 +9,7 @@
  * a core whose version it does not know, and a change to level rules, operation
  * minimums, or decision fields increments it.
  */
-export const EFFORT_POLICY_PROTOCOL_VERSION = 2
+export const EFFORT_POLICY_PROTOCOL_VERSION = 3
 
 /** Automatic effort levels, ordered from least to most expensive. */
 export type EffortLevel = 'low' | 'standard' | 'deep'
@@ -50,6 +50,8 @@ export interface EvidenceObservation {
 export interface EffortState {
   /** The configured or user-selected base level. */
   readonly base: EffortLevel
+  /** Frozen mode: hold the effective base; evidence never changes the level. */
+  readonly frozen?: boolean
   /** A user-selected exact effort, which the policy writes verbatim and never escalates. */
   readonly exact?: string
   /** A level raised by session mode, such as plan mode. */

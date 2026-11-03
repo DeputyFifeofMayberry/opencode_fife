@@ -9,7 +9,7 @@ import { operationFor, sessionSeed } from "./delegation.js"
 import type { EffortStore } from "./store.js"
 
 /** The protocol version this host was built against; a different core is refused. */
-export const SUPPORTED_PROTOCOL_VERSION = 2
+export const SUPPORTED_PROTOCOL_VERSION = 3
 
 /**
  * The route's effort vocabulary, least expensive first.

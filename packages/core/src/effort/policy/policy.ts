@@ -74,6 +74,8 @@ export function operationMinimum(operation: DelegationOperation): EffortLevel {
  * @returns the next state, or the same state when the observation changes nothing.
  */
 export function applyEvidence(state: EffortState, observation: EvidenceObservation): EffortState {
+  // Frozen states carry no durable level, so the `level === undefined` guards
+  // below already leave them unchanged.
   if (observation.kind === 'infrastructure') return state
   if (observation.kind === 'verification-failure') {
     const opened: EffortState = {
@@ -118,6 +120,8 @@ function countCleanPass(state: EffortState, passes: number): EffortState {
  * sessions decide from their durable level, raised by the session pin; the
  * open failure holds the raise the evidence loop already applied, and a level
  * still above the base after the failure cleared is a step-down in progress.
+ * Frozen sessions ignore both the durable level and the open failure: the
+ * level is the effective base, raised only by a pin.
  *
  * Nothing is written when the level is already the adapter's default or the
  * route advertises no reasoning, because a written default is a different
@@ -133,13 +137,13 @@ export function decide(capability: EffortCapability, state: EffortState): Decisi
       ? { rule: 'exact-base', effort: state.exact }
       : { rule: 'untouched' }
   }
-  const adaptive = state.level !== undefined
+  const adaptive = state.frozen !== true && state.level !== undefined
   const held = adaptive
     ? state.pin !== undefined
       ? higherOf(state.level, state.pin)
       : state.level
     : effectiveBase(state)
-  const escalated = state.openFailure !== undefined
+  const escalated = state.frozen !== true && state.openFailure !== undefined
   const level = escalated && !adaptive ? higherLevel(held) : held
   const rule: DecisionRule = escalated
     ? 'escalated'

@@ -187,3 +187,32 @@ describe("adaptive level", () => {
     })
   })
 })
+
+describe("frozen mode", () => {
+  it("does not raise the level when a failure is open", () => {
+    const failed = applyEvidence({ base: "low", frozen: true }, observation("verification-failure"))
+    expect(decide(CAPABILITY, failed)).toEqual({ rule: "base", level: "low", effort: "low" })
+  })
+
+  it("still applies a mode pin", () => {
+    expect(decide(CAPABILITY, { base: "low", pin: "deep", frozen: true })).toEqual({
+      rule: "mode-pin",
+      level: "deep",
+      effort: "max",
+    })
+  })
+
+  it("still writes an exact pick verbatim", () => {
+    expect(decide(CAPABILITY, { base: "low", exact: "off", frozen: true })).toEqual({
+      rule: "exact-base",
+      effort: "off",
+    })
+  })
+
+  it("ignores a durable adaptive level", () => {
+    expect(decide(CAPABILITY, { base: "standard", level: "deep", frozen: true })).toEqual({
+      rule: "base",
+      level: "standard",
+    })
+  })
+})
