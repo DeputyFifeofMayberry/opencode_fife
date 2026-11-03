@@ -35,4 +35,16 @@ describe("effort status", () => {
     expect(EffortStatus.describe({ agent: "build", state })).toMatchObject({ support: "unknown", initialized: true, next: undefined })
     expect(EffortStatus.describe({ agent: "build" })).toMatchObject({ support: "unknown", initialized: false, next: undefined })
   })
+  test("reports frozen mode and a fixed control", () => {
+    expect(EffortStatus.describe({
+      policy: new ConfigEffort.Info({ mode: "frozen", base_level: "standard" }),
+      model,
+      agent: "build",
+    })).toMatchObject({
+      mode: "frozen",
+      control: "fixed",
+      currentLevel: undefined,
+      next: { rule: "base", level: "standard" },
+    })
+  })
 })

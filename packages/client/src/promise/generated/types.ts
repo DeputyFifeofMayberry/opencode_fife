@@ -82,10 +82,10 @@ export type SessionsCursor = string
 export type SessionActive = { type: "running" }
 
 export type SessionEffortStatus = {
-  mode: "static" | "adaptive"
+  mode: "static" | "adaptive" | "frozen"
   agent: string
   support: "unknown" | "unsupported" | "supported"
-  control: "manual" | "automatic"
+  control: "manual" | "automatic" | "fixed"
   model?: { providerID: string; id: string } | undefined
   selectedVariant?: string | undefined
   baseLevel: "low" | "standard" | "deep"
@@ -2412,6 +2412,7 @@ export type ConfigEntry =
         agents?: {
           [x: string]: {
             model?: string | { providerID: string; model: string; variant?: string }
+            variant?: string
             request?: { headers?: { [x: string]: string }; body?: { [x: string]: JsonValue } }
             system?: string
             description?: string
@@ -2512,7 +2513,7 @@ export type ConfigEntry =
         warming?: boolean | { prompt?: string; interval?: "auto" | (string & {}); duration?: string }
         effort_policy?: {
           verification_commands?: Array<string>
-          mode?: "static" | "adaptive"
+          mode?: "static" | "adaptive" | "frozen"
           base_level?: "low" | "standard" | "deep"
           clean_passes?: number
           verification_timeout?: number

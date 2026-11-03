@@ -40,10 +40,10 @@ import { Form } from "@opencode/schema/form"
 import { PublicSessionMessage } from "./message.js"
 
 const EffortStatus = Schema.Struct({
-  mode: Schema.Literals(["static", "adaptive"]),
+  mode: Schema.Literals(["static", "adaptive", "frozen"]),
   agent: Schema.String,
   support: Schema.Literals(["unknown", "unsupported", "supported"]),
-  control: Schema.Literals(["manual", "automatic"]),
+  control: Schema.Literals(["manual", "automatic", "fixed"]),
   model: Schema.Struct({ providerID: Schema.String, id: Schema.String }).pipe(Schema.optional),
   selectedVariant: Schema.String.pipe(Schema.optional),
   baseLevel: Schema.Literals(["low", "standard", "deep"]),

@@ -171,10 +171,10 @@ export type SessionGetOperation<E = never> = (input: SessionGetInput) => Effect.
 
 export type SessionEffortInput = { readonly sessionID: Session.ID }
 export type SessionEffortOutput = {
-  readonly mode: "static" | "adaptive"
+  readonly mode: "static" | "adaptive" | "frozen"
   readonly agent: string
   readonly support: "unknown" | "unsupported" | "supported"
-  readonly control: "manual" | "automatic"
+  readonly control: "manual" | "automatic" | "fixed"
   readonly model?: { readonly providerID: string; readonly id: string } | undefined
   readonly selectedVariant?: string | undefined
   readonly baseLevel: "low" | "standard" | "deep"

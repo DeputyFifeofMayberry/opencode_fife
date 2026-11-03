@@ -18,7 +18,12 @@ export function describe(input: {
     mode: resolution.mode,
     agent: input.agent,
     support: resolution.support,
-    control: resolution.exact !== undefined ? "manual" as const : "automatic" as const,
+    control:
+      resolution.exact !== undefined
+        ? "manual" as const
+        : resolution.mode === "frozen"
+          ? "fixed" as const
+          : "automatic" as const,
     model: input.selection ? { providerID: input.selection.providerID, id: input.selection.id } : undefined,
     selectedVariant: resolution.selectedVariant,
     baseLevel: resolution.baseLevel,
