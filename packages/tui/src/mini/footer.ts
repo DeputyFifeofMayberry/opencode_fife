@@ -561,6 +561,7 @@ export class RunFooter implements FooterApi {
           : prev.interrupt,
       exit:
         typeof next.exit === "number" && Number.isFinite(next.exit) ? Math.max(0, Math.floor(next.exit)) : prev.exit,
+      step: "step" in next ? next.step : prev.step,
     }
 
     if (state.phase === "idle") {

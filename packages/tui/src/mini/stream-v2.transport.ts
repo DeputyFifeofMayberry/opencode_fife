@@ -13,6 +13,7 @@ import { ClientError } from "@opencode/client/promise"
 import { Event } from "@opencode/schema/event"
 import { SessionMessage } from "@opencode/schema/session-message"
 import { blockerStatus, pickBlockerView } from "./session-data"
+import { stepIdentity } from "./step-identity"
 import { writeSessionOutput } from "./stream"
 import { createFragmentReconciler, fragmentRef, type FragmentReconciler } from "./stream-v2.fragment"
 import { toolImageCommits, userImageCommits, type ImageCommit } from "./stream-v2.image"
@@ -33,6 +34,7 @@ import type {
   RunDelivery,
   RunPrompt,
   RunPromptPart,
+  StepIdentity,
   StreamCommit,
 } from "./types"
 
@@ -162,6 +164,7 @@ type State = {
   pending: Map<string, PendingPrompt>
   admitted: Set<string>
   stepModel: RunInput["model"]
+  step?: StepIdentity
   activeCompaction?: string
 }
 
@@ -511,6 +514,7 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
     pending: new Map(),
     admitted: new Set(),
     stepModel: undefined,
+    step: undefined,
   }
   let readyResolve!: () => void
   let readyReject!: (error: unknown) => void
@@ -560,7 +564,7 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
     write([], { phase: "idle", status })
   }
 
-  const write = (commits: StreamCommit[], patch?: Pick<FooterPatch, "phase" | "status" | "usage">) => {
+  const write = (commits: StreamCommit[], patch?: Pick<FooterPatch, "phase" | "status" | "usage" | "step">) => {
     if (state.closed || controller.signal.aborted || input.footer.isClosed) return
     if (!state.initial && state.buffered === undefined)
       commits.forEach((commit) => {
@@ -1091,7 +1095,9 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
     }
     if (event.type === "session.step.started") {
       state.stepModel = { providerID: event.data.model.providerID, modelID: event.data.model.id }
-      write([], { phase: "running", status: "assistant responding" })
+      const step = stepIdentity(event.data)
+      state.step = step
+      write([], { phase: "running", status: "assistant responding", step })
       return
     }
     if (event.type === "session.skill.activated") {
@@ -1385,8 +1391,10 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
         event.data.tokens.cache.write
       const limit = state.stepModel ? input.contextLimit?.(state.stepModel) : undefined
       state.stepModel = undefined
+      state.step = undefined
       if (!showTools()) flushQuietText(event.data.assistantMessageID)
       write([], {
+        step: undefined,
         usage:
           total > 0 || event.data.cost
             ? {
@@ -1400,20 +1408,27 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
     }
     if (event.type === "session.step.failed") {
       state.stepModel = undefined
+      state.step = undefined
       if (!showTools()) flushQuietText(event.data.assistantMessageID)
       const rendered = state.errors.has(event.data.assistantMessageID)
       state.errors.add(event.data.assistantMessageID)
       if (state.wait) state.wait.failureRendered = true
-      if (rendered) return
-      write([
-        {
-          kind: "error",
-          source: "system",
-          text: errorMessage(event.data.error),
-          phase: "start",
-          messageID: event.data.assistantMessageID,
-        },
-      ])
+      if (rendered) {
+        write([], { step: undefined })
+        return
+      }
+      write(
+        [
+          {
+            kind: "error",
+            source: "system",
+            text: errorMessage(event.data.error),
+            phase: "start",
+            messageID: event.data.assistantMessageID,
+          },
+        ],
+        { step: undefined },
+      )
       return
     }
     if (event.type === "session.execution.started") {

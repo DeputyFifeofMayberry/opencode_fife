@@ -173,6 +173,14 @@ type FooterPhase = "idle" | "running"
 
 // Full snapshot of footer status bar state. Every update replaces the whole
 // object in the SolidJS signal so the view re-renders atomically.
+export type StepIdentity = {
+  sessionID: string
+  agent: string
+  providerID: string
+  modelID: string
+  variant?: string
+}
+
 export type FooterState = {
   phase: FooterPhase
   status: string
@@ -182,6 +190,8 @@ export type FooterState = {
   first: boolean
   interrupt: number
   exit: number
+  /** The most recent step that actually ran, for the truthful status line. */
+  step?: StepIdentity
 }
 
 // A partial update to FooterState. The footer merges this onto the current state.
