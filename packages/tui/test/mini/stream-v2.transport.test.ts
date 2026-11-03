@@ -575,6 +575,51 @@ describe("V2 mini transport", () => {
     await transport.close()
   })
 
+  test("keeps the last step after it ends", async () => {
+    const events = feed()
+    events.push(connected())
+    const ui = footer()
+    const transport = await createSessionTransport({
+      sdk: sdk({ streams: [events] }),
+      sessionID: "ses_1",
+      thinking: false,
+      footer: ui.api,
+    })
+
+    events.push({
+      id: "evt_step_started",
+      created: 1,
+      type: "session.step.started",
+      durable: durable("ses_1", 1),
+      data: {
+        started: 1,
+        sessionID: "ses_1",
+        assistantMessageID: "msg_assistant",
+        agent: "build",
+        model: { providerID: "test", id: "model", variant: "high" },
+      },
+    })
+    events.push({
+      id: "evt_step_ended",
+      created: 2,
+      type: "session.step.ended",
+      durable: durable("ses_1", 2),
+      data: {
+        sessionID: "ses_1",
+        assistantMessageID: "msg_assistant",
+        finish: "stop",
+        cost: 0,
+        tokens: { input: 1, output: 1, reasoning: 0, cache: { read: 0, write: 0 } },
+      },
+    })
+
+    while (!ui.events.some((event) => event.type === "stream.patch" && event.patch.usage)) await Bun.sleep(0)
+    const patches = ui.events.filter((event) => event.type === "stream.patch")
+    expect(patches.some((event) => "step" in event.patch && event.patch.step === undefined)).toBe(false)
+    expect(patches.some((event) => event.patch.step?.variant === "high")).toBe(true)
+    await transport.close()
+  })
+
   test("preserves numeric footer tokens, context percentage, and cost-only usage", async () => {
     const events = feed()
     events.push(connected())

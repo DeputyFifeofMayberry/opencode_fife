@@ -21,6 +21,11 @@ describe("step label", () => {
       variant: undefined,
     })
   })
+
+  test("falls back to the resolved level when no variant was written", () => {
+    expect(stepLabel({ sessionID: "s", agent: "build", providerID: "p", modelID: "m", level: "standard" }, fallback))
+      .toEqual({ agent: "build", model: "m", variant: "standard" })
+  })
 })
 
 describe("preferred step", () => {
@@ -37,5 +42,11 @@ describe("preferred step", () => {
 
   test("falls back when a running child has no step yet", () => {
     expect(preferredStep({ parent, tabs: [{ status: "running" }] })).toEqual(parent)
+  })
+
+  test("uses tab order, which is most recently active first", () => {
+    const second = { ...child, sessionID: "ses_child_2", agent: "fast" }
+    expect(preferredStep({ parent, tabs: [{ status: "running", step: child }, { status: "running", step: second }] }))
+      .toEqual(child)
   })
 })

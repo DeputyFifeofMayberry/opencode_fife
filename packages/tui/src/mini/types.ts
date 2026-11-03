@@ -179,6 +179,8 @@ export type StepIdentity = {
   providerID: string
   modelID: string
   variant?: string
+  /** Resolved policy level, used when no variant was written for the request. */
+  level?: "low" | "standard" | "deep"
 }
 
 export type FooterState = {

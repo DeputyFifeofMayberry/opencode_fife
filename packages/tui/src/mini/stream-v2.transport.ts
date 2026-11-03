@@ -165,6 +165,7 @@ type State = {
   admitted: Set<string>
   stepModel: RunInput["model"]
   step?: StepIdentity
+  effortFetched?: boolean
   activeCompaction?: string
 }
 
@@ -515,6 +516,7 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
     admitted: new Set(),
     stepModel: undefined,
     step: undefined,
+    effortFetched: false,
   }
   let readyResolve!: () => void
   let readyReject!: (error: unknown) => void
@@ -1098,6 +1100,20 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
       const step = stepIdentity(event.data)
       state.step = step
       write([], { phase: "running", status: "assistant responding", step })
+      if (step.variant === undefined && state.effortFetched !== true) {
+        // No variant was written, so the request runs at the policy's level.
+        // Ask the authority once per session; frozen makes that level stable.
+        state.effortFetched = true
+        void client.session
+          .effort({ sessionID: input.sessionID }, { signal: attempt.signal })
+          .then((status) => {
+            if (status.mode !== "frozen" || status.next?.level === undefined) return
+            if (state.step !== step) return
+            state.step = { ...step, level: status.next.level }
+            write([], { step: state.step })
+          })
+          .catch(() => {})
+      }
       return
     }
     if (event.type === "session.skill.activated") {
@@ -1391,10 +1407,8 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
         event.data.tokens.cache.write
       const limit = state.stepModel ? input.contextLimit?.(state.stepModel) : undefined
       state.stepModel = undefined
-      state.step = undefined
       if (!showTools()) flushQuietText(event.data.assistantMessageID)
       write([], {
-        step: undefined,
         usage:
           total > 0 || event.data.cost
             ? {
@@ -1408,27 +1422,20 @@ export async function createSessionTransport(input: StreamInput): Promise<Sessio
     }
     if (event.type === "session.step.failed") {
       state.stepModel = undefined
-      state.step = undefined
       if (!showTools()) flushQuietText(event.data.assistantMessageID)
       const rendered = state.errors.has(event.data.assistantMessageID)
       state.errors.add(event.data.assistantMessageID)
       if (state.wait) state.wait.failureRendered = true
-      if (rendered) {
-        write([], { step: undefined })
-        return
-      }
-      write(
-        [
-          {
-            kind: "error",
-            source: "system",
-            text: errorMessage(event.data.error),
-            phase: "start",
-            messageID: event.data.assistantMessageID,
-          },
-        ],
-        { step: undefined },
-      )
+      if (rendered) return
+      write([
+        {
+          kind: "error",
+          source: "system",
+          text: errorMessage(event.data.error),
+          phase: "start",
+          messageID: event.data.assistantMessageID,
+        },
+      ])
       return
     }
     if (event.type === "session.execution.started") {
