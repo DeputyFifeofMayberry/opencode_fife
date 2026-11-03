@@ -16,9 +16,9 @@ export class Info extends Schema.Class<Info>("Config.Effort")({
     description:
       "Shell commands treated as verifications: a non-zero exit raises session effort one level until the same command exits zero. The policy is inert while empty.",
   }),
-  mode: Schema.Literals(["static", "adaptive"]).pipe(optional).annotate({
+  mode: Schema.Literals(["static", "adaptive", "frozen"]).pipe(optional).annotate({
     description:
-      "static (default) seeds sessions from base_level and escalates on verification failures. adaptive seeds the session level from its agent's operation ladder, raises on failures, and steps down after consecutive clean passes.",
+      "static (default) seeds sessions from base_level and escalates on verification failures. adaptive seeds the session level from its agent's operation ladder, raises on failures, and steps down after consecutive clean passes. frozen holds the configured level, never seeds, raises, or steps down, and still honours an explicit variant pick or mode pin.",
   }),
   base_level: Level.pipe(optional).annotate({
     description:

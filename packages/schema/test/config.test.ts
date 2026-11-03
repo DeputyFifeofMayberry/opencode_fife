@@ -209,6 +209,10 @@ describe("Config.Effort", () => {
     expect(Schema.encodeSync(Config.Info)(decoded)).toEqual(input)
   })
 
+  test("accepts frozen effort mode", () => {
+    expect(decode({ effort_policy: { mode: "frozen" } }).effort_policy?.mode).toBe("frozen")
+  })
+
   test("decodes the example documented in docs/spec/effort-policy.md", () => {
     const decoded = decode({
       effort_policy: {
