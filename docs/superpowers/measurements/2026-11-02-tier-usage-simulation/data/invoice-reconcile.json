@@ -1,0 +1,32 @@
+{
+  "source": "data/gateway-inference-requests.json",
+  "requests": 218,
+  "window": {
+    "from": "2026-11-02 23:44:42",
+    "to": "2026-11-03 00:11:50",
+    "requests": 177
+  },
+  "rateValidation": {
+    "scope": "all 218 requests",
+    "billed": 0.784639,
+    "reconstructedFromLocalRates": 0.784639,
+    "deltaUSD": 0,
+    "deltaPct": 0
+  },
+  "cohortComparison": {
+    "billedInWindow": 0.464806,
+    "cohortLocalUSD": 0.465554,
+    "deltaUSD": -0.000748,
+    "deltaPct": -0.16,
+    "note": "The gateway invoice covers Vercel-routed requests, which are the tier dispatches. The cohort is the right comparator."
+  },
+  "allSessionComparison": {
+    "billedInWindow": 0.464806,
+    "localPeriodDelta": 0.608567,
+    "deltaUSD": -0.143761,
+    "deltaPct": -23.62,
+    "nonGatewaySpendUSD": 0.143013,
+    "note": "The all-session period delta includes direct-provider traffic (the orchestrating session runs on deepseek-flash, not on the gateway), so it must exceed the Vercel invoice. The gap is expected, not an error."
+  },
+  "localReconstructionInWindow": 0.464806
+}

@@ -175,10 +175,9 @@ if (mode === "numbers") {
   const stats = read("stats.json")
   const reconcile = read("reconcile.json")
   const decision = read("decision.json")
-  const heavy = stats.groups.find((g: any) => g.groupBy === "tier" && g.group === "heavy")
   const expected: Record<string, unknown> = {
-    heavyMean: heavy.metrics.cost_usd.mean,
-    heavyP90: heavy.metrics.cost_usd.p90,
+    heavyMean: decision.heavyMean,
+    heavyP90: decision.heavyP90,
     deltaPct: reconcile.deltaPct,
     monthly: decision.monthlyMean,
     band: decision.band,

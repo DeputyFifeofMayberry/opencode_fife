@@ -123,26 +123,54 @@ was uniformly 4–5 steps, so its measured spread understates what real work wou
 
 ## 7. Local vs billed reconciliation
 
-| Quantity | Value |
-| --- | --- |
-| `localUSD` (period delta, all sessions) | 0.608567 |
-| `billedUSD` | *unavailable* |
-| `deltaUSD` | — |
-| `deltaPct` | — |
-| verdict | `inconclusive` |
-| `validationStatus` | `not-needed` |
-| `validationFactor` | 1 |
+The Vercel gateway export (`data/gateway-inference-requests.json`, 218 requests) became
+available after the run and is now archived with the data. Raw comparison:
+`data/invoice-reconcile.json`.
 
-No dashboard access existed in the executing environment, so the invoice could not be read.
-By the plan's own sign table there is nothing to compare, and the projection is the
-**unadjusted local estimate**. This is the single largest weakness in the result.
+**Rate validation — exact.** Reconstructing every request's charge from its token counts and
+the locally derived rates gives the invoice total to the cent:
+
+| quantity | value |
+| --- | --- |
+| gateway requests | 218 |
+| billed | 0.784639 |
+| reconstructed from local rates | 0.784639 |
+| delta | **0.000000 (0.00%)** |
+
+Per model the match is exact: `gpt-6.1-terra` 0.530633, `gpt-6.1-terra-fast` 0.106515,
+`deepseek-v4.1-flash-1017` 0.083400, `minimax-m3.1-flash` 0.064091, `reflection/beam` 0.
+This confirms the price table in section 6 is what Vercel actually charges, including the
+cache-write rate of 1.25× input for Terra.
+
+**Cohort comparison — accounting agrees.** The gateway covers Vercel-routed requests, which
+are the tier dispatches, so the cohort is the correct comparator:
+
+| quantity | value |
+| --- | --- |
+| billed in the run window (177 requests) | 0.464806 |
+| cohort local estimate | 0.465554 |
+| delta | −0.000748 (**−0.16%**) |
+
+That is agreement to rounding, well inside the ±15% tolerance. Verdict:
+`aggregate-within-tolerance`.
+
+**Why the all-session figure is larger.** `localUSD` from the session snapshots is 0.608567,
+which exceeds the invoice by 0.143013 (**−23.62%** if mis-compared directly). The gap is the
+orchestrating session, which runs `deepseek-flash` through the **direct DeepSeek provider**,
+not through the Vercel gateway. It is real spend that correctly never appears on a Vercel
+invoice. This is why the comparison must be cohort-to-invoice; comparing account-wide local
+cost to a single gateway's bill would manufacture a false `local-understates` verdict.
+
+**Caveat.** `aggregate-within-tolerance` says the totals agree for these requests. It does
+not independently confirm each unit price — though here the 0.00% reconstruction does, since
+every request was checked individually rather than only in aggregate.
 
 Sign conventions, recorded so they cannot be misread later: `deltaPct > +15` ⇒ local exceeds
 invoice ⇒ `local-overstates` (projection is an upper bound); `deltaPct < −15` ⇒ local is below
 invoice ⇒ `local-understates` (projection is a lower bound); `|deltaPct| ≤ 15` ⇒
-`aggregate-within-tolerance`, which confirms totals only, **not** per-model prices.
+`aggregate-within-tolerance`, which confirms totals only.
 
-Rate derivation from the step data, independent of any invoice:
+Rate derivation from the run's own step data, independent of any invoice:
 
 | identity | status | rank | equations | result |
 | --- | --- | --- | --- | --- |
@@ -182,22 +210,26 @@ threshold, but total router cost is that much higher than the spec assumes.
 
 ## 9. Monthly projection and decision
 
-**Heavy on Terra `xhigh` projects to $11.27/month at 9 dispatches/day; the 95% interval is
-$7.86–$15.45, which is entirely below $100, so the band is `keep-terra-xhigh` and it is
-certain at the interval level.**
+**Heavy on Terra `high` projects to $7.8751/month at 9 dispatches/day; the 95% interval is
+$5.9985–$10.1304, entirely below $100, so the band is `keep-terra-xhigh` and it is certain at
+the interval level.**
+
+This section reflects the **current** configuration, `gpt-6.1-terra#high`. The original
+`xhigh` figures ($11.2695/month, interval $7.8594–$15.4533) are preserved in section 12.
 
 | Quantity | Value |
 | --- | --- |
+| Variant | `high` |
 | Heavy n | 9 |
-| Heavy mean | 0.041739 |
-| Heavy median | 0.037107 |
-| Heavy p90 (= max, n<10) | 0.092067 |
-| Bootstrap 95% CI on the mean | 0.029109 – 0.057234 |
-| `validationFactor` | 1 (`not-needed`) |
-| `monthlyRaw` | 11.2695 |
-| `monthlyMean` | 11.2695 |
-| `monthlyP90` | 24.8581 |
-| `monthlyCI95` | 7.8594 – 15.4533 |
+| Heavy mean | 0.029167 |
+| Heavy median | 0.024841 |
+| Heavy p90 (= max, n<10) | 0.055274 |
+| Bootstrap 95% CI on the mean | 0.022217 – 0.037520 |
+| `validationFactor` | 1 (`not-needed`; invoice reconciles at 0.00%) |
+| `monthlyRaw` | 7.8751 |
+| `monthlyMean` | 7.8751 |
+| `monthlyP90` | 14.924 |
+| `monthlyCI95` | 5.9985 – 10.1304 |
 | Band from interval | `keep-terra-xhigh` |
 | `bandCertain` | true |
 
@@ -205,19 +237,19 @@ Scenario table (monthly USD at the measured distribution):
 
 | dispatches/day | at mean | at median | at max |
 | --- | --- | --- | --- |
-| 3 | 3.7565 | 3.3396 | 8.2860 |
-| 6 | 7.5130 | 6.6793 | 16.5721 |
-| 9 | 11.2695 | 10.0189 | 24.8581 |
-| 18 | 22.5391 | 20.0379 | 49.7162 |
+| 3 | 2.6250 | 2.2357 | 4.9747 |
+| 6 | 5.2501 | 4.4714 | 9.9493 |
+| 9 | 7.8751 | 6.7071 | 14.9240 |
+| 18 | 15.7502 | 13.4141 | 29.8480 |
 
-Even at double the assumed daily rate and the sample maximum, heavy stays under $50/month —
-roughly half the $100 threshold, a factor of two rather than an order of magnitude. The
-decision rule is a threshold comparison on the heavy tier only, and every scenario clears it.
+Even at double the assumed daily rate and the sample maximum, heavy stays under $30/month —
+roughly a third of the $100 threshold. The decision rule is a threshold comparison on the
+heavy tier only, and every scenario clears it.
 
 **Caveats that belong next to that number, not after it:** the mean comes from nine synthetic
-tasks that were uniformly 4–5 steps, so the interval likely understates real variance; the
-cost is an unvalidated local estimate; and the DeepSeek alternative was never measured on
-comparable heavy work, so the `operator-call` comparison cannot be costed.
+tasks, so the interval likely understates real variance; DeepSeek was never measured on
+comparable heavy work, so the alternative cannot be costed; and the 9/day frequency is
+inherited from the spec, not measured.
 
 ## 10. Assumptions still unverified
 
@@ -280,6 +312,6 @@ did not materialise in this sample. The two blocks ran at different times, so pr
 caching state is not identical; and nine synthetic tasks still do not represent real work.
 
 **Consequence for the decision.** Heavy monthly falls from $11.27 to **$7.88** at 9/day, and
-the band stays `keep-terra-xhigh` — the threshold comparison is unchanged. The
-`decision.json` in this directory still reflects the original xhigh run; this section and
-`variant-comparison.json` supersede its heavy figures.
+the band stays `keep-terra-xhigh` — the threshold comparison is unchanged. `decision.json` has
+been regenerated against this block (`bun run decision.ts high`) and section 9 reports those
+figures; `variant-comparison.json` retains both arms.

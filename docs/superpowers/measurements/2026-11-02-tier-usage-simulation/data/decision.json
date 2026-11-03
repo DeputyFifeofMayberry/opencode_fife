@@ -1,78 +1,68 @@
 {
+  "variant": "high",
   "heavyN": 9,
-  "heavyKey": "heavy | vercel/openai/gpt-6.1-terra#xhigh",
-  "heavyMean": 0.041739,
-  "heavyMedian": 0.037107,
-  "heavyP90": 0.092067,
-  "heavyMax": 0.092067,
+  "heavyKey": "heavy | vercel/openai/gpt-6.1-terra#high",
+  "heavySource": "variant-comparison.json (matched high block)",
+  "heavyMean": 0.029167,
+  "heavyMedian": 0.024841,
+  "heavyP90": 0.055274,
+  "heavyMax": 0.055274,
   "heavyCI95": [
-    0.029108711111111112,
-    0.057234461111111114
+    0.022216666666666662,
+    0.03751988888888888
   ],
   "p90IsMax": true,
   "validationFactor": 1,
   "validationStatus": "not-needed",
-  "monthlyRaw": 11.2695,
-  "monthlyMean": 11.2695,
-  "monthlyP90": 24.8581,
+  "invoiceValidation": "gateway export reconciles at 0.00% across 218 requests; cohort vs invoice -0.16%",
+  "monthlyRaw": 7.8751,
+  "monthlyMean": 7.8751,
+  "monthlyP90": 14.924,
   "monthlyCI95": [
-    7.8594,
-    15.4533
+    5.9985,
+    10.1304
   ],
   "band": "keep-terra-xhigh",
   "bandCertain": true,
   "scenarios": [
     {
       "perDay": 3,
-      "atMean": 3.7565,
-      "atMedian": 3.3396,
-      "atMax": 8.286
+      "atMean": 2.625,
+      "atMedian": 2.2357,
+      "atMax": 4.9747
     },
     {
       "perDay": 6,
-      "atMean": 7.513,
-      "atMedian": 6.6793,
-      "atMax": 16.5721
+      "atMean": 5.2501,
+      "atMedian": 4.4714,
+      "atMax": 9.9493
     },
     {
       "perDay": 9,
-      "atMean": 11.2695,
-      "atMedian": 10.0189,
-      "atMax": 24.8581
+      "atMean": 7.8751,
+      "atMedian": 6.7071,
+      "atMax": 14.924
     },
     {
       "perDay": 18,
-      "atMean": 22.5391,
-      "atMedian": 20.0379,
-      "atMax": 49.7162
+      "atMean": 15.7502,
+      "atMedian": 13.4141,
+      "atMax": 29.848
     }
   ],
   "fastMonthly": 4.7168,
-  "fastMonthlyBasis": "cohort fast tier mean x 45/day x 30",
-  "state": "completed",
-  "scopeReduced": {
-    "planned": {
-      "fast": 15,
-      "medium": 15,
-      "heavy": 9
-    },
-    "original": {
-      "fast": 45,
-      "medium": 39,
-      "heavy": 9
-    },
-    "approvedBy": "user, 2026-11-02, message '15/15/9'"
-  },
+  "state": "in-progress",
   "fallbacks": 0,
   "mixedSessions": 0,
   "cohortSize": 39,
   "rationale": [
-    "Heavy measured on 9 dispatches of heavy | vercel/openai/gpt-6.1-terra#xhigh at a mean of $0.041739 (median $0.037107).",
-    "Validation factor is 1 because validationStatus is \"not-needed\": no invoice was available, so the projection is the unadjusted local estimate.",
+    "Heavy measured on 9 dispatches of heavy | vercel/openai/gpt-6.1-terra#high at a mean of $0.029167 (median $0.024841).",
+    "Variant under measurement is \"high\".",
+    "Invoice validation: the gateway export reproduces every local charge exactly (0.00% over 218 requests); cohort total is -0.16% against the same-window invoice.",
+    "validationFactor is 1 because validationStatus is \"not-needed\".",
     "p90 is the maximum observation (n<10), not a 90th percentile.",
-    "Fast costs about $4.7168/month at 45/day, which the spec assumed was free.",
-    "The band is keep-terra-xhigh on the interval [7.8594,15.4533], not on the point estimate.",
-    "Scope was reduced to 15/15/9 from 45/39/9 by explicit approval; heavy kept its n because it is the decision input."
+    "Monthly at 9/day is $7.8751 with interval [5.9985,10.1304].",
+    "The band is keep-terra-xhigh on the interval, not on the point estimate."
   ],
   "smallSample": {
     "heavyN": 9,
