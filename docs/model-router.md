@@ -36,13 +36,17 @@ The configuration keeps them separate:
 
 The live mapping:
 
-| Tier | Pin | Operation seed when unpinned |
+| Tier | Model | Pin |
 |---|---|---|
-| `fast` | none | `explore` → `low` |
-| `medium` | `high` | `implement` → `standard` |
-| `heavy` | `max` | `review` → `deep` (`max`) |
+| `fast` | `vercel/minimax/minimax-m3.1-flash` | `medium` |
+| `medium` | `vercel/deepseek/deepseek-v4.1-flash-1017` | `max` |
+| `heavy` | `vercel/openai/gpt-6.1-terra` | `high` |
 
-`medium` and `heavy` pin `high` and `max` because neither tier model advertises `medium`. See "Per-tier effort pins" in section 4 for the rules and rollback.
+All three tiers are pinned, so no tier keeps an operation seed. `medium` pins
+`max` because the tier-selection design measured `high` and `max` at about the
+same cost, with `max` scoring higher. `heavy` stays on `high` until a measured
+comparison justifies its `xhigh` design intent. See "Per-tier effort pins" in
+section 4 for the rules and rollback.
 
 `fast` is read-only by default. Never dispatch an edit to it.
 
@@ -88,7 +92,7 @@ Router overrides, with placeholders:
     "fife": {
       "fast":   { "model": "<fast-provider/model>",   "costRatio": 1 },
       "medium": { "model": "<medium-provider/model>", "variant": "<variant>", "costRatio": 3 },
-      "heavy":  { "model": "<heavy-provider/model>",  "variant": "<variant>", "costRatio": 6 }
+      "heavy":  { "model": "<heavy-provider/model>",  "variant": "<variant>", "costRatio": 8 }
     }
   },
   "enforcement": {
@@ -131,7 +135,7 @@ Fork config, inside the existing `effort_policy` object:
 
 Keep `mode`, `base_level`, `verification_commands`, and `clean_passes` unchanged when adding the mapping.
 
-`costRatio` is an estimated token-spend multiplier for the engine's comparison, not a dollar price. The values `3` and `6` reflect high and max effort on the same model; adjust them if your tiers use different models. A subscription or free route can report zero dollars while still consuming tokens and limits.
+`costRatio` is an estimated token-spend multiplier for the engine's comparison, not a dollar price. The values `3` and `8` are the live preset's; adjust them if your tiers use different models. A subscription or free route can report zero dollars while still consuming tokens and limits.
 
 ### Per-tier effort pins
 
@@ -141,7 +145,8 @@ tier are neither seeded nor escalated.
 
 - `deepseek/deepseek-flash` and `opencode/glm-5.3-flash-free` both advertise
   `low`, `high`, and `max`. Neither advertises `medium`.
-- `fast` stays unpinned, so the adaptive policy can still step it down to `low`.
+- All three live tiers are pinned, so the adaptive level never seeds or moves
+  for them. `fast` is pinned to `medium`; it is not left to step down to `low`.
 - A caller can override one delegation with `model="provider/model#variant"`.
   The router only fills the tier model when the caller leaves `model` out.
 - An unknown variant id fails at model resolution; it is never silently
@@ -151,7 +156,35 @@ tier are neither seeded nor escalated.
   `model.variant`. A build without that fold drops the pin silently.
 - Rollback: delete the `variant` key from the tier entry and restart.
 
-Live values in the `fife` preset: `medium` → `high`, `heavy` → `max`.
+Live values in the `fife` preset: `fast` → `medium`, `medium` → `max`,
+`heavy` → `high`.
+
+### Frozen effort
+
+`effort_policy.mode: "frozen"` holds the configured level for the life of a
+session:
+
+- No operation seed, no raise on a failed verification, no step down after
+  clean passes.
+- An explicit variant pick and a mode pin (such as `plan` → `deep`) still apply
+  verbatim.
+- A session created before the mode change keeps the base level it already
+  stored. Freezing it does not reset it to the new `base_level`.
+- `session.effort` reports `mode: "frozen"` and `control: "fixed"`.
+- Rollback: set `mode: "static"`. No code change is needed.
+
+Do not write `frozen` into `opencode.json` until the installed build contains
+the mode; an older server rejects the unknown literal and can fail to load the
+file.
+
+### What the tiers actually cost
+
+Measured over nine days of real use: cost per dispatch was **1 : 6.6 : 19.7**
+against the configured `1 : 3 : 8`, and 65% of all spend was the orchestrator's
+own context re-read across steps, not delegation. Heavy took 20% of dispatches
+and 59% of delegated spend. Do not size a budget from the ratios above alone.
+The full evidence is in
+`docs/superpowers/notes/2026-11-02-model-router-efficiency-analysis.md`.
 
 ## 5. Daily commands
 
