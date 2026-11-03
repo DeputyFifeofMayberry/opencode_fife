@@ -174,3 +174,51 @@ describe("EffortAdapter.resolve", () => {
     })
   })
 })
+
+describe("EffortAdapter frozen mode", () => {
+  const full = modelWith("none", "low", "high", "max")
+
+  it("reports frozen and does not seed from the agent operation", () => {
+    const result = EffortAdapter.resolve({
+      policy: new ConfigEffort.Info({ mode: "frozen", base_level: "standard", agent_operations: { build: "explore" } }),
+      agent: "build",
+      model: full,
+    })
+    expect(result.mode).toBe("frozen")
+    expect(result.baseLevel).toBe("standard")
+    expect(result.decision).toEqual({ rule: "base", level: "standard" })
+  })
+
+  it("keeps a stored base over the configured base", () => {
+    const state = { sessionID: SessionID.make("ses_frozen"), baseLevel: "deep" as const, revision: 0 }
+    expect(EffortAdapter.resolve({
+      policy: new ConfigEffort.Info({ mode: "frozen", base_level: "low" }),
+      state,
+      agent: "build",
+      model: full,
+    })).toMatchObject({ mode: "frozen", baseLevel: "deep", decision: { rule: "base", level: "deep", effort: "max" } })
+  })
+
+  it("keeps the plan pin under frozen", () => {
+    expect(EffortAdapter.resolve({
+      policy: new ConfigEffort.Info({ mode: "frozen", base_level: "low" }),
+      agent: "plan",
+      model: full,
+    })).toMatchObject({ mode: "frozen", decision: { rule: "mode-pin", level: "deep", effort: "max" } })
+  })
+
+  it("does not escalate while a failure is open", () => {
+    const state = {
+      sessionID: SessionID.make("ses_frozen"),
+      baseLevel: "low" as const,
+      revision: 1,
+      openFailure: { verifier: "bun test", sequence: 1, revision: 1 },
+    }
+    expect(EffortAdapter.resolve({
+      policy: new ConfigEffort.Info({ mode: "frozen", base_level: "low", verification_commands: ["bun test"] }),
+      state,
+      agent: "build",
+      model: full,
+    })).toMatchObject({ mode: "frozen", decision: { rule: "base", level: "low", effort: "low" } })
+  })
+})

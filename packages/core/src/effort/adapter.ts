@@ -53,6 +53,8 @@ export interface Inputs {
   readonly cleanPasses?: number
   /** Adaptive mode: qualifying clean passes required before one step-down. */
   readonly cleanPassesNeeded?: number
+  /** Frozen mode: hold the effective base and ignore evidence. */
+  readonly frozen?: boolean
 }
 
 /** Assembles the decision core's state from host observations. */
@@ -65,6 +67,7 @@ export function stateFor(input: Inputs): EffortState {
     ...(input.level !== undefined ? { level: input.level } : {}),
     ...(input.cleanPasses !== undefined ? { cleanPasses: input.cleanPasses } : {}),
     ...(input.cleanPassesNeeded !== undefined ? { cleanPassesNeeded: input.cleanPassesNeeded } : {}),
+    ...(input.frozen === true ? { frozen: true } : {}),
   }
 }
 
@@ -88,7 +91,7 @@ export function decideFor(model: Model.Info, input: Inputs): Decision {
 /** Everything one resolution produced, for callers that act or report. */
 export interface Resolution {
   /** Policy mode; absent config means static. */
-  readonly mode: "static" | "adaptive"
+  readonly mode: "static" | "adaptive" | "frozen"
   /** The effective base level: durable row, else adaptive ladder seed, else configured base, else standard. */
   readonly baseLevel: EffortLevel
   /** The session's selected variant with the "default" sentinel removed; absent means Auto. */
@@ -132,6 +135,7 @@ export function resolve(input: {
       baseLevel,
       agent: input.agent,
       openFailure: input.state?.openFailure,
+      frozen: mode === "frozen",
       ...(mode === "adaptive"
         ? {
             level: input.state?.level ?? baseLevel,
