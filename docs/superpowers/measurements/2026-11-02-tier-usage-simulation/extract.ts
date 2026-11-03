@@ -135,15 +135,18 @@ for (const [sessionID, calls] of timingGroups) {
   const identities = [...new Set(own.map((s) => `${s.provider}/${s.model}#${s.variant}`))]
   const last = own.at(-1)
   const agentIsTier = TIER_AGENTS.has(session.agent)
+  // A session that changed model mid-run has no single identity. Label it "mixed" so it can
+  // never be folded into a real model's mean; modelMix still carries the detail.
+  const mixed = identities.length > 1
   dispatched.push({
     sessionID,
     parentSessionID: first.parentSessionID,
     tier: first.tier !== "unknown" ? first.tier : agentIsTier ? session.agent : "unknown",
     tierSource: first.tier !== "unknown" ? "timings" : agentIsTier ? "session_agent" : "unknown",
     agent: session.agent,
-    provider: last?.provider ?? "unknown",
-    model: last?.model ?? "unknown",
-    variant: last?.variant ?? "unspecified",
+    provider: mixed ? "mixed" : (last?.provider ?? "unknown"),
+    model: mixed ? "mixed" : (last?.model ?? "unknown"),
+    variant: mixed ? "mixed" : (last?.variant ?? "unspecified"),
     modelMix: identities,
     costUSD: session.cost,
     steps: own.length,

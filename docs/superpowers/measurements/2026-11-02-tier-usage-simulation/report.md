@@ -113,9 +113,10 @@ Per-dispatch means, with the cost share each token class contributes at the deri
 
 Heavy is qualitatively different from the other two. It carries **14 fresh input tokens** and
 ~22k cache-**write** tokens: the prompt is almost entirely cache traffic, and cache writes
-are 66% of the bill. Heavy cost therefore tracks context size, not task difficulty or output
-length. Medium and fast are dominated by fresh input (40.1% and 44.7%), with cache reads a
-minority share.
+are 66% of the bill. Because cache traffic dominates, heavy cost scales with context size;
+this run does not show that task difficulty or output length are irrelevant, only that they
+contributed little here. Medium and fast are dominated by fresh input (40.1% and 44.7%),
+with cache reads a minority share.
 
 All three tiers show 4–5 steps per dispatch on average, but the distributions differ: heavy
 was uniformly 4–5 steps, so its measured spread understates what real work would produce.
@@ -145,14 +146,16 @@ Rate derivation from the step data, independent of any invoice:
 
 | identity | status | rank | equations | result |
 | --- | --- | --- | --- | --- |
-| `openai/gpt-6.1-terra` | solved | 4 | 4 | 1.00 / 5.00 / 0.05 / 1.25 per M, residual 2.8e-16 |
-| `openai/gpt-6.1-terra-fast` | solved | 4 | 4 | 2.00 / 10.00 / 0.10 / 2.50 per M (exactly 2×) |
-| `minimax-m3.1-flash` | underdetermined | 3 | 11 | no rate reported |
-| `deepseek-v4.1-flash-1017` | underdetermined | 3 | 12 | no rate reported |
+| `openai/gpt-6.1-terra` | solved | 4 | 42 | 1.00 / 5.00 / 0.05 / 1.25 per M, aggregate residual 1.7e-16, worst per-step residual 0 |
+| `minimax-m3.1-flash` | underdetermined | 3 | 62 | no rate reported |
+| `deepseek-v4.1-flash-1017` | underdetermined | 3 | 75 | no rate reported |
+| `openai/gpt-6.1-terra-fast` | not present | — | 0 | no dispatch this window; the 2× relation was established pre-run from 4 steps |
 
-The Terra rates are recovered from the cost data itself to floating-point precision. That
-confirms the local price table is internally consistent for Terra; it does **not** confirm
-the table matches what Vercel charges.
+The Terra rates are recovered from the cost data itself, across 42 equations, to
+floating-point precision, with a worst per-step residual of zero. That confirms the local
+price table is internally consistent for Terra; it does **not** confirm the table matches what
+Vercel charges. The two non-Terra identities are rank-deficient under four unknowns, so no
+rate is claimed for them — their costs are measured directly, which is what the tables use.
 
 ## 8. Tier spend vs main-session spend
 
@@ -167,8 +170,9 @@ the table matches what Vercel charges.
 **The top-level zero is an artifact, not a finding.** `sessions.jsonl` contains only sessions
 *created* inside the window, and the orchestrating session predates it. Its in-window spend is
 visible in the period delta — $0.143013 of the $0.608567 — but not in this table. On the
-pre-run baseline, top-level sessions held 78% of all spend ($3.20 vs $0.94), so main-session
-cost dominates total spend in normal use. Reporting `tierShare = 1.0` as if tiers were all of
+pre-run baseline, top-level sessions held 78% of all spend in this database ($3.20 vs $0.94),
+so historically this machine's spend is dominated by top-level sessions rather than tier
+dispatches. That is one machine's history, not a general claim about normal use. Reporting `tierShare = 1.0` as if tiers were all of
 the spend would be wrong; the correct reading is that this table covers the window's newly
 created sessions only.
 
@@ -204,11 +208,11 @@ Scenario table (monthly USD at the measured distribution):
 | 3 | 3.7565 | 3.3396 | 8.2860 |
 | 6 | 7.5130 | 6.6793 | 16.5721 |
 | 9 | 11.2695 | 10.0189 | 24.8581 |
-| 18 | 22.5390 | 20.0378 | 49.7162 |
+| 18 | 22.5391 | 20.0379 | 49.7162 |
 
-Even at double the assumed daily rate and the sample maximum, heavy stays under $50/month.
-The decision rule is a threshold comparison on the heavy tier only, and every scenario clears
-it by an order of magnitude.
+Even at double the assumed daily rate and the sample maximum, heavy stays under $50/month —
+roughly half the $100 threshold, a factor of two rather than an order of magnitude. The
+decision rule is a threshold comparison on the heavy tier only, and every scenario clears it.
 
 **Caveats that belong next to that number, not after it:** the mean comes from nine synthetic
 tasks that were uniformly 4–5 steps, so the interval likely understates real variance; the

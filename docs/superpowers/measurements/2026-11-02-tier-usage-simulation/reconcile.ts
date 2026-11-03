@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
+import { verdictFor } from "./lib/verdict"
 
 const dataDir = path.join(import.meta.dir, "data")
 const readJson = (file: string) => JSON.parse(readFileSync(path.join(dataDir, file), "utf8"))
@@ -74,6 +75,11 @@ for (const identity of identities) {
       0,
     )
     const actual = b.reduce((a, v) => a + v, 0)
+    const perStep = A.map(
+      (row, i) =>
+        row[0] * solution[0] + row[1] * solution[1] + row[2] * solution[2] + row[3] * solution[3] - b[i],
+    )
+    const absStep = perStep.map(Math.abs)
     derivedRates[identity] = {
       status: "solved",
       rank,
@@ -85,6 +91,11 @@ for (const identity of identities) {
         cacheWrite: solution[3],
       },
       residual: Math.abs(predicted - actual),
+      // Aggregate residual can cancel opposing per-step errors; report the worst step too.
+      maxStepResidual: Number(Math.max(...absStep).toFixed(9)),
+      maxStepRelativeResidual: Number(
+        Math.max(...absStep.map((e, i) => (b[i] > 0 ? e / b[i] : 0))).toFixed(6),
+      ),
     }
     continue
   }
@@ -154,14 +165,7 @@ const billedUSD =
 const deltaUSD = localUSD !== null && billedUSD !== null ? Number((localUSD - billedUSD).toFixed(6)) : null
 const deltaPct = deltaUSD !== null && billedUSD ? Number(((deltaUSD / billedUSD) * 100).toFixed(2)) : null
 
-const verdict =
-  billedUSD === null || billedUSD <= 0
-    ? "inconclusive"
-    : deltaPct! > 15
-      ? "local-overstates"
-      : deltaPct! < -15
-        ? "local-understates"
-        : "aggregate-within-tolerance"
+const verdict = verdictFor(deltaPct, billedUSD)
 
 // --- validation factor ------------------------------------------------------
 const heavyInWindow = dispatches.filter((d) => d.tier === "heavy" && d.costUSD !== null)

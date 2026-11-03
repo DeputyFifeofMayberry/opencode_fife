@@ -59,6 +59,12 @@ const cohortPath = path.join(dataDir, "cohort.json")
 const cohort = existsSync(cohortPath) ? JSON.parse(readFileSync(cohortPath, "utf8")) : null
 const cohortSize = cohort?.checks?.cohortSize ?? 0
 const cohortSet = new Set<string>(cohort?.dispatchingSessionIDs ?? [])
+const runWindowPath = path.join(dataDir, "run-window.json")
+const runWindow = existsSync(runWindowPath) ? JSON.parse(readFileSync(runWindowPath, "utf8")) : null
+if (cohort && cohortSize === 0 && runWindow?.state === "completed") {
+  console.error("completed run with an empty cohort: refusing to fall back to all dispatches")
+  process.exit(1)
+}
 const scoped = cohortSize > 0 ? dispatches.filter((d) => cohortSet.has(d.sessionID)) : dispatches
 
 const excludedUnmatched = scoped.filter((d) => d.costUSD === null).length

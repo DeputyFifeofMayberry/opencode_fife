@@ -18,9 +18,20 @@ const runWindowPath = path.join(dataDir, "run-window.json")
 const runWindow = existsSync(runWindowPath) ? JSON.parse(readFileSync(runWindowPath, "utf8")) : null
 
 const logPath = path.join(dataDir, "07-run-log.md")
+const recordedPath = path.join(dataDir, "dispatched-ids.txt")
 const logged: string[] = []
 let logState = "absent"
-if (existsSync(logPath)) {
+
+// The cohort is an INDEPENDENTLY RECORDED list of the sessions this run dispatched.
+// 07-run-log.md is regenerated from a time window and is evidence only, not the source of
+// cohort membership: deriving the cohort from the same query that selects it is circular.
+if (existsSync(recordedPath)) {
+  for (const line of readFileSync(recordedPath, "utf8").split("\n")) {
+    const id = line.trim()
+    if (id) logged.push(id)
+  }
+  logState = logged.length > 0 ? "recorded-list" : "recorded-list-empty"
+} else if (existsSync(logPath)) {
   const lines = readFileSync(logPath, "utf8")
     .trim()
     .split("\n")
@@ -29,7 +40,7 @@ if (existsSync(logPath)) {
     const id = line.split("|")[3]?.trim()
     if (id) logged.push(id)
   }
-  logState = logged.length > 0 ? "present" : "present-empty"
+  logState = logged.length > 0 ? "run-log" : "run-log-empty"
 }
 const cohortSet = new Set(logged)
 
@@ -87,3 +98,15 @@ const report = {
 writeFileSync(path.join(dataDir, "cohort.json"), JSON.stringify(report, null, 2))
 console.log(JSON.stringify(report, null, 2))
 if (logState === "absent") console.error("no run log; cohort empty")
+if (logState.startsWith("recorded-list") && report.checks.dispatchRowsOutsideCohort > 0) {
+  console.error(
+    `contamination: ${report.checks.dispatchRowsOutsideCohort} tier dispatches in the window are not in the recorded list`,
+  )
+  process.exit(1)
+}
+if (logState.startsWith("recorded-list") && report.checks.cohortWithoutDispatchRow > 0) {
+  console.error(
+    `incomplete: ${report.checks.cohortWithoutDispatchRow} recorded sessions have no dispatch row`,
+  )
+  process.exit(1)
+}

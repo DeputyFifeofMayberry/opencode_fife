@@ -161,7 +161,12 @@ if (mode === "coverage") {
   }
   console.log(JSON.stringify(report, null, 2))
   process.exit(
-    report.duplicateLogEntries === 0 && report.missingFromExtraction === 0 ? 0 : 1,
+    report.duplicateLogEntries === 0 &&
+      report.duplicateDispatchRows === 0 &&
+      report.missingFromExtraction === 0 &&
+      report.outsideCohort === 0
+      ? 0
+      : 1,
   )
 }
 
