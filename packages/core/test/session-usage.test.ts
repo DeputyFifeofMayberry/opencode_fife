@@ -22,6 +22,37 @@ const free = [
 
 const millionInput = { input: 1_000_000, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }
 
+// The same $1 rate, doubled between 01:00 and 04:00 UTC on any day.
+const peak = [
+  {
+    input: Money.USDPerMillionTokens.make(1),
+    output: Money.USDPerMillionTokens.make(2),
+    cache: { read: Money.USDPerMillionTokens.zero, write: Money.USDPerMillionTokens.zero },
+    multipliers: [
+      { window: { days: [], ranges: [{ from: "01:00", to: "04:00" }], skipHolidays: false }, factor: 2 },
+    ],
+  },
+]
+
+const atHour = (hour: number) => Date.UTC(2026, 10, 2, hour)
+
+test("doubles an estimated cost inside a peak window", () => {
+  const recorded = SessionUsage.record(new Usage({ nonCachedInputTokens: 1_000_000 }), peak, atHour(2))
+  expect(recorded.cost).toBe(Money.USD.make(2))
+  expect(recorded.costProvenance).toEqual({ estimated: Money.USD.make(2) })
+})
+
+test("leaves an estimated cost outside a peak window alone", () => {
+  const recorded = SessionUsage.record(new Usage({ nonCachedInputTokens: 1_000_000 }), peak, atHour(5))
+  expect(recorded.cost).toBe(Money.USD.make(1))
+})
+
+test("never scales a cost the endpoint reported", () => {
+  const recorded = SessionUsage.record(new Usage({ nonCachedInputTokens: 1_000_000, cost: 0.25 }), peak, atHour(2))
+  expect(recorded.cost).toBe(Money.USD.make(0.25))
+  expect(recorded.costProvenance).toEqual({ provider: Money.USD.make(0.25) })
+})
+
 test("prices the tokens from the catalog when the endpoint reports no cost", () => {
   const recorded = SessionUsage.record(new Usage({ nonCachedInputTokens: 1_000_000 }), costs)
   expect(recorded.cost).toBe(Money.USD.make(1))

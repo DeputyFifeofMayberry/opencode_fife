@@ -5,6 +5,7 @@ import type { CostProvenance } from "@opencode/schema/cost-provenance"
 import { Money } from "@opencode/schema/money"
 import type { TokenUsage } from "@opencode/schema/token-usage"
 import type { Model } from "@opencode/schema/model"
+import { multiplierAt } from "../cost-window.js"
 
 const finite = (value: number) => (Number.isFinite(value) ? value : 0)
 const safe = (value: number | undefined) => Math.max(0, finite(value ?? 0))
@@ -22,18 +23,24 @@ export const tokens = (usage: Usage | undefined): TokenUsage.Info => ({
 // Catalog pricing is the fallback for endpoints that don't report what they charged (`Usage.cost`).
 // TODO(#35765): Normalize Copilot's reported billed amount into `Usage.cost`.
 // Undefined when no rate applies, so the record counts as unpriced rather than free.
-export function calculateCost(costs: Model.Info["cost"], usage: TokenUsage.Info): Money.USD | undefined {
+export function calculateCost(
+  costs: Model.Info["cost"],
+  usage: TokenUsage.Info,
+  at = Date.now(),
+): Money.USD | undefined {
   const context = usage.input + usage.cache.read + usage.cache.write
   const tier = costs
     .filter((cost) => cost.tier?.type === "context" && context > cost.tier.size)
     .toSorted((a, b) => (b.tier?.size ?? 0) - (a.tier?.size ?? 0))[0]
   const cost = tier ?? costs.find((cost) => cost.tier === undefined)
   if (!cost) return undefined
+  const multiplier = multiplierAt(cost.multipliers, at)
   return Money.USD.make(
-    (usage.input * finite(cost.input) +
+    ((usage.input * finite(cost.input) +
       (usage.output + usage.reasoning) * finite(cost.output) +
       usage.cache.read * finite(cost.cache.read) +
-      usage.cache.write * finite(cost.cache.write)) /
+      usage.cache.write * finite(cost.cache.write)) *
+      multiplier) /
       1_000_000,
   )
 }
@@ -45,13 +52,13 @@ export type Recorded = {
 }
 
 /** Prices tokens that only a hook reported, with no endpoint amount to prefer. */
-export const estimate = (tokens: TokenUsage.Info, costs: Model.Info["cost"]): Recorded => {
-  const cost = calculateCost(costs, tokens)
+export const estimate = (tokens: TokenUsage.Info, costs: Model.Info["cost"], at = Date.now()): Recorded => {
+  const cost = calculateCost(costs, tokens, at)
   if (cost === undefined) return { tokens, cost: Money.USD.zero, costProvenance: { unpriced: 1 } }
   return { tokens, cost, costProvenance: { estimated: cost } }
 }
 
-export const record = (usage: Usage | undefined, costs: Model.Info["cost"]): Recorded => {
+export const record = (usage: Usage | undefined, costs: Model.Info["cost"], at = Date.now()): Recorded => {
   const normalized = tokens(usage)
   // What an endpoint says it charged beats the catalog, which can't see its peak pricing, subscriptions or routing.
   // A reported zero is authoritative.
@@ -59,7 +66,7 @@ export const record = (usage: Usage | undefined, costs: Model.Info["cost"]): Rec
     const cost = Money.USD.make(usage.cost)
     return { tokens: normalized, cost, costProvenance: { provider: cost } }
   }
-  return estimate(normalized, costs)
+  return estimate(normalized, costs, at)
 }
 
 const sum = (a: Money.USD | undefined, b: Money.USD | undefined) =>
