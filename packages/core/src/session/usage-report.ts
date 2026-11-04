@@ -471,12 +471,14 @@ function aggregateUsage(
 function settledUsage(message: SessionMessage.Info, provenance: ReadonlyMap<string, Provenance> | undefined) {
   if (message.type === "assistant") {
     if (message.tokens === undefined && message.cost === undefined) return undefined
-    return { tokens: message.tokens, cost: message.cost, provenance: provenance?.get(message.id) }
+    // A manifest may carry provenance from an external export; otherwise the settled message
+    // already records how its own cost was priced.
+    return { tokens: message.tokens, cost: message.cost, provenance: provenance?.get(message.id) ?? message.costProvenance }
   }
   if (message.type === "compaction") {
     if (message.status === "running") return undefined
     if (message.tokens === undefined && message.cost === undefined) return undefined
-    return { tokens: message.tokens, cost: message.cost, provenance: provenance?.get(message.id) }
+    return { tokens: message.tokens, cost: message.cost, provenance: provenance?.get(message.id) ?? message.costProvenance }
   }
   return undefined
 }

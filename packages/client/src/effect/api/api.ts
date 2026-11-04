@@ -44,6 +44,7 @@ import type { Worktree } from "@opencode/schema/worktree"
 import type { Vcs } from "@opencode/schema/vcs"
 import type { WebSearch } from "@opencode/schema/websearch"
 import type { UsageLimits } from "@opencode/schema/usage-limits"
+import type { Task } from "@opencode/schema/task"
 import type { Config } from "@opencode/schema/config"
 
 export type ServerInfoOutput = {
@@ -2829,6 +2830,54 @@ export interface ExperimentalUsageApi<E = never> {
   readonly limits: ExperimentalUsageLimitsOperation<E>
 }
 
+export type ExperimentalTaskListInput = { readonly limit?: number | undefined }
+export type ExperimentalTaskListOutput = ReadonlyArray<Task.Info>
+export type ExperimentalTaskListOperation<E = never> = (
+  input?: ExperimentalTaskListInput,
+) => Effect.Effect<ExperimentalTaskListOutput, E>
+
+export type ExperimentalTaskEnsureInput = {
+  readonly sessionID: Session.ID
+  readonly label?: string | undefined
+  readonly policy?: string | undefined
+}
+export type ExperimentalTaskEnsureOutput = Task.Info
+export type ExperimentalTaskEnsureOperation<E = never> = (
+  input: ExperimentalTaskEnsureInput,
+) => Effect.Effect<ExperimentalTaskEnsureOutput, E>
+
+export type ExperimentalTaskGetInput = { readonly taskID: Task.ID }
+export type ExperimentalTaskGetOutput = Task.Summary
+export type ExperimentalTaskGetOperation<E = never> = (
+  input: ExperimentalTaskGetInput,
+) => Effect.Effect<ExperimentalTaskGetOutput, E>
+
+export type ExperimentalTaskRecordInput = {
+  readonly taskID: Task.ID
+  readonly outcome: Task.Outcome
+  readonly source?: Task.Source | undefined
+  readonly note?: string | undefined
+  readonly evidence?: Task.Evidence | undefined
+}
+export type ExperimentalTaskRecordOutput = Task.Info
+export type ExperimentalTaskRecordOperation<E = never> = (
+  input: ExperimentalTaskRecordInput,
+) => Effect.Effect<ExperimentalTaskRecordOutput, E>
+
+export type ExperimentalTaskExportInput = { readonly format: Task.ExportFormat; readonly limit?: number | undefined }
+export type ExperimentalTaskExportOutput = Task.Export
+export type ExperimentalTaskExportOperation<E = never> = (
+  input: ExperimentalTaskExportInput,
+) => Effect.Effect<ExperimentalTaskExportOutput, E>
+
+export interface ExperimentalTaskApi<E = never> {
+  readonly list: ExperimentalTaskListOperation<E>
+  readonly ensure: ExperimentalTaskEnsureOperation<E>
+  readonly get: ExperimentalTaskGetOperation<E>
+  readonly record: ExperimentalTaskRecordOperation<E>
+  readonly export: ExperimentalTaskExportOperation<E>
+}
+
 export type ConfigGetInput = { readonly location?: { readonly directory?: string | undefined } | undefined }
 export type ConfigGetOutput = ReadonlyArray<Config.Entry>
 export type ConfigGetOperation<E = never> = (input?: ConfigGetInput) => Effect.Effect<ConfigGetOutput, E>
@@ -3068,6 +3117,51 @@ export type UsageLimitsOutput = ExperimentalUsageLimitsOutput
 /** @deprecated Use `ExperimentalUsageLimitsOperation`. Removed in the next minor. */
 export type UsageLimitsOperation<E = never> = ExperimentalUsageLimitsOperation<E>
 
+/** @deprecated Use `ExperimentalTaskListInput`. Removed in the next minor. */
+export type TaskListInput = ExperimentalTaskListInput
+
+/** @deprecated Use `ExperimentalTaskListOutput`. Removed in the next minor. */
+export type TaskListOutput = ExperimentalTaskListOutput
+
+/** @deprecated Use `ExperimentalTaskListOperation`. Removed in the next minor. */
+export type TaskListOperation<E = never> = ExperimentalTaskListOperation<E>
+
+/** @deprecated Use `ExperimentalTaskEnsureInput`. Removed in the next minor. */
+export type TaskEnsureInput = ExperimentalTaskEnsureInput
+
+/** @deprecated Use `ExperimentalTaskEnsureOutput`. Removed in the next minor. */
+export type TaskEnsureOutput = ExperimentalTaskEnsureOutput
+
+/** @deprecated Use `ExperimentalTaskEnsureOperation`. Removed in the next minor. */
+export type TaskEnsureOperation<E = never> = ExperimentalTaskEnsureOperation<E>
+
+/** @deprecated Use `ExperimentalTaskGetInput`. Removed in the next minor. */
+export type TaskGetInput = ExperimentalTaskGetInput
+
+/** @deprecated Use `ExperimentalTaskGetOutput`. Removed in the next minor. */
+export type TaskGetOutput = ExperimentalTaskGetOutput
+
+/** @deprecated Use `ExperimentalTaskGetOperation`. Removed in the next minor. */
+export type TaskGetOperation<E = never> = ExperimentalTaskGetOperation<E>
+
+/** @deprecated Use `ExperimentalTaskRecordInput`. Removed in the next minor. */
+export type TaskRecordInput = ExperimentalTaskRecordInput
+
+/** @deprecated Use `ExperimentalTaskRecordOutput`. Removed in the next minor. */
+export type TaskRecordOutput = ExperimentalTaskRecordOutput
+
+/** @deprecated Use `ExperimentalTaskRecordOperation`. Removed in the next minor. */
+export type TaskRecordOperation<E = never> = ExperimentalTaskRecordOperation<E>
+
+/** @deprecated Use `ExperimentalTaskExportInput`. Removed in the next minor. */
+export type TaskExportInput = ExperimentalTaskExportInput
+
+/** @deprecated Use `ExperimentalTaskExportOutput`. Removed in the next minor. */
+export type TaskExportOutput = ExperimentalTaskExportOutput
+
+/** @deprecated Use `ExperimentalTaskExportOperation`. Removed in the next minor. */
+export type TaskExportOperation<E = never> = ExperimentalTaskExportOperation<E>
+
 /** @deprecated Use `ExperimentalConfigUpdateInput`. Removed in the next minor. */
 export type ConfigUpdateInput = ExperimentalConfigUpdateInput
 
@@ -3089,6 +3183,9 @@ export type MigrationApi<E = never> = ExperimentalMigrationApi<E>
 /** @deprecated Use `ExperimentalUsageApi`. Removed in the next minor. */
 export type UsageApi<E = never> = ExperimentalUsageApi<E>
 
+/** @deprecated Use `ExperimentalTaskApi`. Removed in the next minor. */
+export type TaskApi<E = never> = ExperimentalTaskApi<E>
+
 export interface AppApi<E = never> {
   readonly server: ServerApi<E>
   readonly location: LocationApi<E>
@@ -3104,6 +3201,7 @@ export interface AppApi<E = never> {
     readonly file: ExperimentalFileApi<E>
     readonly migration: ExperimentalMigrationApi<E>
     readonly usage: ExperimentalUsageApi<E>
+    readonly task: ExperimentalTaskApi<E>
     readonly config: ExperimentalConfigApi<E>
   }
   readonly message: MessageApi<E>
@@ -3163,5 +3261,23 @@ export interface AppApi<E = never> {
   readonly usage: {
     /** @deprecated Use `client.experimental.usage.limits`. Removed in the next minor. */
     readonly limits: ExperimentalUsageLimitsOperation<E>
+  }
+
+  /** @deprecated Use `client.experimental.task`. Removed in the next minor. */
+  readonly task: {
+    /** @deprecated Use `client.experimental.task.list`. Removed in the next minor. */
+    readonly list: ExperimentalTaskListOperation<E>
+
+    /** @deprecated Use `client.experimental.task.ensure`. Removed in the next minor. */
+    readonly ensure: ExperimentalTaskEnsureOperation<E>
+
+    /** @deprecated Use `client.experimental.task.get`. Removed in the next minor. */
+    readonly get: ExperimentalTaskGetOperation<E>
+
+    /** @deprecated Use `client.experimental.task.record`. Removed in the next minor. */
+    readonly record: ExperimentalTaskRecordOperation<E>
+
+    /** @deprecated Use `client.experimental.task.export`. Removed in the next minor. */
+    readonly export: ExperimentalTaskExportOperation<E>
   }
 }

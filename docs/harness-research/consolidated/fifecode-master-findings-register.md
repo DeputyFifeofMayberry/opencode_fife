@@ -233,15 +233,16 @@ Priorities reflect accepted-task value, failure likelihood/severity, evidence, w
 
 ### FIFE-018 — Accepted-task outcome, cost, and latency baseline is missing
 
-- **Domain / class / priority / disposition:** D6/D8; confirmed research measurement gap and high-value evaluation opportunity; **High**; **Retain as decision prerequisite**.
+- **Domain / class / priority / disposition:** D6/D8; confirmed research measurement gap and high-value evaluation opportunity; **High**; **Implemented and validated with documented limitations**.
 - **Original sources / comparison:** A `GAP-004`; B `GAP-005`, `OPP-001`; C `F-05`, `O-04`; related effort/routing hypotheses. Full agreement, but repetition is not independent empirical evidence.
-- **Evidence / status / confidence:** **Verified** absence from supplied evidence and presence of operational substrate; private/external evaluation may exist.
-- **Behavior and code:** `session/usage.ts`, runner logs, event logger, and OTLP capture operational data. No supplied dataset joins task objective, independent test/review acceptance, all retries/children/rework, total cost, and wall time.
-- **Current/upstream status:** Evaluation/evidence gap, not proof the product has zero logging or poor outcomes. Existing usage code prefers endpoint-reported cost and separates token categories.
+- **Evidence / status / confidence:** **Implemented and validated with documented limitations.** The original **Verified** finding covered absence from the supplied evidence before implementation; private/external evaluation may still exist. The ledger has 56 passing tests, including zero-token, accounting, evidence, discovery, migration, and persistence coverage.
+- **Behavior and code:** `session/usage.ts`, runner logs, event logger, and OTLP capture operational data. Task telemetry (`packages/core/src/telemetry/`) now derives a task ledger on demand from `session_v2`, `session_message`, and the durable event log: deterministic task identity, token/cost/request accounting with explicit completeness, and an append-only acceptance history. It adds no model request and no write on the execution path. Provider billing is still not joined.
+- **Current/upstream status:** Implemented in this repository as query-time task telemetry over data the runtime already stores. The remaining gaps are the documented limitations below, not missing capability. Existing usage code prefers endpoint-reported cost and separates token categories.
 - **Root cause / competing explanations:** Operational telemetry preceded product-level evaluation; private/downstream records may exist.
 - **Practical consequence:** No defensible quality, speed, or cost ranking for compaction, effort, routing, caching, or delegation. Request/token/cache proxies cannot fill the gap.
 - **Candidate directions / tradeoffs:** Consented external joins, existing logs, public fixtures, or an evaluation harness; avoid a larger telemetry platform without need. Privacy, labeling consistency, sensitive code, missing/aborted tasks, and instrumentation overhead are material costs.
 - **Benefit evidence required:** Reproducible ledger with task IDs, model/provider/config, all-attempt cost/time, acceptance/rework, failures/censoring, and missingness. Establish join completeness before comparing mechanisms.
+- **Documented limitations:** one task per root Session; provider-attempt and retry counts require a persisted durable event log (`events.persist`, off by default); retry-attempt tokens appear only in the `unattributed` residual; acceptance evidence is recorder-attested, not third-party; provider billing is not reconciled, so `billing_verified` stays false; forks need explicit registration.
 
 ### FIFE-019 — Git-state outcome extraction can reduce evaluation output-contract confounding
 

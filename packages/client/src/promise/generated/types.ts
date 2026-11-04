@@ -406,6 +406,35 @@ export type WebSearchResult = { url: string; title?: string; content?: string; t
 
 export type UsageLimitsMeter = { percent: number; limited: boolean; resetsAt: number }
 
+export type TaskID = string
+
+export type TaskOutcome = "accepted" | "rejected" | "unverified"
+
+export type TaskSource = "user" | "command" | "test"
+
+export type TaskEvidenceKind = "command" | "artifact" | "report" | "user"
+
+export type TaskEvidenceResult = "passed" | "failed" | "unknown"
+
+export type TaskVerification = "verified" | "executed" | "declared" | "attested" | "unverified"
+
+export type TaskExecutionOutcome = "succeeded" | "failed" | "interrupted"
+
+export type TaskTiming = { wall_ms: number; active_ms: number; turn_ms: number }
+
+export type TaskCompleteness = {
+  sessions: boolean
+  requests: boolean
+  usage: boolean
+  cost: boolean
+  reconciled: boolean
+  billing_verified: boolean
+  reverted: boolean
+  measured: boolean
+}
+
+export type TaskExportFormat = "json" | "csv"
+
 export type ConfigHooksEntry = { matcher?: string; command: string }
 
 export type McpProtocol = "legacy" | "auto" | "2026-07-28"
@@ -495,6 +524,30 @@ export type SessionMessageCompactionRunning = {
 export type CostProvenanceInfo = { provider?: MoneyUSD; estimated?: MoneyUSD; unpriced?: number }
 
 export type UsageLimitsBudgetModel = { providerID: ProviderID; modelID: string; name: string; spent?: MoneyUSD }
+
+export type TaskUsage = {
+  requests: {
+    observed: number
+    provider_attempts: number | null
+    settled: number
+    unsettled: number
+    failed: number
+    retries: number | null
+    unreconciled: number | null
+  }
+  tokens: TokenUsageInfo
+  gross_tokens: number
+  unattributed_tokens: number
+  cost: {
+    total: number
+    provider: number
+    estimated: number
+    legacy_unknown: number
+    unattributed: number
+    unpriced_records: number
+    provenance_mismatches: number
+  }
+}
 
 export type FileSystemEntry = { path: RelativePath; type: "file" | "directory" }
 
@@ -979,6 +1032,34 @@ export type VcsInfo = { provider?: string; branch: VcsBranch; ahead?: number; be
 export type WebSearchProvider = { id: WebSearchID; name: string }
 
 export type UsageLimitsGo = { rolling: UsageLimitsMeter; weekly: UsageLimitsMeter; monthly: UsageLimitsMeter }
+
+export type TaskInfo = {
+  id: TaskID
+  root_session_id: SessionID
+  label?: string
+  policy?: string
+  time_created: number
+  time_updated: number
+}
+
+export type TaskEvidence = {
+  kind: TaskEvidenceKind
+  reference: string
+  result: TaskEvidenceResult
+  executed: boolean
+  duration_ms?: number
+}
+
+export type TaskSessionSummary = {
+  id: SessionID
+  parent_id?: SessionID
+  outcome?: TaskExecutionOutcome
+  resume_attempts: number
+  turns: { total: number; succeeded: number; failed: number; interrupted: number }
+  time: { created: number; updated: number; busy?: number; idle?: number }
+}
+
+export type TaskExport = { format: TaskExportFormat; data: string; count: number; skipped: number; truncated: boolean }
 
 export type ConfigHooks = Array<ConfigHooksEntry>
 
@@ -2265,6 +2346,15 @@ export type ScheduleWhen = ScheduleWhenIn | ScheduleWhenAt | ScheduleWhenEvery |
 
 export type ArtifactContent = { info: ArtifactInfo; files: { [x: string]: string } }
 
+export type TaskAcceptance = {
+  outcome: TaskOutcome
+  source: TaskSource
+  note?: string
+  evidence?: TaskEvidence
+  verification: TaskVerification
+  time_created: number
+}
+
 export type SessionInboxMove = {
   id: SessionMessageID
   sessionID: SessionID
@@ -2699,6 +2789,17 @@ export type ScheduleInfo = {
   lastOutcome?: ScheduleOutcome
   lastOutput?: string
   time: { created: number; updated: number }
+}
+
+export type TaskSummary = {
+  version: 2
+  task: TaskInfo
+  acceptance?: TaskAcceptance
+  history: Array<TaskAcceptance>
+  sessions: Array<TaskSessionSummary>
+  timing: TaskTiming
+  usage: TaskUsage
+  completeness: TaskCompleteness
 }
 
 export type AgentInfo = {
@@ -3297,6 +3398,14 @@ export type VcsInitNotSupportedError = {
 }
 export const isVcsInitNotSupportedError = (value: unknown): value is VcsInitNotSupportedError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "VcsInitNotSupportedError"
+
+export type TaskNotFoundError = {
+  readonly _tag: "TaskNotFoundError"
+  readonly taskID: string
+  readonly message: string
+}
+export const isTaskNotFoundError = (value: unknown): value is TaskNotFoundError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "TaskNotFoundError"
 
 export type ServerInfoOutput = ServerInfo
 
@@ -4889,6 +4998,44 @@ export type ExperimentalUsageLimitsInput = {
 
 export type ExperimentalUsageLimitsOutput = { location: LocationPublicRef; data: UsageLimitsInfo | null }
 
+export type ExperimentalTaskListInput = { readonly limit?: number | undefined }
+
+export type ExperimentalTaskListOutput = Array<TaskInfo>
+
+export type ExperimentalTaskEnsureInput = {
+  readonly sessionID: string
+  readonly label?: string | undefined
+  readonly policy?: string | undefined
+}
+
+export type ExperimentalTaskEnsureOutput = TaskInfo
+
+export type ExperimentalTaskGetInput = { readonly taskID: string }
+
+export type ExperimentalTaskGetOutput = TaskSummary
+
+export type ExperimentalTaskRecordInput = {
+  readonly taskID: string
+  readonly outcome: "accepted" | "rejected" | "unverified"
+  readonly source?: ("user" | "command" | "test") | undefined
+  readonly note?: string | undefined
+  readonly evidence?:
+    | {
+        readonly kind: "command" | "artifact" | "report" | "user"
+        readonly reference: string
+        readonly result: "passed" | "failed" | "unknown"
+        readonly executed: boolean
+        readonly duration_ms?: number
+      }
+    | undefined
+}
+
+export type ExperimentalTaskRecordOutput = TaskInfo
+
+export type ExperimentalTaskExportInput = { readonly format: "json" | "csv"; readonly limit?: number | undefined }
+
+export type ExperimentalTaskExportOutput = TaskExport
+
 export type ConfigGetInput = { readonly location?: { readonly directory?: string | undefined } | undefined }
 
 export type ConfigGetOutput = Array<ConfigEntry>
@@ -5042,6 +5189,36 @@ export type UsageLimitsInput = ExperimentalUsageLimitsInput
 
 /** @deprecated Use `ExperimentalUsageLimitsOutput`. Removed in the next minor. */
 export type UsageLimitsOutput = ExperimentalUsageLimitsOutput
+
+/** @deprecated Use `ExperimentalTaskListInput`. Removed in the next minor. */
+export type TaskListInput = ExperimentalTaskListInput
+
+/** @deprecated Use `ExperimentalTaskListOutput`. Removed in the next minor. */
+export type TaskListOutput = ExperimentalTaskListOutput
+
+/** @deprecated Use `ExperimentalTaskEnsureInput`. Removed in the next minor. */
+export type TaskEnsureInput = ExperimentalTaskEnsureInput
+
+/** @deprecated Use `ExperimentalTaskEnsureOutput`. Removed in the next minor. */
+export type TaskEnsureOutput = ExperimentalTaskEnsureOutput
+
+/** @deprecated Use `ExperimentalTaskGetInput`. Removed in the next minor. */
+export type TaskGetInput = ExperimentalTaskGetInput
+
+/** @deprecated Use `ExperimentalTaskGetOutput`. Removed in the next minor. */
+export type TaskGetOutput = ExperimentalTaskGetOutput
+
+/** @deprecated Use `ExperimentalTaskRecordInput`. Removed in the next minor. */
+export type TaskRecordInput = ExperimentalTaskRecordInput
+
+/** @deprecated Use `ExperimentalTaskRecordOutput`. Removed in the next minor. */
+export type TaskRecordOutput = ExperimentalTaskRecordOutput
+
+/** @deprecated Use `ExperimentalTaskExportInput`. Removed in the next minor. */
+export type TaskExportInput = ExperimentalTaskExportInput
+
+/** @deprecated Use `ExperimentalTaskExportOutput`. Removed in the next minor. */
+export type TaskExportOutput = ExperimentalTaskExportOutput
 
 /** @deprecated Use `ExperimentalConfigUpdateInput`. Removed in the next minor. */
 export type ConfigUpdateInput = ExperimentalConfigUpdateInput

@@ -317,6 +317,34 @@ const schema: Omit<DatabaseMigration.Migration, "id"> = {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`task_acceptance\` (
+          \`id\` text PRIMARY KEY,
+          \`task_id\` text NOT NULL,
+          \`outcome\` text NOT NULL,
+          \`source\` text NOT NULL,
+          \`note\` text,
+          \`evidence_kind\` text,
+          \`evidence_reference\` text,
+          \`evidence_result\` text,
+          \`evidence_executed\` integer,
+          \`evidence_duration_ms\` integer,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_task_acceptance_task_id_task_id_fk\` FOREIGN KEY (\`task_id\`) REFERENCES \`task\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`task\` (
+          \`id\` text PRIMARY KEY,
+          \`root_session_id\` text NOT NULL,
+          \`label\` text,
+          \`policy\` text,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_task_root_session_id_session_v2_id_fk\` FOREIGN KEY (\`root_session_id\`) REFERENCES \`session_v2\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`workspace\` (
           \`id\` text PRIMARY KEY,
           \`provider\` text NOT NULL,
@@ -377,6 +405,11 @@ const schema: Omit<DatabaseMigration.Migration, "id"> = {
       yield* tx.run(
         `CREATE INDEX \`session_v2_time_suspended_idx\` ON \`session_v2\` (\`time_suspended\`) WHERE "session_v2"."time_suspended" is not null;`,
       )
+      yield* tx.run(
+        `CREATE INDEX \`task_acceptance_task_idx\` ON \`task_acceptance\` (\`task_id\`,\`time_created\`,\`id\`);`,
+      )
+      yield* tx.run(`CREATE UNIQUE INDEX \`task_root_session_idx\` ON \`task\` (\`root_session_id\`);`)
+      yield* tx.run(`CREATE INDEX \`task_time_created_idx\` ON \`task\` (\`time_created\`);`)
     })
   },
 }

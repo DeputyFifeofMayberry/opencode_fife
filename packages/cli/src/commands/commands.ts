@@ -500,6 +500,81 @@ const Root = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME
         }),
       ],
     }),
+    Spec.make("task", {
+      description: "Measure task outcomes, cost, and latency",
+      globalFlags: ServerFlags,
+      commands: [
+        Spec.make("list", {
+          description: "List measured tasks, newest first",
+          params: {
+            format: Flag.Literals("format", ["table", "json"]).pipe(Flag.withDefault("table")),
+            limit: Flag.Int("limit").pipe(
+              Flag.withDescription("Maximum number of tasks to return"),
+              Flag.optional,
+            ),
+          },
+        }),
+        Spec.make("show", {
+          description: "Show one task summary",
+          params: {
+            taskID: Argument.String("taskID").pipe(Argument.withDescription("Task ID")),
+            format: Flag.Literals("format", ["text", "json"]).pipe(Flag.withDefault("text")),
+          },
+        }),
+        Spec.make("start", {
+          description: "Create or return the task anchored to a session",
+          params: {
+            sessionID: Argument.String("sessionID").pipe(Argument.withDescription("Session ID to measure")),
+            label: Flag.String("label").pipe(Flag.withDescription("Human-readable label"), Flag.optional),
+            policy: Flag.String("policy").pipe(Flag.withDescription("Grouping key for comparisons"), Flag.optional),
+          },
+        }),
+        Spec.make("outcome", {
+          description: "Record an explicit acceptance outcome",
+          params: {
+            taskID: Argument.String("taskID").pipe(Argument.withDescription("Task ID")),
+            outcome: Argument.String("outcome").pipe(
+              Argument.withDescription("accepted, rejected, or unverified"),
+            ),
+            source: Flag.Literals("source", ["user", "command", "test"]).pipe(
+              Flag.withDescription("Who asserted the outcome"),
+              Flag.withDefault("user"),
+            ),
+            note: Flag.String("note").pipe(Flag.withDescription("Why the outcome was recorded"), Flag.optional),
+            evidenceKind: Flag.Literals("evidence-kind", ["command", "artifact", "report", "user"]).pipe(
+              Flag.withDescription("Kind of evidence attached to the outcome"),
+              Flag.optional,
+            ),
+            evidenceRef: Flag.String("evidence-ref").pipe(
+              Flag.withDescription("Command line, artifact path, report path, or statement"),
+              Flag.optional,
+            ),
+            evidenceResult: Flag.Literals("evidence-result", ["passed", "failed", "unknown"]).pipe(
+              Flag.withDescription("Claimed result; defaults to unknown"),
+              Flag.optional,
+            ),
+            run: Flag.String("run").pipe(
+              Flag.withDescription("Execute a command and record its exit code as evidence"),
+              Flag.optional,
+            ),
+          },
+        }),
+        Spec.make("export", {
+          description: "Export task rows as JSON or CSV",
+          params: {
+            format: Flag.Literals("format", ["json", "csv"]).pipe(Flag.withDefault("csv")),
+            limit: Flag.Int("limit").pipe(
+              Flag.withDescription("Maximum number of tasks to export"),
+              Flag.optional,
+            ),
+            out: Flag.String("out").pipe(
+              Flag.withDescription("Write to a file instead of stdout"),
+              Flag.optional,
+            ),
+          },
+        }),
+      ],
+    }),
     Spec.make("service", {
       description: "Manage the background server",
       commands: [

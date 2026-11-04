@@ -319,6 +319,16 @@ import type {
   WebsearchQueryOutput,
   ExperimentalUsageLimitsInput,
   ExperimentalUsageLimitsOutput,
+  ExperimentalTaskListInput,
+  ExperimentalTaskListOutput,
+  ExperimentalTaskEnsureInput,
+  ExperimentalTaskEnsureOutput,
+  ExperimentalTaskGetInput,
+  ExperimentalTaskGetOutput,
+  ExperimentalTaskRecordInput,
+  ExperimentalTaskRecordOutput,
+  ExperimentalTaskExportInput,
+  ExperimentalTaskExportOutput,
   ConfigGetInput,
   ConfigGetOutput,
   ConfigShellsOutput,
@@ -1738,6 +1748,72 @@ export function make(options: ClientOptions) {
             requestOptions,
           ),
       },
+      task: {
+        list: (input?: ExperimentalTaskListInput, requestOptions?: RequestOptions) =>
+          request<ExperimentalTaskListOutput>(
+            {
+              method: "GET",
+              path: `/api/experimental/task`,
+              query: { limit: input?.["limit"] },
+              successStatus: 200,
+              declaredStatuses: [400, 401],
+              empty: false,
+            },
+            requestOptions,
+          ),
+        ensure: (input: ExperimentalTaskEnsureInput, requestOptions?: RequestOptions) =>
+          request<ExperimentalTaskEnsureOutput>(
+            {
+              method: "POST",
+              path: `/api/experimental/task`,
+              body: { sessionID: input["sessionID"], label: input["label"], policy: input["policy"] },
+              successStatus: 200,
+              declaredStatuses: [400, 401, 404],
+              empty: false,
+            },
+            requestOptions,
+          ),
+        get: (input: ExperimentalTaskGetInput, requestOptions?: RequestOptions) =>
+          request<ExperimentalTaskGetOutput>(
+            {
+              method: "GET",
+              path: `/api/experimental/task/${encodeURIComponent(input.taskID)}`,
+              successStatus: 200,
+              declaredStatuses: [400, 401, 404],
+              empty: false,
+            },
+            requestOptions,
+          ),
+        record: (input: ExperimentalTaskRecordInput, requestOptions?: RequestOptions) =>
+          request<ExperimentalTaskRecordOutput>(
+            {
+              method: "POST",
+              path: `/api/experimental/task/${encodeURIComponent(input.taskID)}/acceptance`,
+              body: {
+                outcome: input["outcome"],
+                source: input["source"],
+                note: input["note"],
+                evidence: input["evidence"],
+              },
+              successStatus: 200,
+              declaredStatuses: [400, 401, 404],
+              empty: false,
+            },
+            requestOptions,
+          ),
+        export: (input: ExperimentalTaskExportInput, requestOptions?: RequestOptions) =>
+          request<ExperimentalTaskExportOutput>(
+            {
+              method: "GET",
+              path: `/api/experimental/task/export`,
+              query: { format: input["format"], limit: input["limit"] },
+              successStatus: 200,
+              declaredStatuses: [400, 401],
+              empty: false,
+            },
+            requestOptions,
+          ),
+      },
       config: {
         update: (input: ExperimentalConfigUpdateInput, requestOptions?: RequestOptions) =>
           request<ExperimentalConfigUpdateOutput>(
@@ -2798,6 +2874,19 @@ export function make(options: ClientOptions) {
     usage: {
       /** @deprecated Use `client.experimental.usage.limits`. Removed in the next minor. */
       limits: client.experimental.usage.limits,
+    },
+    /** @deprecated Use `client.experimental.task`. Removed in the next minor. */
+    task: {
+      /** @deprecated Use `client.experimental.task.list`. Removed in the next minor. */
+      list: client.experimental.task.list,
+      /** @deprecated Use `client.experimental.task.ensure`. Removed in the next minor. */
+      ensure: client.experimental.task.ensure,
+      /** @deprecated Use `client.experimental.task.get`. Removed in the next minor. */
+      get: client.experimental.task.get,
+      /** @deprecated Use `client.experimental.task.record`. Removed in the next minor. */
+      record: client.experimental.task.record,
+      /** @deprecated Use `client.experimental.task.export`. Removed in the next minor. */
+      export: client.experimental.task.export,
     },
     config: {
       ...client.config,

@@ -172,6 +172,15 @@ export class MessageNotFoundError extends Schema.TaggedError<MessageNotFoundErro
   { httpApiStatus: 404 },
 ) {}
 
+export class TaskNotFoundError extends Schema.TaggedError<TaskNotFoundError>()(
+  "TaskNotFoundError",
+  {
+    taskID: Schema.String,
+    message: Schema.String,
+  },
+  { httpApiStatus: 404 },
+) {}
+
 export class SkillNotFoundError extends Schema.TaggedError<SkillNotFoundError>()(
   "SkillNotFoundError",
   {

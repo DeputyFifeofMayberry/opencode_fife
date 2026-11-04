@@ -317,6 +317,16 @@ import type {
   WebsearchQueryOutput,
   ExperimentalUsageLimitsInput,
   ExperimentalUsageLimitsOutput,
+  ExperimentalTaskListInput,
+  ExperimentalTaskListOutput,
+  ExperimentalTaskEnsureInput,
+  ExperimentalTaskEnsureOutput,
+  ExperimentalTaskGetInput,
+  ExperimentalTaskGetOutput,
+  ExperimentalTaskRecordInput,
+  ExperimentalTaskRecordOutput,
+  ExperimentalTaskExportInput,
+  ExperimentalTaskExportOutput,
   ConfigGetInput,
   ConfigGetOutput,
   ConfigShellsOutput,
@@ -1953,6 +1963,46 @@ const adaptGroupExperimentalUsage = (raw: RawClient["server.usage"]) => ({
   limits: EndpointExperimentalUsageLimits(raw),
 })
 
+const EndpointExperimentalTaskList = (raw: RawClient["server.task"]) => (input?: ExperimentalTaskListInput) =>
+  preserveEffect<ExperimentalTaskListOutput>()(
+    raw["task.list"]({ query: { limit: input?.["limit"] } }).pipe(Effect.mapError(mapClientError)),
+  )
+
+const EndpointExperimentalTaskEnsure = (raw: RawClient["server.task"]) => (input: ExperimentalTaskEnsureInput) =>
+  preserveEffect<ExperimentalTaskEnsureOutput>()(
+    raw["task.ensure"]({
+      payload: { sessionID: input["sessionID"], label: input["label"], policy: input["policy"] },
+    }).pipe(Effect.mapError(mapClientError)),
+  )
+
+const EndpointExperimentalTaskGet = (raw: RawClient["server.task"]) => (input: ExperimentalTaskGetInput) =>
+  preserveEffect<ExperimentalTaskGetOutput>()(
+    raw["task.get"]({ params: { taskID: input["taskID"] } }).pipe(Effect.mapError(mapClientError)),
+  )
+
+const EndpointExperimentalTaskRecord = (raw: RawClient["server.task"]) => (input: ExperimentalTaskRecordInput) =>
+  preserveEffect<ExperimentalTaskRecordOutput>()(
+    raw["task.record"]({
+      params: { taskID: input["taskID"] },
+      payload: { outcome: input["outcome"], source: input["source"], note: input["note"], evidence: input["evidence"] },
+    }).pipe(Effect.mapError(mapClientError)),
+  )
+
+const EndpointExperimentalTaskExport = (raw: RawClient["server.task"]) => (input: ExperimentalTaskExportInput) =>
+  preserveEffect<ExperimentalTaskExportOutput>()(
+    raw["task.export"]({ query: { format: input["format"], limit: input["limit"] } }).pipe(
+      Effect.mapError(mapClientError),
+    ),
+  )
+
+const adaptGroupExperimentalTask = (raw: RawClient["server.task"]) => ({
+  list: EndpointExperimentalTaskList(raw),
+  ensure: EndpointExperimentalTaskEnsure(raw),
+  get: EndpointExperimentalTaskGet(raw),
+  record: EndpointExperimentalTaskRecord(raw),
+  export: EndpointExperimentalTaskExport(raw),
+})
+
 const EndpointConfigGet = (raw: RawClient["server.config"]) => (input?: ConfigGetInput) =>
   preserveEffect<ConfigGetOutput>()(
     raw["config.get"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
@@ -1992,6 +2042,7 @@ const adaptClient = (raw: RawClient) => {
       file: adaptGroupExperimentalFile(raw["server.fs"]),
       migration: adaptGroupExperimentalMigration(raw["server.migration"]),
       usage: adaptGroupExperimentalUsage(raw["server.usage"]),
+      task: adaptGroupExperimentalTask(raw["server.task"]),
       config: adaptGroupExperimentalConfig(raw["server.config"]),
     },
     message: adaptGroupMessage(raw["server.message"]),
@@ -2105,6 +2156,19 @@ const adaptClient = (raw: RawClient) => {
     usage: {
       /** @deprecated Use `client.experimental.usage.limits`. Removed in the next minor. */
       limits: client.experimental.usage.limits,
+    },
+    /** @deprecated Use `client.experimental.task`. Removed in the next minor. */
+    task: {
+      /** @deprecated Use `client.experimental.task.list`. Removed in the next minor. */
+      list: client.experimental.task.list,
+      /** @deprecated Use `client.experimental.task.ensure`. Removed in the next minor. */
+      ensure: client.experimental.task.ensure,
+      /** @deprecated Use `client.experimental.task.get`. Removed in the next minor. */
+      get: client.experimental.task.get,
+      /** @deprecated Use `client.experimental.task.record`. Removed in the next minor. */
+      record: client.experimental.task.record,
+      /** @deprecated Use `client.experimental.task.export`. Removed in the next minor. */
+      export: client.experimental.task.export,
     },
     config: {
       ...client.config,
