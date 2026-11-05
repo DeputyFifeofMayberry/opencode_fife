@@ -1,0 +1,44 @@
+diff --git a/index.bun.js b/index.bun.js
+index 9daab4b9e3bcbcfaada4d7cecdfcc31d3d193885..631bc67749aa225b008cf8b91b83396d87995564 100644
+--- a/index.bun.js
++++ b/index.bun.js
+@@ -12223,7 +12223,7 @@ class MarkdownRenderable extends Renderable2 {
+           for (const child of token.tokens) {
+             this.renderInlineTokenWithStyle(child, chunks, "markup.link.label", linkHref);
+           }
+-          if ((this.ctx.capabilities?.hyperlinks !== true || !isSupportedLinkTarget(token.href)) && token.text !== token.href && token.raw !== token.text && token.raw !== `<${token.text}>`) {
++          if ((this.ctx.capabilities?.hyperlinks !== true || !isSupportedLinkTarget(token.href)) && !token.href.startsWith("file://") && token.text !== token.href && token.raw !== token.text && token.raw !== `<${token.text}>`) {
+             chunks.push(this.createChunk(" (", "markup.link", linkHref));
+             chunks.push(this.createChunk(token.href, "markup.link.url", linkHref));
+             chunks.push(this.createChunk(")", "markup.link", linkHref));
+@@ -12340,7 +12340,7 @@ class MarkdownRenderable extends Renderable2 {
+         continue;
+       const destination = content.slice(urlStart, urlEnd);
+       const url = group === "markup.link.url" ? normalizeMarkdownLinkTarget(destination) : destination;
+-      if ((this.ctx.capabilities?.hyperlinks !== true || !isSupportedLinkTarget(url)) && content.slice(label[0], label[1]) !== url) {
++      if ((this.ctx.capabilities?.hyperlinks !== true || !isSupportedLinkTarget(url)) && !url.startsWith("file://") && content.slice(label[0], label[1]) !== url) {
+         continue;
+       }
+       while (closingIndex < closings.length && closings[closingIndex][0] < end)
+diff --git a/index.node.js b/index.node.js
+index 64db9271617c9a33426150be8c94fdc4d76c50bc..906ea16621f6c03007bf0fba4af33171622c5fd1 100644
+--- a/index.node.js
++++ b/index.node.js
+@@ -12222,7 +12222,7 @@ class MarkdownRenderable extends Renderable2 {
+           for (const child of token.tokens) {
+             this.renderInlineTokenWithStyle(child, chunks, "markup.link.label", linkHref);
+           }
+-          if ((this.ctx.capabilities?.hyperlinks !== true || !isSupportedLinkTarget(token.href)) && token.text !== token.href && token.raw !== token.text && token.raw !== `<${token.text}>`) {
++          if ((this.ctx.capabilities?.hyperlinks !== true || !isSupportedLinkTarget(token.href)) && !token.href.startsWith("file://") && token.text !== token.href && token.raw !== token.text && token.raw !== `<${token.text}>`) {
+             chunks.push(this.createChunk(" (", "markup.link", linkHref));
+             chunks.push(this.createChunk(token.href, "markup.link.url", linkHref));
+             chunks.push(this.createChunk(")", "markup.link", linkHref));
+@@ -12339,7 +12339,7 @@ class MarkdownRenderable extends Renderable2 {
+         continue;
+       const destination = content.slice(urlStart, urlEnd);
+       const url = group === "markup.link.url" ? normalizeMarkdownLinkTarget(destination) : destination;
+-      if ((this.ctx.capabilities?.hyperlinks !== true || !isSupportedLinkTarget(url)) && content.slice(label[0], label[1]) !== url) {
++      if ((this.ctx.capabilities?.hyperlinks !== true || !isSupportedLinkTarget(url)) && !url.startsWith("file://") && content.slice(label[0], label[1]) !== url) {
+         continue;
+       }
+       while (closingIndex < closings.length && closings[closingIndex][0] < end)
