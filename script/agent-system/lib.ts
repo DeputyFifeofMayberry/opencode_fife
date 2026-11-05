@@ -229,8 +229,12 @@ export async function copyFileAtomic(source: string, target: string) {
   writeFileAtomic(target, normalizedBytes(Buffer.from(await Bun.file(source).arrayBuffer())))
 }
 
+export function parseJsonText(text: string) {
+  return JSON.parse(text.replace(/^\uFEFF/, "")) as unknown
+}
+
 export function readJsonFile(path: string) {
-  return JSON.parse(readFileSync(path, "utf8")) as unknown
+  return parseJsonText(readFileSync(path, "utf8"))
 }
 
 export function writeJsonAtomic(path: string, value: unknown) {

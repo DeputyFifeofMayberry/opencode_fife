@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
 import {
@@ -136,7 +136,7 @@ function readCliRecord() {
 function checkOpencodeConfig(path: string, canonical: Record<string, unknown>): StatusReport["config"]["opencode"] {
   if (!existsSync(path)) return "missing"
   try {
-    const value = asRecord(JSON.parse(readFileSync(path, "utf8")) as unknown, "opencode.json")
+    const value = asRecord(readJsonFile(path), "opencode.json")
     const effort = isRecord(value.effort_policy) ? value.effort_policy : {}
     const expected = asRecord(asRecord(canonical.effort_policy, "fragment effort_policy").agent_operations, "agent_operations")
     if (!deepEqual(effort.agent_operations, expected)) return "drift"
@@ -164,7 +164,7 @@ function checkCliConfig(path: string, installed: InstalledManifest): StatusRepor
   if (installed.permissionMode === "default") {
     if (!existsSync(path)) return "in-sync"
     try {
-      const value = asRecord(JSON.parse(readFileSync(path, "utf8")) as unknown, "cli.json")
+      const value = asRecord(readJsonFile(path), "cli.json")
       const session = isRecord(value.session) ? value.session : {}
       return session.permissions === "autoaccept" ? "drift" : "in-sync"
     } catch {
@@ -173,7 +173,7 @@ function checkCliConfig(path: string, installed: InstalledManifest): StatusRepor
   }
   if (!existsSync(path)) return "missing"
   try {
-    const value = asRecord(JSON.parse(readFileSync(path, "utf8")) as unknown, "cli.json")
+    const value = asRecord(readJsonFile(path), "cli.json")
     const session = asRecord(value.session, "cli.json session")
     return session.permissions === installed.permissionMode ? "in-sync" : "drift"
   } catch {

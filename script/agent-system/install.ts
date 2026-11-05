@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { createBackup, restoreBackup, type BackupRequest } from "./backup"
 import {
@@ -25,6 +25,7 @@ import {
   parseJsonc,
   pruneBackups,
   readInstalledManifest,
+  readJsonFile,
   readText,
   relativePosix,
   removeTree,
@@ -247,7 +248,7 @@ async function planConfig(root: string, configRoot: string, manifest: Manifest, 
   if (existsSync(opencodePath)) {
     const currentHash = await sha256File(opencodePath)
     try {
-      const current = JSON.parse(readFileSync(opencodePath, "utf8")) as unknown
+      const current = readJsonFile(opencodePath)
       const merged = mergeOpencodeConfig(current, canonicalOpencode)
       actions.push({
         path: "opencode.json",
@@ -309,7 +310,7 @@ async function planConfig(root: string, configRoot: string, manifest: Manifest, 
   if (existsSync(cliPath)) {
     const currentHash = await sha256File(cliPath)
     try {
-      const current = JSON.parse(readFileSync(cliPath, "utf8")) as unknown
+      const current = readJsonFile(cliPath)
       const merged = mergeCliPermissions(current, keepAutoAccept)
       warnings.push(...merged.warnings)
       permissionMode = merged.action === "kept" ? "autoaccept" : merged.action === "default" ? "default" : "prompt"
@@ -381,7 +382,7 @@ export async function validateInstalled(configRoot: string, root: string, manife
     if (!existsSync(target)) throw new InstallError(`Installed file is missing: ${file.target}`)
     if ((await sha256File(target)) !== file.sha256) throw new InstallError(`Installed file hash mismatch: ${file.target}`)
   }
-  const opencode = JSON.parse(readFileSync(join(configRoot, "opencode.json"), "utf8")) as unknown
+  const opencode = readJsonFile(join(configRoot, "opencode.json"))
   const expectedOpencode = readCanonicalOpencode(root)
   const effort = asRecord(asRecord(opencode, "opencode.json").effort_policy, "opencode.json effort_policy")
   if (!deepEqual(effort.agent_operations, asRecord(expectedOpencode.effort_policy, "fragment effort_policy").agent_operations)) {
@@ -400,13 +401,13 @@ export async function validateInstalled(configRoot: string, root: string, manife
   const cliPath = join(configRoot, "cli.json")
   if (installed.permissionMode === "prompt") {
     if (!existsSync(cliPath)) throw new InstallError("cli.json is missing after a prompt-mode install.")
-    const cli = asRecord(JSON.parse(readFileSync(cliPath, "utf8")) as unknown, "cli.json")
+    const cli = asRecord(readJsonFile(cliPath), "cli.json")
     const session = asRecord(cli.session, "cli.json session")
     if (session.permissions !== "prompt") throw new InstallError("cli.json session.permissions is not prompt.")
   }
   if (installed.permissionMode === "autoaccept") {
     if (!existsSync(cliPath)) throw new InstallError("cli.json is missing after an autoaccept-mode install.")
-    const cli = asRecord(JSON.parse(readFileSync(cliPath, "utf8")) as unknown, "cli.json")
+    const cli = asRecord(readJsonFile(cliPath), "cli.json")
     const session = asRecord(cli.session, "cli.json session")
     if (session.permissions !== "autoaccept") throw new InstallError("cli.json session.permissions is not autoaccept.")
   }
@@ -542,7 +543,7 @@ function assertPermissionMode(configRoot: string, options: RuntimeOptions) {
   const cliPath = join(configRoot, "cli.json")
   if (options.permissionMode === "default") {
     if (existsSync(cliPath)) {
-      const cli = asRecord(JSON.parse(readFileSync(cliPath, "utf8")) as unknown, "cli.json")
+      const cli = asRecord(readJsonFile(cliPath), "cli.json")
       const session = isRecord(cli.session) ? cli.session : {}
       if (session.permissions === "autoaccept") {
         throw new InstallError("cli.json was created with autoaccept; the runtime default must remain prompt.")
@@ -551,7 +552,7 @@ function assertPermissionMode(configRoot: string, options: RuntimeOptions) {
     return
   }
   if (!existsSync(cliPath)) throw new InstallError("cli.json is missing; cannot verify the permission mode.")
-  const cli = asRecord(JSON.parse(readFileSync(cliPath, "utf8")) as unknown, "cli.json")
+  const cli = asRecord(readJsonFile(cliPath), "cli.json")
   const session = asRecord(cli.session, "cli.json session")
   if (session.permissions !== options.permissionMode) {
     throw new InstallError(`cli.json session.permissions is ${JSON.stringify(session.permissions)}; expected ${options.permissionMode}.`)

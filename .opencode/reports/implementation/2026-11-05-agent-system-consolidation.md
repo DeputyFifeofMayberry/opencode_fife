@@ -4,7 +4,7 @@
 **Stage:** Implementation (authorized 2026-11-05)
 **Branch:** `dev`
 **Baseline commit:** `d44c064e223ef1b9fa0730c6f9bc9ba74380397b`
-**State:** Implementation complete; full-install runtime verification pending
+**State:** Implementation complete; asset install and runtime verification passed; binary install blocked by a concurrent unapproved spec revision
 **Next owner:** Spec Writer for Tester dispatch
 
 > The implementer role denies edits to `.opencode/specs/**`, so this report carries the
@@ -82,7 +82,11 @@
 | Secret scan | Regex scan of changed files for key/token patterns | No matches; no `service*.json` tracked | Passed |
 | Lint | `bun run lint` (part of `bun run check`) | 1348 warnings, 0 errors; `sdk-docs` 0 problems | Passed |
 | Full typecheck | `bun run check` | `@opencode/server#typecheck` failed with 90 errors in 34 `packages/server/test` files unchanged from HEAD | Failed (pre-existing baseline) |
-| Full install + runtime | `bun run update:local`, then `opencode debug agents` outside the repo | Pending committed-tree run | Not Run |
+| Runtime load | `opencode debug agents` outside the repo after `-AgentsOnly` install | 15 agents; four roles with modes `primary`/`all`/`subagent`/`subagent`; tiers `fast`/`medium`/`heavy`; permission rules and v1.1.1 markers present; no errors | Passed |
+| Live status | `bun run local:status` and `--json` | Exit 0; 54/54 in sync; agent-system 2.0.0, role content 1.1.1, CLI version/commit, config in sync | Passed |
+| Live rollback + reinstall | `local:rollback -AgentsOnly`, status, `update:local -AgentsOnly` | Rollback restored the backup and status reported the restored version; reinstall restored 54/54 in sync | Passed |
+| BOM handling | JSON status after the PowerShell build record read | `cli` populated with version, commit, and install time | Passed |
+| Full binary install | `bun run update:local` on the committed tree | Web UI and CLI build completed; the source-fingerprint guard then detected a concurrent unapproved spec revision and stopped before the binary swap | Blocked (external worktree change) |
 
 ## Known limitations, failures, and blockers
 
@@ -90,8 +94,9 @@
 2. **Spec execution record not updated.** The implementer role denies edits to `.opencode/specs/**`; this report carries the evidence instead.
 3. **Skill count deviation.** 40 managed skills (30 global + 10 project) versus the specification's 39/9. `opencode-dev` was omitted from the spec's inventory; it is preserved as a project skill.
 4. **AC-05 marker attribution.** The two-attempt retry ceiling is in `implementer.md` in v1.1.1, not `spec-writer.md`. The installer verifies it in the implementer and verifies the untrusted-material rule, `Skipped`/`Blocked`, and `check revision` in the spec-writer.
-5. **Temp-root runtime verification.** A temp config root cannot reach the live managed service and the plugin is not bootstrapped there; clean-install tests skip runtime verification via `OPENCODE_AGENT_SYSTEM_SKIP_RUNTIME_VERIFY=1`. The full live install performs the verification.
+5. **Temp-root runtime verification.** A temp config root cannot reach the live managed service and the plugin is not bootstrapped there; clean-install tests skip runtime verification via `OPENCODE_AGENT_SYSTEM_SKIP_RUNTIME_VERIFY=1`. The live asset install performs the verification.
+6. **Concurrent spec revision blocked the binary install.** While the full `bun run update:local` was building, `.opencode/specs/2026-11-05-agent-system-consolidation.md` changed to an unapproved revision 3 (Draft, pending approval) that edits requirements and acceptance criteria. The installer's dirty-tree/source-fingerprint guard correctly stopped before the binary swap. The implementer role must not commit or edit that revision, so the binary layer remains uninstalled. The asset layer was installed with `-AgentsOnly` and verified. The existing installed binary is from `d44c064e22`; the migration commit `00f371f22d` does not change CLI source, so the binary is functionally equivalent. The build itself completed successfully before the guard.
 
 ## Next action
 
-Commit the migration on `dev`, run `bun run update:local` on the committed tree, verify `opencode debug agents` from outside the repository, exercise `local:status` and `local:rollback -AgentsOnly`, reinstall, and update this report with the runtime evidence.
+The Spec Writer or user must decide on revision 3: approve and commit it, or restore revision 2 and set the revision aside. Then run `bun run update:local` from the clean `dev` tree to install the binary layer. No further implementation change is required for the asset layer.
