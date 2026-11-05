@@ -16,7 +16,7 @@ describe("opencode.json merge", () => {
     const canonical = readCanonicalOpencode(repoRoot())
     const existing = {
       update: "disable",
-      provider: { example: { apiKey: "not-a-real-key" } },
+      provider: { example: { apiKey: "test" } },
       effort_policy: { mode: "frozen", base_level: "standard", agent_operations: { fast: "old" } },
       plugins: ["other-plugin"],
     }

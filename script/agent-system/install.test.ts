@@ -181,7 +181,7 @@ describe("agent-system install", () => {
         `${JSON.stringify(
           {
             update: "disable",
-            provider: { example: { apiKey: "placeholder" } },
+            provider: { example: { apiKey: "test" } },
             effort_policy: { mode: "frozen", agent_operations: { fast: "old" } },
             plugins: ["other-plugin"],
           },
@@ -205,7 +205,7 @@ describe("agent-system install", () => {
       await installAgentSystem({ configRoot: root, runtimeVerify: false })
       const opencode = readJsonFile(join(root, "opencode.json")) as Record<string, unknown>
       expect(opencode.update).toBe("disable")
-      expect(opencode.provider).toEqual({ example: { apiKey: "placeholder" } })
+      expect(opencode.provider).toEqual({ example: { apiKey: "test" } })
       expect(opencode.plugins).toEqual(["other-plugin", "opencode-model-router@2.9.1"])
       expect((opencode.effort_policy as Record<string, unknown>).agent_operations).toEqual({
         fast: "explore",
