@@ -427,16 +427,19 @@ Revision 3 was approved and tested. The Tester found a conflict between R-02 (ro
 
 ## 13. Execution record
 
-**Execution status:** In progress
-**Current stage:** Spec correction commit; retesting (cycle 2) and QA pre-authorized
-**Authorizations:** Revision 4 approved 2026-11-05; implementation authorized 2026-11-05; testing authorized 2026-11-05; correction cycle 1 authorized 2026-11-05; retesting authorized 2026-11-05; correction cycle 2 authorized 2026-11-05; spec correction commit authorized 2026-11-05; retesting (cycle 2) authorized 2026-11-05; QA authorized 2026-11-05
+**Execution status:** Complete
+**Current stage:** Complete
+**Authorizations:** Revision 4 approved 2026-11-05; implementation authorized 2026-11-05; testing authorized 2026-11-05; correction cycle 1 authorized 2026-11-05; retesting authorized 2026-11-05; correction cycle 2 authorized 2026-11-05; spec correction commit authorized 2026-11-05; retesting (cycle 2) authorized 2026-11-05; QA authorized 2026-11-05; final acceptance granted 2026-11-05
 **Correction cycles:** 2 complete 2026-11-05 (limit 2)
 **Implementation handoff:** Spec revision 3 (approved 2026-11-05); tree state `dev` at commit `178d3d5`; checks `bun run test:agent-system` (40 tests passed), `bun run agent:manifest -- --check` (passed), `bun run check` (pre-existing `server` and `cli` typecheck failures); full-install runtime verification passed in testing; next owner Spec Writer.
 **Testing handoff:** Spec revision 3 (approved 2026-11-05); implementation commit `178d3d5`; result Failed — D-01 spec conflict (R-02 vs R-09), D-02 docs defect (`- -` vs `-- -`); 14/16 ACs passed, AC-09 literal pass with R-09 conflict, AC-12 content pass with docs defect; report `.opencode/reports/testing/2026-11-05-agent-system-consolidation.md`; next owner Spec Writer for revision 4 and correction authorization.
 **Correction handoff:** Spec revision 4 (approved 2026-11-05); correction commit `de85c05`; D-02 fixed in 6 lines (README and script comments `- -` → `-- -`); verification `agent:install -- -ConfigRoot <temp> -AgentsOnly` passed, `local:status -- -json` passed, `test:agent-system` 40/40 passed; D-01 resolved by revision 4; next owner Spec Writer for retesting authorization.
 **Retesting handoff:** Spec revision 4 (approved 2026-11-05); correction commit `de85c05`; result Verified for correction cycle 1 — D-02 fixed, AC-09 24/24, commit scope clean; residual docs inconsistencies in `agent-system/README.md:165-167,199-207`, `docs/local-development.md:107`, `MIGRATION.md:42-45`, and the spec D-01 row; report `.opencode/reports/testing/2026-11-05-agent-system-consolidation-retest.md`; next owner Spec Writer for correction cycle 2 or QA.
 **Correction 2 handoff:** Spec revision 4 (approved 2026-11-05); correction commit `377b41b`; docs-only (`agent-system/README.md`, `agent-system/MIGRATION.md`, `docs/local-development.md`); manifest check passed, `test:agent-system` 40/40, stale-phrase scan clean; one non-blocking `MIGRATION.md:9` imprecision; next owner Spec Writer for retesting authorization.
-**Working tree:** the spec D-01 row correction is uncommitted (`M .opencode/specs/2026-11-05-agent-system-consolidation.md`); `.opencode/reports/testing/` is untracked. The user authorized a commit of the spec correction on 2026-11-05; the Implementer will commit the spec file only. The Tester should use a clean worktree or verify the committed spec.
+**Spec correction commit:** `4a3ca55` on `dev`; only the spec file; D-01 row says 10; working tree clean apart from the untracked `.opencode/reports/testing/` directory.
+**Retesting 2 handoff:** Spec revision 4 (approved 2026-11-05); docs correction commit `377b41b`; spec correction commit `4a3ca55`; result Verified — docs corrections match revision 4, commit scopes clean, focused checks pass; two non-blocking docs imprecisions; report `.opencode/reports/testing/2026-11-05-agent-system-consolidation-retest-2.md`; next owner QA.
+**QA handoff:** Spec revision 4 (approved 2026-11-05); implementation `178d3d5`; docs `377b41b`; spec `4a3ca55`; disposition Pass with residual nonblocking gaps — QA-01/QA-02 minor docs defects; QA-03/QA-04/QA-05 unexecuted low-risk checks; QA-06 pre-existing check failures; QA-07..QA-11 verification/robustness gaps; report `.opencode/reports/qa/2026-11-05-agent-system-consolidation.md`; next owner user for final acceptance.
+**Final acceptance:** Accepted by user on 2026-11-05 with residual gaps QA-01..QA-11 disclosed.
 
 **Provenance:** Revision 1 was produced by the build agent. Revision 2 was the Spec Writer's re-validation and the approved baseline. Revision 3 corrected three findings from the implementation handoff and was approved on 2026-11-05. Revision 4 corrects the permission-model description and is pending approval.
 
@@ -451,6 +454,7 @@ Revision 3 was approved and tested. The Tester found a conflict between R-02 (ro
 | Correction (cycle 1) | Implementer | Authorized by user, 2026-11-05 | Complete; D-02 fixed at `de85c05` | Correction handoff |
 | Retesting | Tester | Authorized by user, 2026-11-05 | Verified for correction cycle 1; residual docs inconsistencies | `.opencode/reports/testing/2026-11-05-agent-system-consolidation-retest.md` |
 | Correction (cycle 2) | Implementer | Authorized by user, 2026-11-05 | Complete; docs aligned at `377b41b` | Correction 2 handoff |
-| Spec correction commit | Implementer | Authorized by user, 2026-11-05 | In progress | Pending handoff |
-| Retesting (cycle 2) | Tester | Authorized by user, 2026-11-05 | Not started | n/a |
-| QA | QA | Authorized by user, 2026-11-05 | Not started | n/a |
+| Spec correction commit | Implementer | Authorized by user, 2026-11-05 | Complete at `4a3ca55` | Commit handoff |
+| Retesting (cycle 2) | Tester | Authorized by user, 2026-11-05 | Verified; two non-blocking docs imprecisions | `.opencode/reports/testing/2026-11-05-agent-system-consolidation-retest-2.md` |
+| QA | QA | Authorized by user, 2026-11-05 | Pass with residual nonblocking gaps | `.opencode/reports/qa/2026-11-05-agent-system-consolidation.md` |
+| Final acceptance | User | Accepted by user, 2026-11-05 | Complete | This document; QA report |
