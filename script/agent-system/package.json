@@ -1,0 +1,9 @@
+{
+  "name": "@opencode/agent-system",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bun check -p tsconfig.json"
+  }
+}

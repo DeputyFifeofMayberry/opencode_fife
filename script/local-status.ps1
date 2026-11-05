@@ -1,15 +1,27 @@
-# Compares the installed local build with the current repository state.
+# Compares the installed local build and agent system with the current repository state.
 # Run from the repository root:
 #   bun run local:status
+#   bun run local:status - -json
+# Exit codes: 0 in sync, 1 drift, 2 agent system not installed, 3 error.
+
+param([switch]$Json)
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "local-builds.ps1")
+
+$configRoot = if ($env:OPENCODE_CONFIG_DIR) { $env:OPENCODE_CONFIG_DIR } else { Join-Path $env:USERPROFILE ".config/opencode" }
+$statusArgs = @("script/agent-system/cli.ts", "status", "--config-root", $configRoot)
+if ($Json) { $statusArgs += "--json" }
+& bun @statusArgs
+$agentExit = $LASTEXITCODE
+
+if ($Json) { exit $agentExit }
 
 $binDir = Join-Path $env:USERPROFILE ".local/bin"
 $record = Read-LocalBuildRecord (Join-Path $binDir "opencode-build.json")
 if ($null -eq $record) {
     Write-Host "No installed build record in $binDir. Run 'bun run update:local' to install one."
-    exit 0
+    exit $agentExit
 }
 
 Write-Host "Installed: $($record.version) from $($record.source.commit.Substring(0, 12)), installed $($record.installedAt)"
@@ -30,8 +42,9 @@ if ($installed -eq $head) {
 
 $status = @(git status --porcelain=v1 --untracked-files=all)
 if ($status.Count -gt 0) {
-    Write-Host "Repository has $($status.Count) uncommitted change(s); the installer requires a committed tree."
+    Write-Host "Repository has $($status.Count) uncommitted change(s); a full installer run requires a committed tree."
 }
 
 $archives = Get-LocalBuildArchives
 Write-Host "Archived builds: $($archives.Count) (keeping $localBuildsKeep)"
+exit $agentExit

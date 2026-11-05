@@ -1,0 +1,1785 @@
+{
+  "schemaVersion": 1,
+  "agentSystemVersion": "2.0.0",
+  "roleContentVersion": "1.1.1",
+  "plugin": "opencode-model-router@2.9.1",
+  "lineEndings": "lf",
+  "files": [
+    {
+      "kind": "agent",
+      "name": "implementer",
+      "source": ".opencode/agents/implementer.md",
+      "target": "agents/implementer.md",
+      "scope": "global",
+      "sha256": "4b5eb2ce9f23bcde1cf17406528449a2fb0281714d71689dcad9e4799660340f"
+    },
+    {
+      "kind": "agent",
+      "name": "qa",
+      "source": ".opencode/agents/qa.md",
+      "target": "agents/qa.md",
+      "scope": "global",
+      "sha256": "c4a4890344355e87a7dca94f44f96d1c0647dad94c6bd887556e811da3ec55ab"
+    },
+    {
+      "kind": "agent",
+      "name": "spec-writer",
+      "source": ".opencode/agents/spec-writer.md",
+      "target": "agents/spec-writer.md",
+      "scope": "global",
+      "sha256": "b70e647f7db287c71777b3dd8f750ba6d571b6350e8b97cf4a8fa265dc1ba642"
+    },
+    {
+      "kind": "agent",
+      "name": "tester",
+      "source": ".opencode/agents/tester.md",
+      "target": "agents/tester.md",
+      "scope": "global",
+      "sha256": "eb77f77464a25d0f8501274b0490586b410d4b67f7f7dd30d215093c988cb9ac"
+    },
+    {
+      "kind": "config",
+      "name": "model-router",
+      "source": "agent-system/config/model-router.overrides.jsonc",
+      "target": null,
+      "scope": "config",
+      "sha256": "09eac19d8345269ffa402ec9f7c731f6f6db00c1d98180db483d82ece4d2d6b1"
+    },
+    {
+      "kind": "config",
+      "name": "opencode",
+      "source": "agent-system/config/opencode.fragment.json",
+      "target": null,
+      "scope": "config",
+      "sha256": "5ae526220736dc6335aadea97eeb963aec7c83c721dd7712da4d56c53e1fd71f"
+    },
+    {
+      "kind": "skill",
+      "name": "api-and-interface-design",
+      "source": ".opencode/skills/api-and-interface-design/SKILL.md",
+      "target": "skills/api-and-interface-design/SKILL.md",
+      "scope": "global",
+      "sha256": "e83d34f52ff12dd8a7c5134cd7e8140ea4541ec65e204f8a1e4cd366e30c4192"
+    },
+    {
+      "kind": "skill",
+      "name": "app-e2e-tests",
+      "source": ".opencode/skills/app-e2e-tests/SKILL.md",
+      "target": "skills/app-e2e-tests/SKILL.md",
+      "scope": "project",
+      "sha256": "c1c4e3ad5fea5fa14619dcb6b35e5c26a59a03b13725f7cc04780360f7f27b8d"
+    },
+    {
+      "kind": "skill",
+      "name": "browser-testing-with-devtools",
+      "source": ".opencode/skills/browser-testing-with-devtools/SKILL.md",
+      "target": "skills/browser-testing-with-devtools/SKILL.md",
+      "scope": "global",
+      "sha256": "4e3aacd6a380cd25bc6c2d67fdd1c926a9b22535b8a62109ecd33cefd909e3d9"
+    },
+    {
+      "kind": "skill",
+      "name": "code-review-and-quality",
+      "source": ".opencode/skills/code-review-and-quality/SKILL.md",
+      "target": "skills/code-review-and-quality/SKILL.md",
+      "scope": "global",
+      "sha256": "2db1e850379f255fd3091ef278cde24cd6c7d2ba23e360cc52ea522c40d4396e"
+    },
+    {
+      "kind": "skill",
+      "name": "code-simplification",
+      "source": ".opencode/skills/code-simplification/SKILL.md",
+      "target": "skills/code-simplification/SKILL.md",
+      "scope": "global",
+      "sha256": "f0c5ed754057eb0c1e027e2587f59de816651feb5e837242296c43ea21cf621d"
+    },
+    {
+      "kind": "skill",
+      "name": "component-tests",
+      "source": ".opencode/skills/component-tests/SKILL.md",
+      "target": "skills/component-tests/SKILL.md",
+      "scope": "project",
+      "sha256": "a8219cf8cc77bf9e21c989b106c54aa77c085006157878a128c1117e20b54aa1"
+    },
+    {
+      "kind": "skill",
+      "name": "constraint-driven-development",
+      "source": ".opencode/skills/constraint-driven-development/references/floor-guard.md",
+      "target": "skills/constraint-driven-development/references/floor-guard.md",
+      "scope": "global",
+      "sha256": "59715dc6c3c6c36ec9177f9ced65c379e80a4539b36115456666bfabc43a6a9c"
+    },
+    {
+      "kind": "skill",
+      "name": "constraint-driven-development",
+      "source": ".opencode/skills/constraint-driven-development/SKILL.md",
+      "target": "skills/constraint-driven-development/SKILL.md",
+      "scope": "global",
+      "sha256": "375cb5d1de2c069b1a2c6adcde76bb2c4709a899768fd690889667b95fd5f239"
+    },
+    {
+      "kind": "skill",
+      "name": "construction-humanizer",
+      "source": ".opencode/skills/construction-humanizer/SKILL.md",
+      "target": "skills/construction-humanizer/SKILL.md",
+      "scope": "global",
+      "sha256": "75301f543a6ece93042dedbe33fc72dd08f3c616f950223cda862847014433bc"
+    },
+    {
+      "kind": "skill",
+      "name": "context-engineering",
+      "source": ".opencode/skills/context-engineering/SKILL.md",
+      "target": "skills/context-engineering/SKILL.md",
+      "scope": "global",
+      "sha256": "8b736cb9e55b82b265ab6ff78349c0e826e8a6df550deddf665b7fb3ff858b63"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/agents/openai.yaml",
+      "target": "skills/craft-prompting/agents/openai.yaml",
+      "scope": "global",
+      "sha256": "4dc3aedff79aabf3fc1f4a051dd4c42e2cf7a1640083e14ce1e361e7c663f8ec"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/evals/audit-coverage.md",
+      "target": "skills/craft-prompting/evals/audit-coverage.md",
+      "scope": "global",
+      "sha256": "f6830faf2be73168602ed1edab04a851780378bdd475e17f13b28742826cceca"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/evals/cases.jsonl",
+      "target": "skills/craft-prompting/evals/cases.jsonl",
+      "scope": "global",
+      "sha256": "04d1bd4a27484e91e0da14a19ecab99fefd5ff1364d74513977bdb19acc8d83c"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/evals/provenance.json",
+      "target": "skills/craft-prompting/evals/provenance.json",
+      "scope": "global",
+      "sha256": "aa81f552152d3ac54eeb2a9c6eff239402324b39260e86d0633393db24f4b91c"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/evals/validation.md",
+      "target": "skills/craft-prompting/evals/validation.md",
+      "scope": "global",
+      "sha256": "007066b0e33fc7122ea45c7807f0818cd11e1d9726b1cce6eb73802233a73805"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/references/evaluation.md",
+      "target": "skills/craft-prompting/references/evaluation.md",
+      "scope": "global",
+      "sha256": "6bed222095b3245790663365289c95fc76843a358f3419a9a0742cb0e364552f"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/references/evidence-inputs.md",
+      "target": "skills/craft-prompting/references/evidence-inputs.md",
+      "scope": "global",
+      "sha256": "518febb15c969cd6bfc5dae682b125719621bbc6d14b29c58060553f5d8ce826"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/references/examples.md",
+      "target": "skills/craft-prompting/references/examples.md",
+      "scope": "global",
+      "sha256": "1123f634c8bf5f3f09ede7203057482126c60d8c13955a10d745c019d451d38f"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/references/maintenance.md",
+      "target": "skills/craft-prompting/references/maintenance.md",
+      "scope": "global",
+      "sha256": "4e99069f4d97373d92ced56959fda2799aad04213d227ebefeeab05e6cdbcb37"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/references/platforms-agents.md",
+      "target": "skills/craft-prompting/references/platforms-agents.md",
+      "scope": "global",
+      "sha256": "d979a85107a581de70ef25e2a39ec7bd1f9e50dfe9c50aa1d5c6411a7380c811"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/references/sources.md",
+      "target": "skills/craft-prompting/references/sources.md",
+      "scope": "global",
+      "sha256": "e8affe49a80d3e9d405152f17cf71be886d790c446114a961976f0ca22a83b62"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/scripts/score_evals.py",
+      "target": "skills/craft-prompting/scripts/score_evals.py",
+      "scope": "global",
+      "sha256": "538d6b3094def1f7a0baa9f12155a2a1a2c5945fda833ca2a511d6b00162a0e6"
+    },
+    {
+      "kind": "skill",
+      "name": "craft-prompting",
+      "source": ".opencode/skills/craft-prompting/SKILL.md",
+      "target": "skills/craft-prompting/SKILL.md",
+      "scope": "global",
+      "sha256": "60ffd53cece2ab081f730ecefc3c7401028ca85ae2c33fb19b273b3b9bb7300b"
+    },
+    {
+      "kind": "skill",
+      "name": "debugging-and-error-recovery",
+      "source": ".opencode/skills/debugging-and-error-recovery/SKILL.md",
+      "target": "skills/debugging-and-error-recovery/SKILL.md",
+      "scope": "global",
+      "sha256": "e8be3b0294cee140c504f7e36fd579ed7926dafd614f3152d98a06b7fb5d7d78"
+    },
+    {
+      "kind": "skill",
+      "name": "deprecation-and-migration",
+      "source": ".opencode/skills/deprecation-and-migration/SKILL.md",
+      "target": "skills/deprecation-and-migration/SKILL.md",
+      "scope": "global",
+      "sha256": "6a624f942e09c69863a4219b9bd5d56975026b67b0c70bc83385ffd2120b6142"
+    },
+    {
+      "kind": "skill",
+      "name": "documentation-and-adrs",
+      "source": ".opencode/skills/documentation-and-adrs/SKILL.md",
+      "target": "skills/documentation-and-adrs/SKILL.md",
+      "scope": "global",
+      "sha256": "b60d503925bbaacee7fd63935db70b9ced5b2514ff5a56a672130e01b9690bc5"
+    },
+    {
+      "kind": "skill",
+      "name": "doubt-driven-development",
+      "source": ".opencode/skills/doubt-driven-development/SKILL.md",
+      "target": "skills/doubt-driven-development/SKILL.md",
+      "scope": "global",
+      "sha256": "68b9318866a45667d8a61bd9227dc664fbbac42fae8fc34599950f9d39864aa8"
+    },
+    {
+      "kind": "skill",
+      "name": "effect",
+      "source": ".opencode/skills/effect/SKILL.md",
+      "target": "skills/effect/SKILL.md",
+      "scope": "project",
+      "sha256": "02ea7104fa70f67a00161610e1ce62e43bfaa7f8ec5e2af489a46ae617399cf7"
+    },
+    {
+      "kind": "skill",
+      "name": "eli5-skill",
+      "source": ".opencode/skills/eli5-skill/SKILL.md",
+      "target": "skills/eli5-skill/SKILL.md",
+      "scope": "global",
+      "sha256": "ec229da13fd77407481234c62c13d11016af0241d66e9bbec5aaf75a4bd6a94b"
+    },
+    {
+      "kind": "skill",
+      "name": "find-skills",
+      "source": ".opencode/skills/find-skills/SKILL.md",
+      "target": "skills/find-skills/SKILL.md",
+      "scope": "global",
+      "sha256": "c00eeea0e13e74fe4a9d84ba0a8542205a1b736d65f13134fe1a6647eb14976f"
+    },
+    {
+      "kind": "skill",
+      "name": "frontend-ui-engineering",
+      "source": ".opencode/skills/frontend-ui-engineering/SKILL.md",
+      "target": "skills/frontend-ui-engineering/SKILL.md",
+      "scope": "global",
+      "sha256": "29a3e53d57c0a128831a20730ae874a8c4fda40c001fcdc15f8e9ad4b5f72f1b"
+    },
+    {
+      "kind": "skill",
+      "name": "git-workflow-and-versioning",
+      "source": ".opencode/skills/git-workflow-and-versioning/SKILL.md",
+      "target": "skills/git-workflow-and-versioning/SKILL.md",
+      "scope": "global",
+      "sha256": "b7465d187935c52546d39fdc7bd6ac36d94eda25a9500ef8c18b767d2eb116ea"
+    },
+    {
+      "kind": "skill",
+      "name": "grilling",
+      "source": ".opencode/skills/grilling/agents/openai.yaml",
+      "target": "skills/grilling/agents/openai.yaml",
+      "scope": "global",
+      "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b"
+    },
+    {
+      "kind": "skill",
+      "name": "grilling",
+      "source": ".opencode/skills/grilling/SKILL.md",
+      "target": "skills/grilling/SKILL.md",
+      "scope": "global",
+      "sha256": "a146842ed93ca43d833550fa9adf02e58cb63c83fea9d4b4522995b82242d4e2"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/.claude-plugin/marketplace.json",
+      "target": "skills/humanizer_fife/.claude-plugin/marketplace.json",
+      "scope": "project",
+      "sha256": "e539740285b660d2288a38b6d9b237396c6769828c671c46b9f91e760db6cc29"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/.claude-plugin/plugin.json",
+      "target": "skills/humanizer_fife/.claude-plugin/plugin.json",
+      "scope": "project",
+      "sha256": "7845f430c50e0df9674a00c7cb5f78f0dc4d1c4dfc7679551b3f1d2f4496b01a"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/.cursor-plugin/plugin.json",
+      "target": "skills/humanizer_fife/.cursor-plugin/plugin.json",
+      "scope": "project",
+      "sha256": "f42083c3396390bf481f5de1dd377ab5fef0c87f182a2efd04973ae9f6415558"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/.github/ISSUE_TEMPLATE/config.yml",
+      "target": "skills/humanizer_fife/.github/ISSUE_TEMPLATE/config.yml",
+      "scope": "project",
+      "sha256": "cb7e95de7606d07654024c8d47916796b307033e23ddb2b0a821a9bf89e999ef"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/.github/ISSUE_TEMPLATE/new-pattern.yml",
+      "target": "skills/humanizer_fife/.github/ISSUE_TEMPLATE/new-pattern.yml",
+      "scope": "project",
+      "sha256": "7436d578fa0056a09da5da6da950a03cb49f3ce27cf268ae295eb3d7ca19f604"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/.github/ISSUE_TEMPLATE/rewrite-problem.yml",
+      "target": "skills/humanizer_fife/.github/ISSUE_TEMPLATE/rewrite-problem.yml",
+      "scope": "project",
+      "sha256": "ecfe5e82c5b6d44683e0cb63cfad117dfdd16e30cc6f03510ef335414eea4947"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/.github/workflows/validate.yml",
+      "target": "skills/humanizer_fife/.github/workflows/validate.yml",
+      "scope": "project",
+      "sha256": "1b8a11f8852dbf9af09378bdc7cd6544dfb1afef4811a0e7b743b86da0994c93"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/.gitignore",
+      "target": "skills/humanizer_fife/.gitignore",
+      "scope": "project",
+      "sha256": "d6439973d8a506f44142877efa1b34b8f7d904803a04bf61a03ab338883a8e2c"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/AGENTS.md",
+      "target": "skills/humanizer_fife/AGENTS.md",
+      "scope": "project",
+      "sha256": "de84a449da400454df1225ddb1ced728c35bf0be7811b239e3370c7dbe1f4e69"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/agents/openai.yaml",
+      "target": "skills/humanizer_fife/agents/openai.yaml",
+      "scope": "project",
+      "sha256": "9d87ff83149a04f86a372948b8ee35fa249de20923867bbc2a49304290aad736"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/CHANGELOG.md",
+      "target": "skills/humanizer_fife/CHANGELOG.md",
+      "scope": "project",
+      "sha256": "1d540d91192fd1dce2a3557d60644c96e986731f4bb68d668166a363d7219e7f"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/email-9c9edf62.md",
+      "target": "skills/humanizer_fife/evals/blind/email-9c9edf62.md",
+      "scope": "project",
+      "sha256": "3fd92efe40d5d1745529b66639ff9a3d6a632f4832c44ee3ed2f7e3365542a6f"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/essay-38b1fae6.md",
+      "target": "skills/humanizer_fife/evals/blind/essay-38b1fae6.md",
+      "scope": "project",
+      "sha256": "e55182464130d75bb3e3252f08672c8bb11eb2fd665dbba5710391befff994f8"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/howto-5fbf038f.md",
+      "target": "skills/humanizer_fife/evals/blind/howto-5fbf038f.md",
+      "scope": "project",
+      "sha256": "645674bdd77489340a3cab7afc7a901b16ef13bc93d76f72c34cd18dba4615c6"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/JUDGMENTS-human-2.md",
+      "target": "skills/humanizer_fife/evals/blind/JUDGMENTS-human-2.md",
+      "scope": "project",
+      "sha256": "c92ea9774524532993c36d241a5d825d5430bff5308fdd208a842f8acef52311"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/JUDGMENTS-human-3.md",
+      "target": "skills/humanizer_fife/evals/blind/JUDGMENTS-human-3.md",
+      "scope": "project",
+      "sha256": "55b3c5a299ae3a4ef3d8948d8e540c37ec1e2e205fb2bde2beae9334530f9392"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/JUDGMENTS-human.md",
+      "target": "skills/humanizer_fife/evals/blind/JUDGMENTS-human.md",
+      "scope": "project",
+      "sha256": "7753a7741e20b40043cd5b2d669e02362c2505b1ecf391aeddbc3783710f31ea"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/JUDGMENTS-smoke.md",
+      "target": "skills/humanizer_fife/evals/blind/JUDGMENTS-smoke.md",
+      "scope": "project",
+      "sha256": "ffb43547b0467d68ded3bbaa7e7902679b2343d70c2591246f107bbf0daac27c"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/key.json",
+      "target": "skills/humanizer_fife/evals/blind/key.json",
+      "scope": "project",
+      "sha256": "f55ade7b30998316304ec9cc483263dd354c22d018b541c21def1e5abb2a13cc"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/marketing-8f89d7ec.md",
+      "target": "skills/humanizer_fife/evals/blind/marketing-8f89d7ec.md",
+      "scope": "project",
+      "sha256": "92a4bd241cc951ec674a49a6a5af35305c419b87812022becc981565a363239a"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/review-0fc940ad.md",
+      "target": "skills/humanizer_fife/evals/blind/review-0fc940ad.md",
+      "scope": "project",
+      "sha256": "b7c65f2addce04ca87985868b77737a0e11a49cce8638a3368d4dac117df02c5"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/run2-2026-10-10/email-7c35534c.md",
+      "target": "skills/humanizer_fife/evals/blind/run2-2026-10-10/email-7c35534c.md",
+      "scope": "project",
+      "sha256": "a4c93c07fc28b83b52fd13c88f9c8001899d74f648c96a00e253ee27ebce9d6d"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/run2-2026-10-10/essay-1647e644.md",
+      "target": "skills/humanizer_fife/evals/blind/run2-2026-10-10/essay-1647e644.md",
+      "scope": "project",
+      "sha256": "5cba31013e8360e60093b20d2b83b07a4e53064d4a511bbb279146b0959ac64f"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/run2-2026-10-10/howto-28c21b7e.md",
+      "target": "skills/humanizer_fife/evals/blind/run2-2026-10-10/howto-28c21b7e.md",
+      "scope": "project",
+      "sha256": "30835a532cb605bece2232a318b7fd1870cd3c66a06847cf04201542ad49201b"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/run2-2026-10-10/key.json",
+      "target": "skills/humanizer_fife/evals/blind/run2-2026-10-10/key.json",
+      "scope": "project",
+      "sha256": "46473f8eebc48e3fad19328b442922bf1eb19c23e8d2b6c97c65296c97fb5145"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/run2-2026-10-10/marketing-aa3ebdfd.md",
+      "target": "skills/humanizer_fife/evals/blind/run2-2026-10-10/marketing-aa3ebdfd.md",
+      "scope": "project",
+      "sha256": "e2d3209f347e4f3c5002d5acd205e35d727dc6eaa0104442777dcd628a71d033"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/run2-2026-10-10/review-bd5d67d7.md",
+      "target": "skills/humanizer_fife/evals/blind/run2-2026-10-10/review-bd5d67d7.md",
+      "scope": "project",
+      "sha256": "8bc38b41be1251aa6c09014fbff04de28b5d761f212a89174a41c395e4c5dcdd"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/run2-2026-10-10/technical-69167e30.md",
+      "target": "skills/humanizer_fife/evals/blind/run2-2026-10-10/technical-69167e30.md",
+      "scope": "project",
+      "sha256": "2c92e3db1d7d5c7ac5bf111986035ba9518ac99c4e146c8d097c9d7abf527fa9"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/smoke-2026-10-10/email-94e6fab3.md",
+      "target": "skills/humanizer_fife/evals/blind/smoke-2026-10-10/email-94e6fab3.md",
+      "scope": "project",
+      "sha256": "71eea8ea7cbbb38bc80c920e715028d711aa50bd89d03677e4a4e27a5a86d589"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/smoke-2026-10-10/essay-3f206ad7.md",
+      "target": "skills/humanizer_fife/evals/blind/smoke-2026-10-10/essay-3f206ad7.md",
+      "scope": "project",
+      "sha256": "171abf3d13e549099139914a9a0b09af49269c0f938eb6efb0457bd00dd40206"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/smoke-2026-10-10/howto-2b25593c.md",
+      "target": "skills/humanizer_fife/evals/blind/smoke-2026-10-10/howto-2b25593c.md",
+      "scope": "project",
+      "sha256": "58697015243e72f5586662dedfd2eeadc145b25c914a748cf7a59f822681f06a"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/smoke-2026-10-10/key.json",
+      "target": "skills/humanizer_fife/evals/blind/smoke-2026-10-10/key.json",
+      "scope": "project",
+      "sha256": "86a68dec0e3320027b97d800101667b6b1c2bc05ca856f7813426a354963938f"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/blind/technical-a8c0f135.md",
+      "target": "skills/humanizer_fife/evals/blind/technical-a8c0f135.md",
+      "scope": "project",
+      "sha256": "91a1d5b8802aaebbcf366d57dc0f3d44a9e392d3e9f0af901d7a89d99c4c29d5"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/check_gate.py",
+      "target": "skills/humanizer_fife/evals/check_gate.py",
+      "scope": "project",
+      "sha256": "53f6651ba665dbc90b7c9d75624fde311ea64040018eeed8802d8afb388e5045"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/check_profile.py",
+      "target": "skills/humanizer_fife/evals/check_profile.py",
+      "scope": "project",
+      "sha256": "b8d9dbf0083ff65f6d2e9d2352972cf1606767458337af30eda0af6b6a02c6c9"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus/ai_email_vendor.md",
+      "target": "skills/humanizer_fife/evals/corpus/ai_email_vendor.md",
+      "scope": "project",
+      "sha256": "af13c3248303da4c08c6f5ba85f6932a0b04c636e966516886ef52baf3e5f665"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus/ai_essay_remote_work.md",
+      "target": "skills/humanizer_fife/evals/corpus/ai_essay_remote_work.md",
+      "scope": "project",
+      "sha256": "f28f6c8521dbead3ae417ad97deb069e8e7caee2b95db3b80a40c04b28ecaafe"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus/ai_howto_network.md",
+      "target": "skills/humanizer_fife/evals/corpus/ai_howto_network.md",
+      "scope": "project",
+      "sha256": "15543501309a901e6a0d009d7bfe34111018d9e7b7c4abd5859d03ba127a5bf3"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus/ai_marketing_saas.md",
+      "target": "skills/humanizer_fife/evals/corpus/ai_marketing_saas.md",
+      "scope": "project",
+      "sha256": "b86c0872a04920acf42e23286e48a02ca3d8fd483dffe797b18072fa91b0e583"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus/ai_review_grinder.md",
+      "target": "skills/humanizer_fife/evals/corpus/ai_review_grinder.md",
+      "scope": "project",
+      "sha256": "f0f3841cc785bb43d481f9ac44610a8ab07dd6346adafb2ca33665a0a583c375"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus/ai_technical_release.md",
+      "target": "skills/humanizer_fife/evals/corpus/ai_technical_release.md",
+      "scope": "project",
+      "sha256": "94498a19ed5b201ad9c5b40df8edf060231d15d852f00f6440b1e89553c86c40"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/email_01.md",
+      "target": "skills/humanizer_fife/evals/corpus2/email_01.md",
+      "scope": "project",
+      "sha256": "037fdb7ff341c8a5138aab518e8a972a0f140fedeee4e16dcdd1bc65b6db90c4"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/email_02.md",
+      "target": "skills/humanizer_fife/evals/corpus2/email_02.md",
+      "scope": "project",
+      "sha256": "5f20774c2e640645bcf63730c8bc0a57661c169ff1e0ba31921244ef1a3b54ff"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/email_03.md",
+      "target": "skills/humanizer_fife/evals/corpus2/email_03.md",
+      "scope": "project",
+      "sha256": "7246a6d85ddb6d246e06ee6eac645287db5ef3be868ca087dcdb54129bcb23b7"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/email_04.md",
+      "target": "skills/humanizer_fife/evals/corpus2/email_04.md",
+      "scope": "project",
+      "sha256": "d77b596335bc3a30c7edacd7ddef850d1a1590cefff699ee5aa5be12eb2911b6"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/email_05.md",
+      "target": "skills/humanizer_fife/evals/corpus2/email_05.md",
+      "scope": "project",
+      "sha256": "b4f52a749f78e3c89f3e98b5b12c8017e343d68742f8947d8f8d6bc9bddc8c6a"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/email_06.md",
+      "target": "skills/humanizer_fife/evals/corpus2/email_06.md",
+      "scope": "project",
+      "sha256": "0cfbdef8f5d9225fdadab766fb7d28f6c1171470c56a1a7891d4f603fdeecf7a"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/email_07.md",
+      "target": "skills/humanizer_fife/evals/corpus2/email_07.md",
+      "scope": "project",
+      "sha256": "8bd3b275720a51d7d090c3dd5f7cef49bc58f0146e7d433e36de4d43f90f7107"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/email_08.md",
+      "target": "skills/humanizer_fife/evals/corpus2/email_08.md",
+      "scope": "project",
+      "sha256": "43a3a72e3f4ed6f222baab2cb9954bf14080f09ef23100494f8036b540fa2c6c"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/email_09.md",
+      "target": "skills/humanizer_fife/evals/corpus2/email_09.md",
+      "scope": "project",
+      "sha256": "96aedcd6a6d3de4d6837c5f1ba1fa2679d5364752988d3b927e0d992463231db"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/essay_01.md",
+      "target": "skills/humanizer_fife/evals/corpus2/essay_01.md",
+      "scope": "project",
+      "sha256": "e266a96b6a56e097d2baa00c4f393237d714e5ccfe0d0a3079eefd85461833ff"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/essay_02.md",
+      "target": "skills/humanizer_fife/evals/corpus2/essay_02.md",
+      "scope": "project",
+      "sha256": "fc544dacafef2ed60deecc07b152f163f3077d509bf98635fb8db6464a09b88c"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/essay_03.md",
+      "target": "skills/humanizer_fife/evals/corpus2/essay_03.md",
+      "scope": "project",
+      "sha256": "fa53573f8bff236e4e706450b38350b828c3a749c363e1b89f723924c343e2cb"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/essay_04.md",
+      "target": "skills/humanizer_fife/evals/corpus2/essay_04.md",
+      "scope": "project",
+      "sha256": "209d9e462e8bfd4116bf5d0e8f0ad3a4a681fc400d4fce9bd59c12b6a2e2f950"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/essay_05.md",
+      "target": "skills/humanizer_fife/evals/corpus2/essay_05.md",
+      "scope": "project",
+      "sha256": "1bdbd90e6910ee072064e8cda4cc73441db056c1ed6af7c1e80555520210198d"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/essay_06.md",
+      "target": "skills/humanizer_fife/evals/corpus2/essay_06.md",
+      "scope": "project",
+      "sha256": "ede5cbed136ac5c2e542fcd1f8ae6866baca7784600743ef21575384ba777011"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/essay_07.md",
+      "target": "skills/humanizer_fife/evals/corpus2/essay_07.md",
+      "scope": "project",
+      "sha256": "1822c01a30e91b2cfb6a05ff2c8301d1377c75cbffa73065114d9eb42d752f53"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/essay_08.md",
+      "target": "skills/humanizer_fife/evals/corpus2/essay_08.md",
+      "scope": "project",
+      "sha256": "1005b8b4c81060310192860fd6c98ea2336ff1b6a8d8a4b3358d8155a42423de"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/essay_09.md",
+      "target": "skills/humanizer_fife/evals/corpus2/essay_09.md",
+      "scope": "project",
+      "sha256": "39970160bdbe4fabdab6a70894c1c76a175976bff08e119c0441eab52cf16c23"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/howto_01.md",
+      "target": "skills/humanizer_fife/evals/corpus2/howto_01.md",
+      "scope": "project",
+      "sha256": "936a710e7f91788e45668ecb5990fcf495932ccde81707280f205aebf801d0b6"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/howto_02.md",
+      "target": "skills/humanizer_fife/evals/corpus2/howto_02.md",
+      "scope": "project",
+      "sha256": "bf60de7e9eb1d0f1bf80cf688c12d941ec29150c8df4575de2d2490d690802d2"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/howto_03.md",
+      "target": "skills/humanizer_fife/evals/corpus2/howto_03.md",
+      "scope": "project",
+      "sha256": "7c081ab7b470a749941e1f459fa4a88ecbcb5c3ba7e9c5b20e72af75b24fbb5f"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/howto_04.md",
+      "target": "skills/humanizer_fife/evals/corpus2/howto_04.md",
+      "scope": "project",
+      "sha256": "f91b0216e8a4c6d92c7204d4f9faecb9443447bc9e36b260d9abe6d5954ba6f1"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/howto_05.md",
+      "target": "skills/humanizer_fife/evals/corpus2/howto_05.md",
+      "scope": "project",
+      "sha256": "8c679a9a6fb15cc1d96c1b767980e5f48fa47ff7f0c653ff4500b5c39b688100"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/howto_06.md",
+      "target": "skills/humanizer_fife/evals/corpus2/howto_06.md",
+      "scope": "project",
+      "sha256": "36bd364e9d2043ab59d0057711806af06fd9c6cd4af9e598fb86e1451b3ea2a1"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/howto_07.md",
+      "target": "skills/humanizer_fife/evals/corpus2/howto_07.md",
+      "scope": "project",
+      "sha256": "90e3e1bcc9541ea126fc85c01a78da54e395eb236d43f51d865a4ca7be3ff738"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/howto_08.md",
+      "target": "skills/humanizer_fife/evals/corpus2/howto_08.md",
+      "scope": "project",
+      "sha256": "d242c60b2622a16b711d225c48fe182f2cc0d6ca84c70681f6251e375cd78156"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/howto_09.md",
+      "target": "skills/humanizer_fife/evals/corpus2/howto_09.md",
+      "scope": "project",
+      "sha256": "1288515f0557c0edecc61ffb28c24fcdc5110e251e7e4c965776e36e734afc0c"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/marketing_01.md",
+      "target": "skills/humanizer_fife/evals/corpus2/marketing_01.md",
+      "scope": "project",
+      "sha256": "f04837718099514c314ece286f8d3f8159efcc92ded2a0cc2dbb97e9ede32357"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/marketing_02.md",
+      "target": "skills/humanizer_fife/evals/corpus2/marketing_02.md",
+      "scope": "project",
+      "sha256": "0e605dd0ae215fe60fc83a5d1b5ad02fe970ec4544042dc1d9065de924401f29"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/marketing_03.md",
+      "target": "skills/humanizer_fife/evals/corpus2/marketing_03.md",
+      "scope": "project",
+      "sha256": "13e6600d58ee2b99ffd43c92556a04427120725156390c4632ec95366f58fe3a"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/marketing_04.md",
+      "target": "skills/humanizer_fife/evals/corpus2/marketing_04.md",
+      "scope": "project",
+      "sha256": "3558db5814b13734b339670617b2ceecd884fcfab9cfa0b415a6ff0c2d932c40"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/marketing_05.md",
+      "target": "skills/humanizer_fife/evals/corpus2/marketing_05.md",
+      "scope": "project",
+      "sha256": "a0eb77aa30b621f39683001123999ce18b3dcf91769f1033e3a26f46351fbfd2"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/marketing_06.md",
+      "target": "skills/humanizer_fife/evals/corpus2/marketing_06.md",
+      "scope": "project",
+      "sha256": "e2d98db012c8ec80b175c43302893fe95cb67c39e37170708bb35508a98ac2c9"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/marketing_07.md",
+      "target": "skills/humanizer_fife/evals/corpus2/marketing_07.md",
+      "scope": "project",
+      "sha256": "70add5a3cf3f6008d4be87a0ef19294b9a462b0c7f33ff4fc98112ce76e67ec7"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/marketing_08.md",
+      "target": "skills/humanizer_fife/evals/corpus2/marketing_08.md",
+      "scope": "project",
+      "sha256": "feaf8bcf95a065d409d22c8a0eb0c49a77d67070276d0618b609766c1e03c215"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/marketing_09.md",
+      "target": "skills/humanizer_fife/evals/corpus2/marketing_09.md",
+      "scope": "project",
+      "sha256": "53a44d8259f0a90aac642639f42e0747083ae47b65c591bb035fdd2b92478b21"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/review_01.md",
+      "target": "skills/humanizer_fife/evals/corpus2/review_01.md",
+      "scope": "project",
+      "sha256": "66e7a832f102caea329c55d7eed5aecc0d88bf39d321d7e91610cc424e40b19b"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/review_02.md",
+      "target": "skills/humanizer_fife/evals/corpus2/review_02.md",
+      "scope": "project",
+      "sha256": "ac5316a42dbfcb4c960ebee313aac7ef0587327e6693e539b6619769f3f843cf"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/review_03.md",
+      "target": "skills/humanizer_fife/evals/corpus2/review_03.md",
+      "scope": "project",
+      "sha256": "e209ca094c5804957ba05a3c39e877587a706e46e40620c79593250ee46f989d"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/review_04.md",
+      "target": "skills/humanizer_fife/evals/corpus2/review_04.md",
+      "scope": "project",
+      "sha256": "9b9586ad19de2668ba33b406db0971dc2c798624b98eba5975d09e4bc1b7eec4"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/review_05.md",
+      "target": "skills/humanizer_fife/evals/corpus2/review_05.md",
+      "scope": "project",
+      "sha256": "9a63148820a5cb566ce85303e11940cfcac1826de5ebbe58f591972b903b429f"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/review_06.md",
+      "target": "skills/humanizer_fife/evals/corpus2/review_06.md",
+      "scope": "project",
+      "sha256": "c026798525d9ad25a8ea9d3007a28579a1a7ccc903dcb8f316e032a70c413fad"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/review_07.md",
+      "target": "skills/humanizer_fife/evals/corpus2/review_07.md",
+      "scope": "project",
+      "sha256": "94cbb6ceaa426c944be5557ecbf6c2bc6a689aa8942d52890583dfe4552ad656"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/review_08.md",
+      "target": "skills/humanizer_fife/evals/corpus2/review_08.md",
+      "scope": "project",
+      "sha256": "82208c9e4719439659498fe609db94ea9e640dab7ff71992fa4ae0d06e1c22f6"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/review_09.md",
+      "target": "skills/humanizer_fife/evals/corpus2/review_09.md",
+      "scope": "project",
+      "sha256": "3714a61205a1c5a01cc93d5a06c8d04b5409c79128f7b87c7ba0b941b9f24f79"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/technical_01.md",
+      "target": "skills/humanizer_fife/evals/corpus2/technical_01.md",
+      "scope": "project",
+      "sha256": "e6696003b064d2412158a583475f2e36966b7d13b3049e78bac8c69028931042"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/technical_02.md",
+      "target": "skills/humanizer_fife/evals/corpus2/technical_02.md",
+      "scope": "project",
+      "sha256": "ceb00907183569006a3d7ddcf7705236e552588e41aa80c737f1ded0812bf15e"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/technical_03.md",
+      "target": "skills/humanizer_fife/evals/corpus2/technical_03.md",
+      "scope": "project",
+      "sha256": "73b3469a0072a3b86a382da306099b6b4b96e34282e86609d7cceaaa08a9e0a1"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/technical_04.md",
+      "target": "skills/humanizer_fife/evals/corpus2/technical_04.md",
+      "scope": "project",
+      "sha256": "9c0b59d369e3ecbee5000638a7bcbfb3cfb610b389785a20a8196a07e2c09315"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/technical_05.md",
+      "target": "skills/humanizer_fife/evals/corpus2/technical_05.md",
+      "scope": "project",
+      "sha256": "d10e79a16d77de4b93a9bc9f82797abb93d71d99eb065a0540d60ebb22621f40"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/technical_06.md",
+      "target": "skills/humanizer_fife/evals/corpus2/technical_06.md",
+      "scope": "project",
+      "sha256": "2fcb165d1923ba9c6d6e35eee757124f4089d09ca05fffcbebb7aaed2999d5e7"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/technical_07.md",
+      "target": "skills/humanizer_fife/evals/corpus2/technical_07.md",
+      "scope": "project",
+      "sha256": "eb1a1daa74e0d8d6bae2093ade3a872f0f339f350476790d4457446494e6ec80"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/technical_08.md",
+      "target": "skills/humanizer_fife/evals/corpus2/technical_08.md",
+      "scope": "project",
+      "sha256": "4b8bc135d3e55dac4e01619ec72c3492db4675da4bb4ef0106545256bccf5224"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/corpus2/technical_09.md",
+      "target": "skills/humanizer_fife/evals/corpus2/technical_09.md",
+      "scope": "project",
+      "sha256": "e922a918a52fc13123ee2997660936656e7863532b8fa241d9e0da4ab7584adf"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/freeze_run.py",
+      "target": "skills/humanizer_fife/evals/freeze_run.py",
+      "scope": "project",
+      "sha256": "ee2581a1f167a321046d0ca390b9a8d43b050077deb5367a77e9c535c0bb5e4b"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/jfleg_restraint.py",
+      "target": "skills/humanizer_fife/evals/jfleg_restraint.py",
+      "scope": "project",
+      "sha256": "b45ecddcb36ecb6f444c6cc3417f39962c99603267c71405c39753b247f1779b"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/make_pairs.py",
+      "target": "skills/humanizer_fife/evals/make_pairs.py",
+      "scope": "project",
+      "sha256": "93b072e3f3fa66f44169bfda1a30ad64179a2bc42960bb2bd63ee3fd9817cc7e"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/oanc_sweep.py",
+      "target": "skills/humanizer_fife/evals/oanc_sweep.py",
+      "scope": "project",
+      "sha256": "4f5921c8fa259baf6aef8a74c8e6d47a7e3de8a860c91e7b032ce57bfd226a96"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/README.md",
+      "target": "skills/humanizer_fife/evals/README.md",
+      "scope": "project",
+      "sha256": "a0dbafa13e0a51ceef352d6e6e3e471c98e4e6ef10804f7868f448b262c06751"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/reconstruct_keys.py",
+      "target": "skills/humanizer_fife/evals/reconstruct_keys.py",
+      "scope": "project",
+      "sha256": "19f9ba020eb31ed9430361c5041d86953d99b0aa0f36ea28214f6652a1b67e93"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/demo_v3.3.0_essay_rewrite.md",
+      "target": "skills/humanizer_fife/evals/results/demo_v3.3.0_essay_rewrite.md",
+      "scope": "project",
+      "sha256": "59ad01f0b552200e4508802d3e8a99dfdcc81c2d0e9f63ced4f6991f3dd8092e"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/detector-crosscheck.json",
+      "target": "skills/humanizer_fife/evals/results/detector-crosscheck.json",
+      "scope": "project",
+      "sha256": "7508a3edb3cabb0a7a9b0bcd3112714f608ce91370a6da8d8aeead0c89758cf6"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/detector-crosscheck.md",
+      "target": "skills/humanizer_fife/evals/results/detector-crosscheck.md",
+      "scope": "project",
+      "sha256": "0e95da21e19cc3b6f564440b411c0b322d06db7b7fadf99fd7b432aa0e846926"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/human-prose-sweep.json",
+      "target": "skills/humanizer_fife/evals/results/human-prose-sweep.json",
+      "scope": "project",
+      "sha256": "e9b38a98fa240305f9c6280d42ed444ed5ffdde0ee37790b242f13d2e9a63470"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/human-prose-sweep.md",
+      "target": "skills/humanizer_fife/evals/results/human-prose-sweep.md",
+      "scope": "project",
+      "sha256": "ee0c0467f9a3e96ac48182446a604f8d5d9863773789084b00dcb33c734453a3"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/jfleg-restraint.json",
+      "target": "skills/humanizer_fife/evals/results/jfleg-restraint.json",
+      "scope": "project",
+      "sha256": "49cd3212f8227e783dda0782bca393daa24c8edad98486127ef1b1beaedcbbbe"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/jfleg-restraint.md",
+      "target": "skills/humanizer_fife/evals/results/jfleg-restraint.md",
+      "scope": "project",
+      "sha256": "0d50405abe5d90168d1193b2ca6ba87894f2777ae8d8156e48d9b4d8eb3ecc65"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/key-reconstruction.json",
+      "target": "skills/humanizer_fife/evals/results/key-reconstruction.json",
+      "scope": "project",
+      "sha256": "0f005d4f22bb87b1c1e69488ad744a35ebbdc48a9f036baecfdeb1c14ffbde1c"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/manifests/run3.json",
+      "target": "skills/humanizer_fife/evals/results/manifests/run3.json",
+      "scope": "project",
+      "sha256": "ec9874cd416d0a5b45250338301289bf5d052ac4bd569af6f1803e723f22cbea"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/masc-sweep.json",
+      "target": "skills/humanizer_fife/evals/results/masc-sweep.json",
+      "scope": "project",
+      "sha256": "578e8367237858ec9e84af13fcbeaa5b4563c0f64c7eb03f1b06235c315643bb"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/mechanical-gate-v3.3.0-vs-v3.1.0.md",
+      "target": "skills/humanizer_fife/evals/results/mechanical-gate-v3.3.0-vs-v3.1.0.md",
+      "scope": "project",
+      "sha256": "7bfc2578ffb4614f97e5f79516931bb89c03f7029d0b144edadc641475dbbeeb"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/oanc-detector-crosscheck.json",
+      "target": "skills/humanizer_fife/evals/results/oanc-detector-crosscheck.json",
+      "scope": "project",
+      "sha256": "d065e0fe245d965dc27ea8e211016026d7d22afda2ac04489b581117ab786cbb"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/oanc-sweep.json",
+      "target": "skills/humanizer_fife/evals/results/oanc-sweep.json",
+      "scope": "project",
+      "sha256": "b7e8c83b41655011d379e56f7d22f145172fe8444c84119dad50bc7f03fdf646"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/oanc-sweep.md",
+      "target": "skills/humanizer_fife/evals/results/oanc-sweep.md",
+      "scope": "project",
+      "sha256": "bc7d88552a07c65521bd5df2839e9b361191745b5405e509473607cb2283cac6"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/profile-fixture.md",
+      "target": "skills/humanizer_fife/evals/results/profile-fixture.md",
+      "scope": "project",
+      "sha256": "cbcbe53f34224796c6f8830604dd9edd84140897724dcce04a1d4f71c6461c03"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/run2-claim-correction.md",
+      "target": "skills/humanizer_fife/evals/results/run2-claim-correction.md",
+      "scope": "project",
+      "sha256": "3ec56c6478dfbc86b9e3791fddfd139bb23429ed1b5a0e928d7e5e783348334e"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/smoke-judging-tally.txt",
+      "target": "skills/humanizer_fife/evals/results/smoke-judging-tally.txt",
+      "scope": "project",
+      "sha256": "6d525ffda70123f16f7ad8f498335595cf73700c25c790d26efcf49e27b828f3"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/v3.1.0-rewrites.json",
+      "target": "skills/humanizer_fife/evals/results/v3.1.0-rewrites.json",
+      "scope": "project",
+      "sha256": "bcfaa2368c81ae4256e00c8d7094769ce69df7fd00e6b095adbd3b403ac5dbd5"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/v3.2.0-raw-corpus.json",
+      "target": "skills/humanizer_fife/evals/results/v3.2.0-raw-corpus.json",
+      "scope": "project",
+      "sha256": "0313da43dfe66d6444ac692a7f41ef19775a71f39f6db24beb93279f6c5108cc"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/v3.3.0-demo-essay-metrics.json",
+      "target": "skills/humanizer_fife/evals/results/v3.3.0-demo-essay-metrics.json",
+      "scope": "project",
+      "sha256": "0d3fb92746ad2044859691ac977e2795493c5b98d77b276e28c4f98550b24461"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/v3.3.0-rewrites.json",
+      "target": "skills/humanizer_fife/evals/results/v3.3.0-rewrites.json",
+      "scope": "project",
+      "sha256": "0871ebf6f3258d27ffd083b8742ce6bea41d17bd2ad8a2efcb80b8e073a9224d"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/v3.6.0-rewrites.json",
+      "target": "skills/humanizer_fife/evals/results/v3.6.0-rewrites.json",
+      "scope": "project",
+      "sha256": "df4cac40b6986eb9ffad439ef8a03bde5c87065251c47e1acee2b4f73214ab94"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/word-ratios.json",
+      "target": "skills/humanizer_fife/evals/results/word-ratios.json",
+      "scope": "project",
+      "sha256": "1595acafd3c3ed7d237ecc4972b68a00273a814ab98ff999d8c44cc805e31bed"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/results/word-ratios.md",
+      "target": "skills/humanizer_fife/evals/results/word-ratios.md",
+      "scope": "project",
+      "sha256": "4534b8626f69680d17c915f1342b4a5ca72916225f0dbf16171cd923cb1b72bf"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/email_v310.md",
+      "target": "skills/humanizer_fife/evals/rewrite/email_v310.md",
+      "scope": "project",
+      "sha256": "a97b096dd79458a549917f2ada92601226f100f82392c6e2b888e3add6fcfd7a"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/email_v330.md",
+      "target": "skills/humanizer_fife/evals/rewrite/email_v330.md",
+      "scope": "project",
+      "sha256": "056b3775d61d0ab2b4810452350af31d74a5ebbbc494d3938506a9ef3a81ae61"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/email_v360.md",
+      "target": "skills/humanizer_fife/evals/rewrite/email_v360.md",
+      "scope": "project",
+      "sha256": "85195ed150c12a74f955400becc7c9a6847140619b6950a694a62b80d918e58b"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/essay_v310.md",
+      "target": "skills/humanizer_fife/evals/rewrite/essay_v310.md",
+      "scope": "project",
+      "sha256": "2d1865640a8e0f96e1da6812eba91755e8b8b1703dcb638867ed7ad61d3127e5"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/essay_v330.md",
+      "target": "skills/humanizer_fife/evals/rewrite/essay_v330.md",
+      "scope": "project",
+      "sha256": "59ad01f0b552200e4508802d3e8a99dfdcc81c2d0e9f63ced4f6991f3dd8092e"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/essay_v360.md",
+      "target": "skills/humanizer_fife/evals/rewrite/essay_v360.md",
+      "scope": "project",
+      "sha256": "dc5bf2931fdaa96e28ef36fcc475b9370aea97bf18925804e9256db0a4798c8c"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/howto_v310.md",
+      "target": "skills/humanizer_fife/evals/rewrite/howto_v310.md",
+      "scope": "project",
+      "sha256": "73903219a52cad010bf0cc638f403cda114afaff57c3f298bd1b9978212b68dd"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/howto_v330.md",
+      "target": "skills/humanizer_fife/evals/rewrite/howto_v330.md",
+      "scope": "project",
+      "sha256": "5493436820dc56f73fdda44b55a29b8b0267e629063a7f1c0a9ccc13d87cb997"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/howto_v360.md",
+      "target": "skills/humanizer_fife/evals/rewrite/howto_v360.md",
+      "scope": "project",
+      "sha256": "3426d7b0b671f0571e26e23c04e46c4d55f228768e4961d2fe8b2b2dd1d08788"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/marketing_v310.md",
+      "target": "skills/humanizer_fife/evals/rewrite/marketing_v310.md",
+      "scope": "project",
+      "sha256": "5173379d225b5b55b4c4ba4ff4489dc4bca9f283d4393c5a563ec1d6e18e4e63"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/marketing_v330.md",
+      "target": "skills/humanizer_fife/evals/rewrite/marketing_v330.md",
+      "scope": "project",
+      "sha256": "4c3ff6ca898cc8a9cdb7da997f6fe80477f7e29bd94eafaf2fff22c6dad2b2e6"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/marketing_v360.md",
+      "target": "skills/humanizer_fife/evals/rewrite/marketing_v360.md",
+      "scope": "project",
+      "sha256": "c936f4f7584cafacc7cccca270de8ea087da5d6f0b9b0b76cda3f938b7496b66"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/profile_email_v360.md",
+      "target": "skills/humanizer_fife/evals/rewrite/profile_email_v360.md",
+      "scope": "project",
+      "sha256": "c4fe655c55f6fd20a3c5a15d0d246a1cc8a147f1d5ccb4a1efe6eba81a496d67"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/review_v310.md",
+      "target": "skills/humanizer_fife/evals/rewrite/review_v310.md",
+      "scope": "project",
+      "sha256": "e0e94fe9471e22cf707e839214c51032ba88f02e0019c45828c58da6272fad16"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/review_v330.md",
+      "target": "skills/humanizer_fife/evals/rewrite/review_v330.md",
+      "scope": "project",
+      "sha256": "b91505e4a5fc79610ada41a12b8461112eec76b4ff73317c8be16d4301492862"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/review_v360.md",
+      "target": "skills/humanizer_fife/evals/rewrite/review_v360.md",
+      "scope": "project",
+      "sha256": "6ed86270c4cab9705133c8b3adc3dddebfd07491fb15f25f5c4af81b7a55d3bf"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/technical_v310.md",
+      "target": "skills/humanizer_fife/evals/rewrite/technical_v310.md",
+      "scope": "project",
+      "sha256": "2a41d9e43aae9263ca115eae5ceb399701dc7d6671ab7d2d4f5c8a37aadce45b"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/technical_v330.md",
+      "target": "skills/humanizer_fife/evals/rewrite/technical_v330.md",
+      "scope": "project",
+      "sha256": "8bb98f896e15e479d457d22fc689ec338daa02e1dbc24b3dc7fb7edf76c03692"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rewrite/technical_v360.md",
+      "target": "skills/humanizer_fife/evals/rewrite/technical_v360.md",
+      "scope": "project",
+      "sha256": "af8ee961db07f897eefdcb2e29bc54527f7e873c5bd8b8e9aacab7e63691fb92"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/rhythm_metrics.py",
+      "target": "skills/humanizer_fife/evals/rhythm_metrics.py",
+      "scope": "project",
+      "sha256": "a34c45d97edf8db047cc434a3c2804774986977bd2941a93bc13d1ec4e06e8d7"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/test_rhythm_metrics.py",
+      "target": "skills/humanizer_fife/evals/test_rhythm_metrics.py",
+      "scope": "project",
+      "sha256": "d7ba5d1d8a4a61440063d89d1869f156b07c96a9302e604e93ca4ecc17bddc58"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/watch_words.py",
+      "target": "skills/humanizer_fife/evals/watch_words.py",
+      "scope": "project",
+      "sha256": "46b5042ff3b42e1bc4f7a226a615dcf1bf3231cb86a94aac16a8ab9261717370"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/evals/word_ratios.py",
+      "target": "skills/humanizer_fife/evals/word_ratios.py",
+      "scope": "project",
+      "sha256": "23a377b46cae6367e1ce143fcb06a41a4ba112ca30a1886f5e78b5073352815f"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/INVESTIGATION.md",
+      "target": "skills/humanizer_fife/INVESTIGATION.md",
+      "scope": "project",
+      "sha256": "0ed57e49cdf7d9ac5b605ce144d2364277953bff66b5bd0ebaf6d4b7308a4575"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/LICENSE",
+      "target": "skills/humanizer_fife/LICENSE",
+      "scope": "project",
+      "sha256": "4ac4810254ab36d45419141aeb8e69bf50652cfafe5b2dab947d06d44e5cbf96"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/README.md",
+      "target": "skills/humanizer_fife/README.md",
+      "scope": "project",
+      "sha256": "a07a054f230dca1e3d25e32ba6c808905b743cc6fa56bf8b6868cee0b12a0432"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/references/profiles/example-site-updates.md",
+      "target": "skills/humanizer_fife/references/profiles/example-site-updates.md",
+      "scope": "project",
+      "sha256": "55766636c13a52c9e0d038f2be0b2636ea9f6f14eb0440101befbf847113be14"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/references/profiles/PRIOR-ART.md",
+      "target": "skills/humanizer_fife/references/profiles/PRIOR-ART.md",
+      "scope": "project",
+      "sha256": "61ec444fabcf45099074533ed85aaa25e7ad6bac098baf8c7c90e9267e52f017"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/references/profiles/README.md",
+      "target": "skills/humanizer_fife/references/profiles/README.md",
+      "scope": "project",
+      "sha256": "de29c26f409f4b8a70a29a040f7a6b42449a74c3f5be9b571748e3e6bd8985ac"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/references/rhythm.md",
+      "target": "skills/humanizer_fife/references/rhythm.md",
+      "scope": "project",
+      "sha256": "a956a2cf35280d358771449fa66ff8a795d01cf4d06ee5eb456fdea90382d0ae"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/scripts/validate-package.py",
+      "target": "skills/humanizer_fife/scripts/validate-package.py",
+      "scope": "project",
+      "sha256": "941bd99e52b2ba21449719bb7969607ac8117e3dc173d0c9dfe64fd274c65938"
+    },
+    {
+      "kind": "skill",
+      "name": "humanizer_fife",
+      "source": ".opencode/skills/humanizer_fife/SKILL.md",
+      "target": "skills/humanizer_fife/SKILL.md",
+      "scope": "project",
+      "sha256": "c374c2604488da350cf0d05cf70c094929ff65ca0246e80846bde40ea8af06a2"
+    },
+    {
+      "kind": "skill",
+      "name": "idea-refine",
+      "source": ".opencode/skills/idea-refine/examples.md",
+      "target": "skills/idea-refine/examples.md",
+      "scope": "global",
+      "sha256": "563204bfbf2f80a444151695205af4cb759e722b3d1e5460e08f278a69c89ba1"
+    },
+    {
+      "kind": "skill",
+      "name": "idea-refine",
+      "source": ".opencode/skills/idea-refine/frameworks.md",
+      "target": "skills/idea-refine/frameworks.md",
+      "scope": "global",
+      "sha256": "161ebc18fdf2d996bc62a87a2d747cf1bf53548354f8925de25c732c27f00309"
+    },
+    {
+      "kind": "skill",
+      "name": "idea-refine",
+      "source": ".opencode/skills/idea-refine/refinement-criteria.md",
+      "target": "skills/idea-refine/refinement-criteria.md",
+      "scope": "global",
+      "sha256": "1ca2973a4d01b5cb37ab7ddb2eff77fa4e792634a33d0ce44961c068fc88d51a"
+    },
+    {
+      "kind": "skill",
+      "name": "idea-refine",
+      "source": ".opencode/skills/idea-refine/scripts/idea-refine.sh",
+      "target": "skills/idea-refine/scripts/idea-refine.sh",
+      "scope": "global",
+      "sha256": "f02a52408a4218047c032d221483abfbb48d11f090bb4915965c7419bf2e0e47"
+    },
+    {
+      "kind": "skill",
+      "name": "idea-refine",
+      "source": ".opencode/skills/idea-refine/SKILL.md",
+      "target": "skills/idea-refine/SKILL.md",
+      "scope": "global",
+      "sha256": "21ef828e3a2144245b67f840cc3805f761e98c9acce9a96670b7cd7441353463"
+    },
+    {
+      "kind": "skill",
+      "name": "incremental-implementation",
+      "source": ".opencode/skills/incremental-implementation/SKILL.md",
+      "target": "skills/incremental-implementation/SKILL.md",
+      "scope": "global",
+      "sha256": "e72e4c494e1dc7ffa73ca810dd7a0e2c727a3479560f73d98c1101b5c488cbb6"
+    },
+    {
+      "kind": "skill",
+      "name": "interview-me",
+      "source": ".opencode/skills/interview-me/SKILL.md",
+      "target": "skills/interview-me/SKILL.md",
+      "scope": "global",
+      "sha256": "ace4b675999bb504593d572e0f73f3d7e803ad6fddf318445598c82c11939db2"
+    },
+    {
+      "kind": "skill",
+      "name": "observability-and-instrumentation",
+      "source": ".opencode/skills/observability-and-instrumentation/SKILL.md",
+      "target": "skills/observability-and-instrumentation/SKILL.md",
+      "scope": "global",
+      "sha256": "e7fcb0820306d46268de9594d676ad98e35040858926c412b7000faa52a61f87"
+    },
+    {
+      "kind": "skill",
+      "name": "opencode-dev",
+      "source": ".opencode/skills/opencode-dev/SKILL.md",
+      "target": "skills/opencode-dev/SKILL.md",
+      "scope": "project",
+      "sha256": "06f76585cbfb37ab21090f0d2fdeb0fd4c0b9acdc101c4b7e8e9f4a2d7a297e4"
+    },
+    {
+      "kind": "skill",
+      "name": "performance-optimization",
+      "source": ".opencode/skills/performance-optimization/references/optimization-patterns.md",
+      "target": "skills/performance-optimization/references/optimization-patterns.md",
+      "scope": "global",
+      "sha256": "fbf724076ffb8ac1a28e1a2773c0b550f5361090024b2dd32e5a682c69b7945f"
+    },
+    {
+      "kind": "skill",
+      "name": "performance-optimization",
+      "source": ".opencode/skills/performance-optimization/SKILL.md",
+      "target": "skills/performance-optimization/SKILL.md",
+      "scope": "global",
+      "sha256": "bd36a30e55a5f84329a6977eba5e1ab7654146e71eaba88e34337d4ee020460f"
+    },
+    {
+      "kind": "skill",
+      "name": "plan-hardening",
+      "source": ".opencode/skills/plan-hardening/SKILL.md",
+      "target": "skills/plan-hardening/SKILL.md",
+      "scope": "project",
+      "sha256": "a8ef0e4124393d5b86bc801d3aa6f5fffe26545551d8c4335f4196c76afe877e"
+    },
+    {
+      "kind": "skill",
+      "name": "planning-and-task-breakdown",
+      "source": ".opencode/skills/planning-and-task-breakdown/SKILL.md",
+      "target": "skills/planning-and-task-breakdown/SKILL.md",
+      "scope": "global",
+      "sha256": "ed0f90cc5951ddd4bcab7f871f64efec93a49af9279ef93bc470da77ad8da3f7"
+    },
+    {
+      "kind": "skill",
+      "name": "rtl-aware-development",
+      "source": ".opencode/skills/rtl-aware-development/SKILL.md",
+      "target": "skills/rtl-aware-development/SKILL.md",
+      "scope": "project",
+      "sha256": "456d9a1c7fdb120b9256a6c3bc81b49defea84ca87ab3b395ddc4b870d740cea"
+    },
+    {
+      "kind": "skill",
+      "name": "sample-skill",
+      "source": ".opencode/skills/sample-skill/SKILL.md",
+      "target": "skills/sample-skill/SKILL.md",
+      "scope": "project",
+      "sha256": "3b7caeedd3528987e35e030314400f4fa536ec061936d7434615656ae5e7248a"
+    },
+    {
+      "kind": "skill",
+      "name": "security-and-hardening",
+      "source": ".opencode/skills/security-and-hardening/references/hardening-patterns.md",
+      "target": "skills/security-and-hardening/references/hardening-patterns.md",
+      "scope": "global",
+      "sha256": "2e1b93a502b4cdb0258404441f3aab029b0cce4003fbbcc61af9a2de18bab9ab"
+    },
+    {
+      "kind": "skill",
+      "name": "security-and-hardening",
+      "source": ".opencode/skills/security-and-hardening/SKILL.md",
+      "target": "skills/security-and-hardening/SKILL.md",
+      "scope": "global",
+      "sha256": "2e3fc60eed5aba97fe416f3f3c9317fdb014a682925ec70a733c3ff99e4b9858"
+    },
+    {
+      "kind": "skill",
+      "name": "shipping-and-launch",
+      "source": ".opencode/skills/shipping-and-launch/SKILL.md",
+      "target": "skills/shipping-and-launch/SKILL.md",
+      "scope": "global",
+      "sha256": "726f3e546369db289160b8d42195590f00b6432887e17bf19070dcc9a347fe39"
+    },
+    {
+      "kind": "skill",
+      "name": "source-driven-development",
+      "source": ".opencode/skills/source-driven-development/SKILL.md",
+      "target": "skills/source-driven-development/SKILL.md",
+      "scope": "global",
+      "sha256": "c59faf851377f0eeda45306398d16eb96d77ab1c2fd3e1a7fb58e9a0af33c1e9"
+    },
+    {
+      "kind": "skill",
+      "name": "spec-driven-development",
+      "source": ".opencode/skills/spec-driven-development/SKILL.md",
+      "target": "skills/spec-driven-development/SKILL.md",
+      "scope": "global",
+      "sha256": "0809c356b4e571d12a5371946b3e1b8e6da980cc1d7940d0d17100057b5b7f6a"
+    },
+    {
+      "kind": "skill",
+      "name": "test-design",
+      "source": ".opencode/skills/test-design/SKILL.md",
+      "target": "skills/test-design/SKILL.md",
+      "scope": "global",
+      "sha256": "3742c86e01ecd0c5fcaf55223727b1609fde3d7ab05d5199fc13c14b008ac13f"
+    },
+    {
+      "kind": "skill",
+      "name": "tui-tests",
+      "source": ".opencode/skills/tui-tests/SKILL.md",
+      "target": "skills/tui-tests/SKILL.md",
+      "scope": "project",
+      "sha256": "db566da22798300d5e357f661b4abc63883a6a3627d4678058ee502d740924fc"
+    },
+    {
+      "kind": "skill",
+      "name": "unit-tests",
+      "source": ".opencode/skills/unit-tests/SKILL.md",
+      "target": "skills/unit-tests/SKILL.md",
+      "scope": "project",
+      "sha256": "31fb5d19b3bc0268de9e445db4a0b75d746b1d9598ccfe46edbda3b2da797ee5"
+    },
+    {
+      "kind": "skill",
+      "name": "using-agent-skills",
+      "source": ".opencode/skills/using-agent-skills/SKILL.md",
+      "target": "skills/using-agent-skills/SKILL.md",
+      "scope": "global",
+      "sha256": "f6529fa800cf4dc228286ca1ebee16d2dbf430aeaea939d6173a401533039402"
+    },
+    {
+      "kind": "skill",
+      "name": "walk-me-through",
+      "source": ".opencode/skills/walk-me-through/SKILL.md",
+      "target": "skills/walk-me-through/SKILL.md",
+      "scope": "global",
+      "sha256": "b519dabd6797b50ba2289ad9a8554d7c139dff7d5755031d8738f36a4cd59b47"
+    }
+  ]
+}

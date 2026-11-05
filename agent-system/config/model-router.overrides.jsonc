@@ -1,0 +1,23 @@
+{
+  // Canonical fife tier preset. The installer merges only presets.fife and
+  // preserves activePreset, activeMode, other presets, and unrelated keys.
+  "presets": {
+    "fife": {
+      "fast": {
+        "model": "vercel/minimax/minimax-m3.1-flash",
+        "variant": "medium",
+        "costRatio": 1
+      },
+      "medium": {
+        "model": "mistral/deepseek-v4-1-flash-1017",
+        "variant": "max",
+        "costRatio": 3
+      },
+      "heavy": {
+        "model": "vercel/openai/gpt-6.1-terra",
+        "variant": "high",
+        "costRatio": 8
+      }
+    }
+  }
+}

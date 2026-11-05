@@ -31,6 +31,8 @@ This repository's update terms are synonyms: "update opencode", "create local up
 
    The installer refuses a dirty tree, so commit first. It assigns a timestamped `dev` version, builds Windows x64 with its embedded web UI, runs the compiled service smoke test using temporary data and an operating-system-assigned port, then swaps the executable in atomically. Failed builds, failed smoke tests, a changed source fingerprint, or uncommitted source stop installation. The compiled smoke test is the only hard gate; lint, typechecks, and regression tests from step 2 stay your responsibility. Run one build/installer at a time per checkout. Each install archives the previous build and prunes the archive to the newest 5 (about 270 MB per build).
 
+   The same run installs the agent system: the four SDD roles, the 30 global-scope skills, and the canonical tier configuration. The canonical sources are `.opencode/agents/` and `.opencode/skills/`; `~/.config/opencode/` is an install target, never a source. The installer copies the managed files, merges only the canonical keys into `opencode.json` and `opencode-model-router.overrides.jsonc`, writes `agent-system.installed.json`, and verifies the loaded roles with `opencode debug agents`. If that verification fails, the asset step restores its backup and exits nonzero. See `agent-system/README.md` for the manifest, merge, backup, and rollback contract.
+
    The installer also checks tracked symlinks before building. If Git checked them out as plain text, enable Windows Developer Mode and recreate the listed links, or create a fresh worktree with Git symlink support enabled. Preserve any local changes before recreating files. The smoke test checks that the packaged favicon is SVG data.
 
 5. When sessions and terminal work are idle, close old clients and launch `opencode .` again. The new client can replace an older shared `dev` server. The installer itself does not stop or restart it. Verify the changed behavior in the installed app.
@@ -71,10 +73,38 @@ Previous builds are retained under `%USERPROFILE%\.local\share\opencode-fife-bui
 
 ```powershell
 bun run local:list        # installed build plus every archive, newest first
-bun run local:status      # installed build versus dev HEAD and tree state
-bun run local:rollback    # newest archived build; -Build <timestamp> picks one
+bun run local:status      # installed build, agent system, and drift; --json for tests
+bun run local:rollback    # agent system + newest archived build
 bun run local:prune       # trim the archive now, remove stale .old renames
+
+bun run agent:install -- -ConfigRoot C:\Windows\Temp\agent-system-clean -AgentsOnly
+bun run agent:status      # agent-system-only status
+bun run agent:rollback    # agent-system-only rollback
+bun run agent:manifest -- --check
+bun run test:agent-system
 ```
+
+### Agent system
+
+The agent system is version `2.0.0` with role content `1.1.1`. `agent-system/manifest.json` records every managed file with its SHA-256 and scope; `agent-system/manifest.schema.json` validates it. Regenerate the manifest after an intentional role or skill change with `bun run agent:manifest`, then run `bun run agent:manifest -- --check` and `bun run test:agent-system`.
+
+Installer options:
+
+| Option | Effect |
+|---|---|
+| `-AgentsOnly` | Install agents, skills, and configuration without building or swapping the CLI. A dirty tree is reported and the working tree is copied so assets can be iterated before committing. |
+| `-SkipAgents` | Preserve the previous CLI-only install. |
+| `-ConfigRoot <path>` | Install into an isolated config root. Use `OPENCODE_AGENT_SYSTEM_SKIP_RUNTIME_VERIFY=1` for a clean-install test that cannot reach the live managed service. |
+| `-Force` | Back up and replace a managed file that was modified since the last install or collides with an unmanaged file. |
+| `-KeepAutoAccept` | Keep `session.permissions: "autoaccept"`, record the opt-out in the installed manifest, and warn that the TUI suppresses `ask` prompts. |
+
+`local:status` exits `0` in sync, `1` on drift, `2` when the agent system is not installed (including a missing or unreadable installed manifest), and `3` on error. `--json` returns the same data in machine-readable form.
+
+The default install changes `session.permissions` from `autoaccept` to `prompt` when `cli.json` exists, because `autoaccept` suppresses the TUI presentation of the SDD `ask` gates. The previous `cli.json` is backed up and the change is reported. `-KeepAutoAccept` is the explicit opt-out.
+
+Agent-system backups live under `~/.config/opencode/backups/agent-system/<timestamp>/` with a `backup.json` manifest and the newest 5 are retained. `local:rollback -AgentsOnly` restores the most recent backup, verifies the restored hashes, removes files the install created, and preserves unmanaged files created after the backup. `local:rollback -BinaryOnly` restores only the CLI. With no backup, the command exits `2`.
+
+Tier boundary: `fast`, `medium`, and `heavy` are plugin-registered subagents and the sole owners of model selection. The four SDD roles keep their own `subagent` permissions and stage gates; the Spec Writer may invoke only `explore` (allow) and `implementer`/`tester`/`qa` (ask), the Implementer may invoke only `explore`, and the Tester and QA deny all subagents. Tier selection does not alter stage authorization, approval gates, or correction limits. The model-router plugin remains external at `opencode-model-router@2.9.1`; its model IDs and routing behavior are unchanged.
 
 Rollback: save work and close clients (`opencode service stop`), run `bun run local:rollback`, then reopen `opencode .` and verify it. The rollback keeps the pre-rollback executable as an `opencode.exe.old-*` rename for one more undo, syncs the build record from the archive, and removes the record when the archive predates build manifests. A rename still held by a running session is reported rather than deleted; the next install or prune removes it once the session exits.
 

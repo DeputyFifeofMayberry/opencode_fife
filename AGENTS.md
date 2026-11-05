@@ -7,10 +7,11 @@
 
 ## Skills
 
-Skills load from two sources. On OpenCode V2 the precedence is project `.opencode/skills/` → personal `~/.config/opencode/skills/`. Five names exist in both the project and personal directories — `construction-humanizer`, `craft-prompting`, `eli5-skill`, `find-skills`, `walk-me-through` — and the project copy is the one that runs, so edit that copy or the change is invisible.
+The repository `.opencode/skills/` tree is the canonical source for the managed skill library: 30 global-scope skills and 10 project-scope skills. `~/.config/opencode/skills/` is an install target, never a source. On OpenCode V2 the precedence is project `.opencode/skills/` → personal `~/.config/opencode/skills/`, so the project copy is the one that runs; edit that copy or the change is invisible.
 
-- **Project skills** supply repo knowledge and tooling: `unit-tests`, `tui-tests`, `app-e2e-tests`, `component-tests`, `effect`, `opencode-dev`, `rtl-aware-development`, and the writing and prompting skills.
-- **Personal skills** supply technique. Use a personal skill when the user names it, or when no project skill fits.
+- **Global-scope skills** are copied to the global config root by `bun run update:local`. They supply general technique: the writing and prompting skills, review and planning skills, security and performance skills, and the rest of the 30-skill library.
+- **Project-scope skills** supply repository knowledge and tooling and are never installed globally: `unit-tests`, `tui-tests`, `app-e2e-tests`, `component-tests`, `effect`, `opencode-dev`, `humanizer_fife`, `plan-hardening`, `rtl-aware-development`, and `sample-skill`.
+- **Adding or changing a skill:** edit `.opencode/skills/<name>/`, add the name to `GLOBAL_SKILLS` or `PROJECT_SKILLS` in `script/agent-system/lib.ts`, run `bun run agent:manifest`, then `bun run agent:manifest -- --check` and `bun run test:agent-system`.
 
 Use a skill when its description matches the task. A question, a read-only inspection, or a one-line fix needs no skill.
 
@@ -40,10 +41,13 @@ Plans under `docs/superpowers/` and `docs/plans/` are preserved historical artif
 
 ## Local Updates
 
-- "Update opencode", "create local update package", and "install local build" all mean one procedure: `bun run update:local` (alias of `install:local`) from the repo root on a committed `dev` tree. Full process: `docs/local-development.md`; confirmed decisions: `docs/intent/local-update.md`.
+- "Update opencode", "create local update package", and "install local build" all mean one procedure: `bun run update:local` (alias of `install:local`) from the repo root on a committed `dev` tree. It installs both the CLI and the agent system. Full process: `docs/local-development.md`; confirmed decisions: `docs/intent/local-update.md`; agent-system contract: `agent-system/README.md`.
+- The canonical agent sources are `.opencode/agents/` and `.opencode/skills/`. `~/.config/opencode/` is an install target; never edit it as source. The installer copies the managed roles and global-scope skills there, merges the canonical tier keys into `opencode.json` and `opencode-model-router.overrides.jsonc`, and writes `agent-system.installed.json`.
 - Never install unasked. If `bun run local:status` shows `dev` ahead of the installed build, say so and wait for the user to request the update.
-- The installer refuses a dirty tree; commit first. Its compiled smoke test is the only hard gate; other checks are advisory per the checklist in `docs/local-development.md`.
-- Companion commands: `local:list`, `local:status`, `local:rollback`, `local:prune`. Installs archive the previous build and prune the archive to the newest 5.
+- The installer refuses a dirty tree for a full install; commit first. `-AgentsOnly` reports the dirty tree and copies the working tree so assets can be iterated before committing. Its compiled smoke test is the only hard gate; other checks are advisory per the checklist in `docs/local-development.md`.
+- Options: `-AgentsOnly` (assets only, no CLI build), `-SkipAgents` (CLI only), `-ConfigRoot <path>` (isolated clean install), `-Force` (back up and replace a locally modified managed file), `-KeepAutoAccept` (keep `autoaccept`, record the opt-out, and warn that SDD `ask` gates are suppressed).
+- Companion commands: `local:list`, `local:status`, `local:rollback`, `local:prune`, `agent:install`, `agent:status`, `agent:rollback`, `agent:manifest`, `test:agent-system`. Installs archive the previous build and prune the archive to the newest 5; agent-system backups use the same retention.
+- Tier boundary: `fast`, `medium`, and `heavy` are plugin-registered subagents and the sole owners of model selection. The four SDD roles keep their own `subagent` permissions and stage gates; tier selection does not alter stage authorization, approval gates, or correction limits.
 
 ## Live TUI Testing
 
