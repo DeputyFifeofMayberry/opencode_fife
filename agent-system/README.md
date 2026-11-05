@@ -35,10 +35,10 @@ source commit, and the backup path.
 bun run update:local
 
 # Agent system only; no CLI build. Reports a dirty tree but copies the working tree.
-bun run update:local - -AgentsOnly
+bun run update:local -- -AgentsOnly
 
 # CLI only; preserves the previous binary-only behavior
-bun run update:local - -SkipAgents
+bun run update:local -- -SkipAgents
 
 # Clean install into an isolated config root
 bun run agent:install -- -ConfigRoot C:\Windows\Temp\agent-system-clean -AgentsOnly
@@ -58,7 +58,7 @@ bun run agent:install -- -ConfigRoot C:\Windows\Temp\agent-system-clean -AgentsO
 
 ```powershell
 bun run local:status
-bun run local:status - -json
+bun run local:status -- -json
 ```
 
 Exit codes:

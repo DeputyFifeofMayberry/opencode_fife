@@ -2,8 +2,8 @@
 # then installs the managed agent system (roles, skills, and tier configuration).
 # Run from the repository root after pulling or making changes on dev:
 #   bun run update:local                 (CLI + agent system)
-#   bun run update:local - -AgentsOnly   (agent system only; no CLI build)
-#   bun run update:local - -SkipAgents   (CLI only; previous behavior)
+#   bun run update:local -- -AgentsOnly   (agent system only; no CLI build)
+#   bun run update:local -- -SkipAgents   (CLI only; previous behavior)
 # The tree must be committed for a full install; -AgentsOnly reports a dirty tree
 # and copies the working tree so assets can be iterated before committing.
 

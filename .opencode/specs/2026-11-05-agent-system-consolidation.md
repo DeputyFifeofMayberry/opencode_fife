@@ -1,10 +1,10 @@
 # Agent System Consolidation and Managed Install
 
 **Status:** Approved
-**Approval:** Approved by user on 2026-11-05
-**Revision:** 2. Spec Writer re-validation of the build-agent draft.
+**Approval:** Revision 4 approved by user on 2026-11-05
+**Revision:** 4. Corrects R-09 and AC-09 to match the v1.1.1 permission model.
 
-> **Provenance.** Revision 1 was produced by the build agent, not the Spec Writer. The Spec Writer reviewed that draft against its role contract, checked the material claims against the repository and runtime evidence, and revised the requirements, acceptance criteria, decisions, and failure handling below. Revision 2 is the approved requirements baseline.
+> **Provenance.** Revision 1 was produced by the build agent, not the Spec Writer. The Spec Writer reviewed that draft against its role contract, checked the material claims against the repository and runtime evidence, and revised the requirements, acceptance criteria, decisions, and failure handling below. Revision 2 was approved on 2026-11-05. Revision 3 corrected three findings from the implementation handoff and was approved on 2026-11-05. Revision 4 corrects the permission-model description after the Tester found a conflict between R-02 and R-09 and was approved on 2026-11-05.
 
 ## 1. Objective
 
@@ -77,11 +77,12 @@ The repo and global copies lack all of those changes. `tester.md` is 169 lines i
 
 ### 2.4 Skills
 
-- Repo `.opencode/skills`: 14 skills.
+- Repo `.opencode/skills`: 15 skills.
 - Global `~/.config/opencode/skills`: 30 skills.
 - Intersection: 5 (`construction-humanizer`, `craft-prompting`, `eli5-skill`, `find-skills`, `walk-me-through`).
-- Repo-only: 9 (`app-e2e-tests`, `component-tests`, `effect`, `humanizer_fife`, `plan-hardening`, `rtl-aware-development`, `sample-skill`, `tui-tests`, `unit-tests`).
+- Repo-only: 10 (`app-e2e-tests`, `component-tests`, `effect`, `humanizer_fife`, `opencode-dev`, `plan-hardening`, `rtl-aware-development`, `sample-skill`, `tui-tests`, `unit-tests`).
 - Global-only: 25.
+- Total canonical: 40 (30 global, 10 project).
 
 `craft-prompting` diverges materially: the repo copy is the older CRAFT-only wording; the global copy is the newer adaptive-prompting revision. No `SKILL.md` carries a `version:` field.
 
@@ -131,7 +132,7 @@ The repo and global copies lack all of those changes. `tester.md` is 169 lines i
 
 **R-02. Role content parity.** After migration, the four repo role files must be content-identical to the v1.1.1 standalone files, including frontmatter and `permissions`. Line endings may be normalized to the repo's convention; the normalization must be recorded and applied consistently. No role text may be reworded, reordered, or "cleaned up" in this change.
 
-**R-03. Skill consolidation.** All 30 global skills must be present in the repo's canonical skills tree. The five shared skills must be deduplicated, with the newer global copy winning where the bodies differ. The nine repo-only skills must remain available to the repo but must not be installed globally. Every managed skill must carry a `global` or `project` scope in the manifest, and all license/provenance files must be preserved.
+**R-03. Skill consolidation.** All 30 global skills must be present in the repo's canonical skills tree. The five shared skills must be deduplicated, with the newer global copy winning where the bodies differ. The ten repo-only skills, including `opencode-dev`, must remain available to the repo but must not be installed globally. Every managed skill must carry a `global` or `project` scope in the manifest, and all license/provenance files must be preserved.
 
 **R-04. Manifest and versioning.** `agent-system/manifest.json` must declare the agent-system version (`2.0.0`), the role-content version (`1.1.1`), the exact plugin pin (`opencode-model-router@2.9.1`), every managed file with its SHA-256 and scope, and the canonical config fragments. The manifest must validate against a checked-in schema.
 
@@ -143,7 +144,7 @@ The repo and global copies lack all of those changes. `tester.md` is 169 lines i
 
 **R-08. Configuration merge.** The installer must preserve unrelated keys in `opencode.json` (including `update`, provider/auth settings, and other plugins), other presets and the active preset/mode in the router overrides, and all `service*.json` files. It must add or update only the canonical keys: `effort_policy.agent_operations`, the exact plugin pin, and `presets.fife`. If either configuration file is absent, the installer must create it with only the canonical keys. If `cli.json` is absent, the installer must not create it; it must verify the runtime's default permission mode instead. Writes must be atomic and validated after writing. If a file cannot be parsed, the installer must refuse, back it up, and report the parse error.
 
-**R-09. Tier and SDD coexistence.** `fast`, `medium`, and `heavy` remain plugin-registered subagents and the sole owners of model selection. The four SDD roles must not gain permission to invoke them. The Spec Writer may invoke only `explore` (allow) and `implementer`/`tester`/`qa` (ask). The Implementer may invoke only `explore`; the Tester and QA must deny all subagents. Tier selection must not alter stage authorization, approval gates, or correction limits.
+**R-09. Tier and SDD coexistence.** `fast`, `medium`, and `heavy` remain plugin-registered subagents and the sole owners of model selection. No SDD role may have an `allow` rule for `subagent` resources `fast`, `medium`, or `heavy`. The v1.1.1 permission model is: the Spec Writer may invoke `explore` (allow) and `implementer`/`tester`/`qa` (ask); the Implementer may invoke `explore` (allow) and any other subagent only with `ask`; the Tester must deny all subagents; the QA must deny all subagents by default and may invoke `explore` only with `ask`. Tier selection must not alter stage authorization, approval gates, or correction limits.
 
 **R-10. Permission gate integrity.** The default install must ensure that `ask` rules are presented. If `session.permissions` is `"autoaccept"` in `cli.json`, the installer must set it to `"prompt"` with a backup and report the change, because `autoaccept` suppresses the TUI presentation of `ask` rules. A user who explicitly opts out with `-KeepAutoAccept` must receive a warning that the `ask` gates are suppressed; the opt-out must be recorded in the installed manifest. The installer must verify that an `ask` rule is presented after the default change. It must not silently weaken any role's `permissions` block.
 
@@ -153,7 +154,7 @@ The repo and global copies lack all of those changes. `tester.md` is 169 lines i
 
 **R-13. Clean-install testability.** The installer must support `-ConfigRoot <path>` and `-AgentsOnly` so a clean install can be exercised without touching the live configuration or rebuilding the CLI. The clean-install path must create the complete agents, skills, configuration, and installed-manifest tree under the supplied root.
 
-**R-14. Runtime load verification.** After installation, `opencode debug agents` run from a directory outside the repo must list `spec-writer`, `implementer`, `tester`, and `qa` with modes `primary`, `all`, `subagent`, and `subagent`, and must show the expected permission rules. The loaded `spec-writer` system prompt must contain the v1.1.1 markers: the untrusted-material rule, `Skipped`/`Blocked`, the two-attempt retry ceiling, and the handoff `check revision`. If the command is unavailable or fails, the installer must fail the verification and preserve the command output for diagnosis.
+**R-14. Runtime load verification.** After installation, `opencode debug agents` run from a directory outside the repo must list `spec-writer`, `implementer`, `tester`, and `qa` with modes `primary`, `all`, `subagent`, and `subagent`, and must show the expected permission rules. The loaded `spec-writer` system prompt must contain the untrusted-material rule, `Skipped`/`Blocked`, the correction-cycle limit, and the handoff `check revision`. The loaded `implementer` system prompt must contain the two-attempt retry ceiling. If the command is unavailable or fails, the installer must fail the verification and preserve the command output for diagnosis.
 
 **R-15. Documentation.** `AGENTS.md:43`, `docs/local-development.md`, and the new `agent-system/README.md` must describe `update:local` as installing both the CLI and the agent system, define the source-of-truth and install-target boundaries, document install/status/rollback and the `-AgentsOnly`/`-ConfigRoot`/`-Force`/`-KeepAutoAccept` options, explain how to add or change a managed agent or skill, and state the tier/SDD boundary.
 
@@ -161,19 +162,19 @@ The repo and global copies lack all of those changes. `tester.md` is 169 lines i
 
 **R-17. Compatibility and non-regression.** The model-router plugin, its version, its model IDs, and its routing behavior must not change. The installer must verify that `opencode-model-router@2.9.1` is installed and must not silently substitute another version; a missing or mismatched plugin is a reported failure, not an automatic upgrade. The existing binary build, smoke test, archive, swap, prune, and `--version` behavior must continue to work. The existing `local:status` and `local:rollback` behavior must remain available.
 
-**R-18. Test coverage.** Manifest validation, hash generation/comparison, scope selection, JSON/JSONC merging, path mapping, backup/restore, drift detection, local-modification refusal, and clean install must have automated tests. The agent-system tests must run from their package directory (or a dedicated script that sets the correct working directory), not from the repository root. The full `bun run check` must pass.
+**R-18. Test coverage.** Manifest validation, hash generation/comparison, scope selection, JSON/JSONC merging, path mapping, backup/restore, drift detection, local-modification refusal, and clean install must have automated tests. The agent-system tests must run from their package directory (or a dedicated script that sets the correct working directory), not from the repository root. The full `bun run check` must pass, or any failure must be demonstrated to be pre-existing and unrelated to the agent-system change, with the baseline failure recorded and the agent-system package typecheck passing.
 
 ## 5. Acceptance criteria
 
 **AC-01 (R-01, R-02).** A repository search finds exactly one canonical copy of each role file under `.opencode/agents/`. Each file's content matches the corresponding v1.1.1 standalone file after the documented line-ending normalization, and the normalized SHA-256 is recorded in the manifest. No role file exists outside `.opencode/agents/` and the standalone archive, and no role file is loaded from the standalone directory.
 
-**AC-02 (R-03).** The manifest lists 39 skills: 30 with scope `global` and 9 with scope `project`. The five shared skills appear once. `craft-prompting` matches the newer global revision. Every skill directory with a `LICENSE`, `NOTICE`, or provenance file retains it.
+**AC-02 (R-03).** The manifest lists 40 skills: 30 with scope `global` and 10 with scope `project`, including `opencode-dev` as project-scoped. The five shared skills appear once. `craft-prompting` matches the newer global revision. Every skill directory with a `LICENSE`, `NOTICE`, or provenance file retains it.
 
 **AC-03 (R-04).** `bun run agent:manifest --check` validates the manifest against the schema and every declared hash. Tampering with one managed file causes a nonzero exit and names the file.
 
 **AC-04 (R-05, R-13).** Given an empty temporary directory, when `bun run agent:install -- -ConfigRoot <temp> -AgentsOnly` runs, then it exits `0` and creates `<temp>/agents/{spec-writer,implementer,tester,qa}.md`, `<temp>/skills/<30 global skills>/SKILL.md`, `<temp>/opencode.json`, `<temp>/opencode-model-router.overrides.jsonc`, and `<temp>/agent-system.installed.json`. Every installed hash matches the manifest.
 
-**AC-05 (R-14).** Given a full `bun run update:local` on a committed `dev` tree, when `opencode debug agents` runs from a directory outside the repo, then the JSON contains the four role ids with the expected modes, and the `spec-writer` permissions contain `edit * deny`, `edit .opencode/specs/** allow`, `shell * deny`, `subagent * deny`, `subagent explore allow`, and `subagent implementer|tester|qa ask`. The `spec-writer` system prompt contains the untrusted-material rule, `Skipped`/`Blocked`, the two-attempt retry ceiling, and `check revision`. If `opencode debug agents` is unavailable or fails, the installer exits nonzero and preserves the command output.
+**AC-05 (R-14).** Given a full `bun run update:local` on a committed `dev` tree, when `opencode debug agents` runs from a directory outside the repo, then the JSON contains the four role ids with the expected modes, and the `spec-writer` permissions contain `edit * deny`, `edit .opencode/specs/** allow`, `shell * deny`, `subagent * deny`, `subagent explore allow`, and `subagent implementer|tester|qa ask`. The `spec-writer` system prompt contains the untrusted-material rule, `Skipped`/`Blocked`, the correction-cycle limit, and `check revision`. The `implementer` system prompt contains the two-attempt retry ceiling. If `opencode debug agents` is unavailable or fails, the installer exits nonzero and preserves the command output.
 
 **AC-06 (R-06).** A second identical install exits `0`, changes no managed file hash, creates no new backup directory, and reports `in sync`.
 
@@ -181,7 +182,7 @@ The repo and global copies lack all of those changes. `tester.md` is 169 lines i
 
 **AC-08 (R-08).** Given an `opencode.json` containing `update: "disable"`, a provider block, and an unrelated plugin, when the installer merges, then those keys survive, `effort_policy.agent_operations` equals the canonical mapping, and the plugin pin is exactly `opencode-model-router@2.9.1`. Given a router overrides file with a different `activePreset`, other presets, and comments, when the installer merges, then the active preset, other presets, and unrelated keys survive, and `presets.fife` matches the canonical definition. When either configuration file is absent, the installer creates it with only the canonical keys. A malformed JSON/JSONC file causes a refusal, a backup, and a parse-error report.
 
-**AC-09 (R-09, R-10).** `opencode debug agents` still lists `fast`, `medium`, and `heavy`. No SDD role's permission set contains an `allow` rule for `subagent` resources `fast`, `medium`, or `heavy`. `cli.json` has `session.permissions: "prompt"`, and an `ask` rule is presented in the TUI (verified manually or with the runtime's permission test harness). The installer reports the `autoaccept` change and its backup path. If `-KeepAutoAccept` was used, the installed manifest records the opt-out and the installer prints a warning that `ask` gates are suppressed.
+**AC-09 (R-09, R-10).** `opencode debug agents` still lists `fast`, `medium`, and `heavy`. No SDD role's permission set contains an `allow` rule for `subagent` resources `fast`, `medium`, or `heavy`. The loaded permissions match the v1.1.1 model: the Implementer has `subagent * ask` and `subagent explore allow`; the Tester has `subagent * deny`; the QA has a default deny and `subagent explore ask`; the Spec Writer has the expected `explore`/`implementer`/`tester`/`qa` rules. `cli.json` has `session.permissions: "prompt"`, and an `ask` rule is presented in the TUI (verified manually or with the runtime's permission test harness). The installer reports the `autoaccept` change and its backup path. If `-KeepAutoAccept` was used, the installed manifest records the opt-out and the installer prints a warning that `ask` gates are suppressed.
 
 **AC-10 (R-11).** `bun run local:status` exits `0` after a clean install, exits `1` after a managed file is edited, exits `2` when the installed manifest is removed, and reports the CLI version, source commit, agent-system version, role-content version, drifted files, missing files, unmanaged files, and configuration drift. `--json` returns the same data in machine-readable form.
 
@@ -193,7 +194,7 @@ The repo and global copies lack all of those changes. `tester.md` is 169 lines i
 
 **AC-14 (R-17).** `git diff` shows no change to the model-router plugin, model IDs, provider configuration, or role semantics. The installer verifies the exact `opencode-model-router@2.9.1` pin and reports a mismatch instead of substituting another version. The full binary install path still builds, smoke-tests, archives, swaps, prunes, and runs `--version`.
 
-**AC-15 (R-18).** `bun run test:agent-system` passes from the repository root and delegates to the package directory that owns the tests. `bun run check` passes. The installer tests cover the asset step, `-AgentsOnly`, `-SkipAgents`, `-ConfigRoot`, and `-KeepAutoAccept`.
+**AC-15 (R-18).** `bun run test:agent-system` passes from the repository root and delegates to the package directory that owns the tests. `bun run check` passes, or the only failures are demonstrated pre-existing baseline failures unrelated to the change; the agent-system package typecheck passes. The installer tests cover the asset step, `-AgentsOnly`, `-SkipAgents`, `-ConfigRoot`, and `-KeepAutoAccept`.
 
 **AC-16 (R-04, R-05).** The installed manifest records agent-system `2.0.0`, role-content `1.1.1`, the CLI version, the source commit, and the backup path. `local:status` displays both versions.
 
@@ -230,7 +231,7 @@ The repo and global copies lack all of those changes. `tester.md` is 169 lines i
 | Tier boundary | R-09 | Parse `debug agents` JSON; assert no SDD allow rule for `fast`/`medium`/`heavy` |
 | Permission gate | R-10 | Assert `cli.json` is `prompt`; manually confirm an `ask` rule is presented; verify the `-KeepAutoAccept` warning and manifest record |
 | Secret scan | R-16 | Scan changed files for credentials; assert no `service*.json` |
-| Regression | R-17 | Existing installer tests and `bun run check` pass |
+| Regression | R-17 | Existing installer tests pass; `bun run check` passes or its only failures are demonstrated pre-existing baseline failures |
 
 ### 7.2 Runtime verification
 
@@ -420,24 +421,29 @@ Minor decisions recorded for implementation:
 
 ## 12. Approval
 
-**Decision:** Approved by user on 2026-11-05.
+**Decision:** Revision 4 approved by user on 2026-11-05.
 
-The user approved revision 2 as the requirements baseline. This approval covers the specification and decisions D-03 through D-06 in Section 11.1. It does not authorize implementation. Implementation requires a separate explicit authorization, followed by separate authorizations for testing, QA, and any correction cycle.
+Revision 3 was approved and tested. The Tester found a conflict between R-02 (role content parity with v1.1.1) and R-09 (an idealized permission model that the v1.1.1 files do not implement). Revision 4 corrects R-09 and AC-09 to describe the actual v1.1.1 permissions while preserving the invariant that no SDD role may `allow` the tier agents. It was approved on 2026-11-05 and authorizes correction cycle 1 for D-02 only. QA remains a separate approval.
 
 ## 13. Execution record
 
 **Execution status:** In progress
-**Current stage:** Implementation
-**Authorizations:** Specification approved 2026-11-05; implementation authorized 2026-11-05
-**Correction cycles:** 0
-**Implementation handoff:** Spec revision 2 (approved 2026-11-05); tree state `dev` with untracked `.opencode/specs/`; check revision `bun run check` and `bun run test:agent-system`; next owner Implementer.
+**Current stage:** Correction cycle 1 (D-02 docs fix)
+**Authorizations:** Revision 4 approved 2026-11-05; implementation authorized 2026-11-05; testing authorized 2026-11-05; correction cycle 1 authorized 2026-11-05; QA not authorized
+**Correction cycles:** 1 (authorized 2026-11-05)
+**Implementation handoff:** Spec revision 3 (approved 2026-11-05); tree state `dev` at commit `178d3d5`; checks `bun run test:agent-system` (40 tests passed), `bun run agent:manifest -- --check` (passed), `bun run check` (pre-existing `server` and `cli` typecheck failures); full-install runtime verification passed in testing; next owner Spec Writer.
+**Testing handoff:** Spec revision 3 (approved 2026-11-05); implementation commit `178d3d5`; result Failed — D-01 spec conflict (R-02 vs R-09), D-02 docs defect (`- -` vs `-- -`); 14/16 ACs passed, AC-09 literal pass with R-09 conflict, AC-12 content pass with docs defect; report `.opencode/reports/testing/2026-11-05-agent-system-consolidation.md`; next owner Spec Writer for revision 4 and correction authorization.
+**Correction handoff:** Spec revision 4 (approved 2026-11-05); implementation commit `178d3d5`; scope D-02 only (README and script-comment `- -` → `-- -`); next owner Implementer.
 
-**Provenance:** Revision 1 was produced by the build agent. Revision 2 is the Spec Writer's re-validation of that draft. No implementation work has been performed.
+**Provenance:** Revision 1 was produced by the build agent. Revision 2 was the Spec Writer's re-validation and the approved baseline. Revision 3 corrected three findings from the implementation handoff and was approved on 2026-11-05. Revision 4 corrects the permission-model description and is pending approval.
 
 | Stage | Owner | Authorization | Result | Evidence |
 |---|---|---|---|---|
 | Specification (revision 1) | Build agent | Requested by user | Superseded by revision 2 | Draft history |
 | Specification (revision 2) | Spec Writer | Approved by user, 2026-11-05 | Approved | This document |
-| Implementation | Implementer | Authorized by user, 2026-11-05 | In progress | Pending handoff |
-| Testing | Tester | Not authorized | Not started | n/a |
+| Implementation | Implementer | Authorized by user, 2026-11-05 | Complete; full-install runtime verification passed in testing; D-02 docs defect open | Commit `178d3d5`; `.opencode/reports/implementation/2026-11-05-agent-system-consolidation.md` |
+| Specification (revision 3) | Spec Writer | Approved by user, 2026-11-05 | Approved | This document |
+| Testing | Tester | Authorized by user, 2026-11-05 | Failed — D-01 spec conflict, D-02 docs defect | `.opencode/reports/testing/2026-11-05-agent-system-consolidation.md` |
+| Specification (revision 4) | Spec Writer | Approved by user, 2026-11-05 | Approved | This document |
+| Correction (cycle 1) | Implementer | Authorized by user, 2026-11-05 | In progress | Pending handoff |
 | QA | QA | Not authorized | Not started | n/a |

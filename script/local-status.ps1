@@ -1,7 +1,7 @@
 # Compares the installed local build and agent system with the current repository state.
 # Run from the repository root:
 #   bun run local:status
-#   bun run local:status - -json
+#   bun run local:status -- -json
 # Exit codes: 0 in sync, 1 drift, 2 agent system not installed, 3 error.
 
 param([switch]$Json)
