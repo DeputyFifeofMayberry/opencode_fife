@@ -97,6 +97,13 @@
 5. **Temp-root runtime verification.** A temp config root cannot reach the live managed service and the plugin is not bootstrapped there; clean-install tests skip runtime verification via `OPENCODE_AGENT_SYSTEM_SKIP_RUNTIME_VERIFY=1`. The live asset install performs the verification.
 6. **Concurrent spec revision blocked the binary install.** While the full `bun run update:local` was building, `.opencode/specs/2026-11-05-agent-system-consolidation.md` changed to an unapproved revision 3 (Draft, pending approval) that edits requirements and acceptance criteria. The installer's dirty-tree/source-fingerprint guard correctly stopped before the binary swap. The implementer role must not commit or edit that revision, so the binary layer remains uninstalled. The asset layer was installed with `-AgentsOnly` and verified. The existing installed binary is from `d44c064e22`; the migration commit `00f371f22d` does not change CLI source, so the binary is functionally equivalent. The build itself completed successfully before the guard.
 
+## Commit state
+
+- `00f371f22d` — `feat(agent-system): consolidate roles, skills, and managed install`
+- `4a4fd00188` — `fix(agent-system): handle BOM in JSON reads and record runtime evidence`
+- Working tree: `.opencode/specs/2026-11-05-agent-system-consolidation.md` is modified by a concurrent, unapproved revision 3. The implementer did not edit or commit it.
+- Not pushed.
+
 ## Next action
 
 The Spec Writer or user must decide on revision 3: approve and commit it, or restore revision 2 and set the revision aside. Then run `bun run update:local` from the clean `dev` tree to install the binary layer. No further implementation change is required for the asset layer.
