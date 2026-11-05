@@ -63,7 +63,7 @@
 | Agent-system typecheck | `bun check -p tsconfig.json` in `script/agent-system` | No type errors in 14 files | Passed |
 | Manifest check | `bun run agent:manifest -- --check` | 4 agents, 30 global, 10 project, 222 files; no errors | Passed |
 | Tamper detection | `manifest.test.ts` copies the repo and edits one file | Error names `.opencode/agents/spec-writer.md` | Passed |
-| Clean install | `bun run agent:install -- -ConfigRoot <temp> -AgentsOnly` | 4 agents, 30 global skill dirs, config files, installed manifest; project skills absent | Passed |
+| Clean install | `bun run agent:install -- -ConfigRoot <temp> -AgentsOnly` | Exit 0; 4 agents, 30 global skill dirs, `opencode.json`, router overrides, installed manifest; project skills absent | Passed |
 | Idempotence | Second identical install | `in sync`, no new backup | Passed |
 | Local-modification refusal | Edit a managed file, install without `-Force` | Exit 1, names `agents/spec-writer.md`, file unchanged | Passed |
 | `-Force` | Install with `-Force` | Replaces and backs up the edited file | Passed |
@@ -79,7 +79,7 @@
 | Line-ending stability | Manifest hash normalization; `--check` after regeneration | 222 files; 51 pre-existing CRLF project-skill hashes normalized; check passes | Passed |
 | Shared skills | SHA-256 vs global copies | All five match | Passed |
 | License/provenance | File existence | `humanizer_fife/LICENSE`, `craft-prompting/evals/provenance.json`, references preserved | Passed |
-| Secret scan | Regex scan of changed files for key/token patterns | No matches; no `service*.json` tracked | Passed |
+| Secret scan | Regex scan of 253 tracked managed files for key/token patterns | No matches; no `service*.json` tracked; no absolute paths in managed files | Passed |
 | Lint | `bun run lint` (part of `bun run check`) | 1348 warnings, 0 errors; `sdk-docs` 0 problems | Passed |
 | Full typecheck | `bun run check` | `@opencode/server#typecheck` failed with 90 errors in 34 `packages/server/test` files unchanged from HEAD | Failed (pre-existing baseline) |
 | Runtime load | `opencode debug agents` outside the repo after `-AgentsOnly` install | 15 agents; four roles with modes `primary`/`all`/`subagent`/`subagent`; tiers `fast`/`medium`/`heavy`; permission rules and v1.1.1 markers present; no errors | Passed |
@@ -101,6 +101,8 @@
 
 - `00f371f22d` — `feat(agent-system): consolidate roles, skills, and managed install`
 - `4a4fd00188` — `fix(agent-system): handle BOM in JSON reads and record runtime evidence`
+- `c1c7c314a8` — `docs(agent-system): record commit state and runtime evidence`
+- `5c8511dc5e` — `test(agent-system): use non-secret placeholder values`
 - Working tree: `.opencode/specs/2026-11-05-agent-system-consolidation.md` is modified by a concurrent, unapproved revision 3. The implementer did not edit or commit it.
 - Not pushed.
 
