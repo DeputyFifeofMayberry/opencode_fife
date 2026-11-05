@@ -162,10 +162,12 @@ value, records the opt-out, and warns that the TUI suppresses `ask` prompts.
 
 `fast`, `medium`, and `heavy` are plugin-registered subagents and the sole owners of
 model selection. The four SDD roles keep their own subagent permissions and stage
-gates. The Spec Writer may invoke only `explore` (allow) and `implementer`/`tester`/`qa`
-(ask). The Implementer may invoke only `explore`. The Tester and QA deny all
-subagents. Tier selection does not alter stage authorization, approval gates, or
-correction limits.
+gates. The Spec Writer may invoke `explore` (allow) and `implementer`/`tester`/`qa`
+(ask). The Implementer may invoke `explore` (allow) and any other subagent only with
+`ask`. The Tester denies all subagents. The QA denies all subagents by default and may
+invoke `explore` only with `ask`. No SDD role may `allow` `fast`, `medium`, or `heavy`.
+Tier selection does not alter stage authorization, approval gates, or correction
+limits.
 
 ## Security boundaries
 
@@ -194,14 +196,12 @@ For a clean-install test without the managed-service port conflict, set
 The full `update:local` runs `opencode debug agents` against the live config and fails
 the install if the four roles, modes, permissions, or v1.1.1 markers are missing.
 
-## Known specification discrepancies
+## Skill inventory and verification markers
 
-- The approved specification records 14 repository skills and 9 repo-only skills. The
-  repository actually contains 15 skills and 10 repo-only skills; the list omits
-  `opencode-dev`. The consolidation preserves it as a project-scoped skill, producing
-  30 global + 10 project = 40 managed skills. Deleting a working skill to match the
-  count would violate the preservation requirement.
-- The specification's AC-05 says the `spec-writer` system prompt contains the
-  two-attempt retry ceiling. In v1.1.1 that ceiling is in `implementer.md`; the
-  installer verifies it there and verifies the untrusted-material rule,
-  `Skipped`/`Blocked`, and `check revision` in `spec-writer.md`.
+The approved specification records 15 repository skills: 10 project-scope skills,
+including `opencode-dev`, and 5 shared skills. The managed library totals 40 skills:
+30 global and 10 project.
+
+The installer verifies the untrusted-material rule, `Skipped`/`Blocked`, the
+correction-cycle limit, and the handoff `check revision` in the `spec-writer` system
+prompt. It verifies the two-attempt retry ceiling in the `implementer` system prompt.

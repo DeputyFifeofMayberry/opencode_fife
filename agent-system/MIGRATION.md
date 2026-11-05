@@ -37,15 +37,11 @@ and evaluation assets are preserved.
 not managed. The repository's pre-existing ignored `__pycache__` files were left in
 place and are not installed.
 
-## Inventory discrepancy
+## Inventory
 
-The approved specification records 14 repository skills and 9 repo-only skills. The
-repository actually contains 15 skills and 10 repo-only skills: the specification's
-list omits `opencode-dev`, which `AGENTS.md` references as a project skill. The
-consolidation preserves it as a project-scoped skill, producing 30 global + 10
-project = 40 managed skills. Deleting a working skill to match the specification's
-count would violate the preservation requirement, so the discrepancy is recorded
-here and in the implementation report.
+The approved specification records 15 repository skills: 10 project-scope skills,
+including `opencode-dev`, and 5 shared skills. The consolidation produces 30 global +
+10 project = 40 managed skills.
 
 ## Secrets
 
