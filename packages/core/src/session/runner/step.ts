@@ -8,7 +8,7 @@ import {
   type ToolCall,
 } from "@opencode/ai/effect"
 import type { Agent } from "@opencode/schema/agent"
-import { Cause, Clock, Data, Effect, Exit, Fiber, Option, Semaphore, Stream } from "effect"
+import { Cause, Clock, Data, Effect, Exit, Fiber, Option, Scope, Semaphore, Stream } from "effect"
 import { SessionError } from "@opencode/schema/session-error"
 import { Bus } from "../../bus.js"
 import { Config } from "../../config.js"
@@ -26,6 +26,7 @@ import { SessionEvent } from "../event.js"
 import { SessionMessage } from "../message.js"
 import { SessionModelRequest } from "../model-request.js"
 import { SessionSchema } from "../schema.js"
+import { WorkspaceGate } from "../workspace-gate.js"
 import { toSessionError } from "../to-session-error.js"
 import { SessionUsage } from "../usage.js"
 import { SessionRunnerModel } from "./model.js"
@@ -144,8 +145,9 @@ export const make = Effect.gen(function* () {
                   typeof command === "string" &&
                   EffortEvidence.matchVerifier(command, settings?.verification_commands ?? []) !== undefined
                 const mutates = !verifier && (configured || event.name === "shell")
+                const deferredShell = event.name === "shell" && (settings?.verification_commands?.length ?? 0) > 0
                 const work = Effect.gen(function* () {
-                  if (mutates) yield* efforts.bumpWorkspaceRevision(input.sessionID)
+                  if (mutates && !deferredShell) yield* efforts.bumpWorkspaceRevision(input.sessionID)
                   yield* restore(executeTool(event)).pipe(
                     Effect.flatMap(toolOutput.truncate),
                     Effect.flatMap((outcome) =>
@@ -165,9 +167,41 @@ export const make = Effect.gen(function* () {
                     ),
                   )
                 })
-                if ((event.name === "shell" || configured) && (settings?.verification_commands?.length ?? 0) > 0)
+                if (deferredShell) {
+                  yield* restore(
+                    Effect.scoped(
+                      Effect.gen(function* () {
+                        const scope = yield* Scope.Scope
+                        let held = false
+                        yield* Scope.addFinalizer(scope, Effect.suspend(() =>
+                          held ? workspaceLock.release(1).pipe(Effect.asVoid) : Effect.void,
+                        ))
+                        const enter = Effect.uninterruptibleMask((restore) =>
+                          Effect.gen(function* () {
+                            if (held) return
+                            yield* restore(workspaceLock.take(1))
+                            held = true
+                            // A verifier may have completed while authorization was pending.
+                            if (mutates) yield* efforts.bumpWorkspaceRevision(input.sessionID)
+                          }),
+                        )
+                        const leave = Effect.uninterruptible(Effect.suspend(() => {
+                          if (!held) return Effect.void
+                          held = false
+                          return workspaceLock.release(1).pipe(Effect.asVoid)
+                        }))
+                        yield* enter
+                        yield* work.pipe(Effect.provideService(WorkspaceGate.Current, { enter, leave }))
+                      }),
+                    ),
+                  )
+                  return
+                }
+                if (configured && (settings?.verification_commands?.length ?? 0) > 0) {
                   yield* restore(workspaceLock.withPermit(Effect.uninterruptible(work)))
-                else yield* work
+                  return
+                }
+                yield* work
               }),
             ).pipe(Effect.forkScoped),
           })

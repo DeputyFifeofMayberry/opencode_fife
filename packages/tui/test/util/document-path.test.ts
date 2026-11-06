@@ -21,6 +21,21 @@ test("leaves a path that does not exist untouched", () => {
   expect(linkifyDocumentPaths("see docs/missing.md for details", options)).toBe("see docs/missing.md for details")
 })
 
+test("continues displaying and finding paths when a file check fails", () => {
+  const unavailable = {
+    cwd,
+    exists: (value: string) => {
+      if (normalize(value).endsWith("docs/unavailable.md")) throw new Error("EUNKNOWN: stat failed")
+      return exists(value)
+    },
+  }
+  const content = "see docs/unavailable.md and docs/plan.md"
+  expect(linkifyDocumentPaths(content, unavailable)).toBe(
+    "see docs/unavailable.md and [docs/plan.md](file:///Y:/CodingProjects/opencode_fife/docs/plan.md)",
+  )
+  expect(lastDocumentPath([{ text: "docs/plan.md then docs/unavailable.md" }], unavailable)).toBe(planAbsolute)
+})
+
 test("leaves a path inside a fenced code block untouched", () => {
   const content = ["```", "docs/plan.md", "```"].join("\n")
   expect(linkifyDocumentPaths(content, options)).toBe(content)

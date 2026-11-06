@@ -11,6 +11,7 @@ import { Config } from "../../config.js"
 import { Job } from "../../job.js"
 import { FileAccess } from "../../file-access.js"
 import { Permission } from "../../permission.js"
+import { WorkspaceGate } from "../../session/workspace-gate.js"
 import { NonNegativeInt } from "../../schema.js"
 import { Session } from "../../session.js"
 import { AutoBackground } from "../../session/auto-background.js"
@@ -141,6 +142,8 @@ export const Plugin = {
           agent: context.agent,
           source,
         })
+      const gate = yield* WorkspaceGate.Current
+      yield* gate.enter
       // Approval can outlive the directory, so validate immediately before spawning.
       const workdir = yield* Environment.typeFollowing(environment.files, target.absolute).pipe(
         Effect.catchTag("Environment.NotFound", () =>
@@ -212,6 +215,8 @@ export const Plugin = {
                     invocation.env.OPENCODE = "1"
                     invocation.env.AI_AGENT ||= "opencode"
                     invocation.env.OPENCODE_SESSION_ID = context.sessionID
+                    const gate = yield* WorkspaceGate.Current
+                    yield* gate.leave
                     finalTimeout = yield* prepare(invocation, context)
                   }),
               )

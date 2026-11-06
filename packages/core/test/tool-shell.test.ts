@@ -28,6 +28,7 @@ import { SessionEvent } from "@opencode/core/session/event"
 import { SessionExecution } from "@opencode/core/session/execution"
 import { SessionMessage } from "@opencode/core/session/message"
 import { SessionStore } from "@opencode/core/session/store"
+import { WorkspaceGate } from "@opencode/core/session/workspace-gate"
 import { Permission } from "@opencode/core/permission"
 import { PermissionSaved } from "@opencode/core/permission/saved"
 import { Plugin } from "@opencode/core/plugin"
@@ -800,6 +801,95 @@ describe("ShellTool ordinary shell syntax", () => {
 })
 
 describe("ShellTool", () => {
+  permissionIt.live(
+    "permits another shell while a real approval request remains pending",
+    () =>
+      Effect.acquireUseRelease(
+        Effect.promise(() => tmpdir()),
+        (tmp) =>
+          withSession(tmp.path, (registry) =>
+            Effect.gen(function* () {
+              const agents = yield* Agent.Service
+              const permission = yield* Permission.Service
+              const bus = yield* Bus.Service
+              yield* agents.transform((editor) =>
+                editor.update(toolIdentity.agent, (agent) => {
+                  agent.permissions = [
+                    { action: "shell", resource: "*", effect: "allow" },
+                    { action: "shell", resource: "echo first", effect: "ask" },
+                  ]
+                }),
+              )
+              const requests = yield* Queue.unbounded<Permission.Request>()
+              yield* bus.subscribe(Permission.Event.Asked).pipe(
+                Stream.runForEach((event) => Queue.offer(requests, event.data)),
+                Effect.forkScoped({ startImmediately: true }),
+              )
+              const entries: string[] = []
+              const run = (command: string) =>
+                executeTool(registry, call({ command }, command)).pipe(
+                  Effect.provideService(WorkspaceGate.Current, {
+                    enter: Effect.sync(() => { entries.push(command) }),
+                    leave: Effect.void,
+                  }),
+                )
+              const first = yield* run("echo first").pipe(Effect.forkChild)
+              const request = yield* Queue.take(requests)
+              expect(request.resources).toEqual(["echo first"])
+              expect((yield* run("echo second")).status).toBe("completed")
+              expect(entries).toEqual(["echo second"])
+              expect(yield* permission.forSession(sessionID)).toEqual([request])
+              yield* permission.reply({ requestID: request.id, reply: "once" })
+              expect((yield* Fiber.join(first)).status).toBe("completed")
+              expect(entries).toEqual(["echo second", "echo first"])
+            }),
+          ),
+        (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]().then(() => undefined)),
+      ),
+    { timeout: 15_000 },
+  )
+
+  it.live("enters the workspace gate only after shell permission is granted", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        return withSession(tmp.path, (registry) =>
+          Effect.gen(function* () {
+            const waiting = yield* Deferred.make<void>()
+            const approve = yield* Deferred.make<void>()
+            const entries: string[] = []
+            afterPermission = (input) =>
+              input.resources.some((resource) => resource.includes("first"))
+                ? Deferred.succeed(waiting, undefined).pipe(Effect.andThen(Deferred.await(approve)))
+                : Effect.void
+            const run = (command: string) =>
+              executeTool(registry, call({ command }, command)).pipe(
+                Effect.provideService(WorkspaceGate.Current, {
+                  enter: Effect.sync(() => { entries.push(command) }),
+                  leave: Effect.void,
+                }),
+              )
+            const first = yield* run("echo first").pipe(Effect.forkChild)
+            yield* Deferred.await(waiting)
+            const second = yield* run("echo second")
+            expect(second.status).toBe("completed")
+            expect(entries).toEqual(["echo second"])
+            yield* Deferred.succeed(approve, undefined)
+            expect((yield* Fiber.join(first)).status).toBe("completed")
+            expect(entries).toEqual(["echo second", "echo first"])
+            reset()
+            denyAction = "shell"
+            expect((yield* run("echo denied")).status).toBe("error")
+            expect(entries).toEqual(["echo second", "echo first"])
+          }),
+        ).pipe(Effect.ensuring(Effect.sync(reset)))
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]().then(() => undefined)),
+    ),
+    { timeout: 15_000 },
+  )
+
   it.live("returns both parallel CodeMode shell results", () =>
     Effect.acquireUseRelease(
       Effect.promise(() => tmpdir()),
