@@ -1,6 +1,6 @@
 import { TextAttributes, type ScrollBoxRenderable } from "@opentui/core"
 import { useKeyboard, useTerminalDimensions } from "@opentui/solid"
-import { createMemo, createSignal, onMount, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, onMount, Show } from "solid-js"
 import path from "node:path"
 import { openPath } from "@opencode/util/open"
 import { useConfig } from "../config"
@@ -26,6 +26,15 @@ export function DialogDocument(props: { path: string; onBack?: () => void }) {
   let scroll: ScrollBoxRenderable | undefined
 
   const title = createMemo(() => path.basename(props.path))
+  const width = createMemo(() =>
+    Math.min(dimensions().width - 2, Math.max(dialogWidth("medium"), Math.floor(dimensions().width * 0.75))),
+  )
+  // Fixed body height so short documents still fill the box; the dialog chrome is about 6 rows.
+  const height = createMemo(() => Math.max(3, Math.floor(dimensions().height * 0.75) - 6))
+
+  dialog.setCentered(true)
+  createEffect(() => dialog.setWidth(width()))
+
   const back = () => {
     if (props.onBack) return props.onBack()
     dialog.clear()
@@ -38,7 +47,10 @@ export function DialogDocument(props: { path: string; onBack?: () => void }) {
       .catch((error: unknown) => setFailure(error instanceof Error ? error.message : String(error)))
   })
 
-  const open = () => void openPath(props.path).catch(toast.error)
+  const open = () =>
+    void openPath(props.path)
+      .then(() => toast.show({ variant: "success", message: `Opened ${title()}` }))
+      .catch(toast.error)
   const copy = () => {
     void clipboard
       .write(props.path)
@@ -91,11 +103,7 @@ export function DialogDocument(props: { path: string; onBack?: () => void }) {
               </text>
             }
           />
-          <FilePath
-            value={props.path}
-            maxWidth={Math.min(dialogWidth(dialog.size), dimensions().width - 2) - DIALOG_INSET * 2}
-            fg={theme.text.muted}
-          />
+          <FilePath value={props.path} maxWidth={width() - DIALOG_INSET * 2} fg={theme.text.muted} />
         </box>
       }
       footer={{ actions: { primary: actions() } }}
@@ -103,7 +111,7 @@ export function DialogDocument(props: { path: string; onBack?: () => void }) {
     >
       <scrollbox
         ref={(element: ScrollBoxRenderable) => (scroll = element)}
-        maxHeight={20}
+        height={height()}
         contentOptions={{ minHeight: 0 }}
         scrollbarOptions={{ visible: false }}
         scrollAcceleration={getScrollAcceleration(config)}

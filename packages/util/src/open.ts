@@ -7,6 +7,11 @@ export function openUrl(input: string) {
   return open(url.href)
 }
 
-export function openPath(path: string) {
-  return open(path)
+export async function openPath(path: string) {
+  const subprocess = await open(path)
+  // The launcher resolves before the child exits on macOS and Linux, leaving exitCode null.
+  // Windows resolves on child close, so a non-zero code is the only failure signal available.
+  if (typeof subprocess.exitCode === "number" && subprocess.exitCode !== 0)
+    throw new Error(`Failed to open ${path} (exit code ${subprocess.exitCode})`)
+  return subprocess
 }

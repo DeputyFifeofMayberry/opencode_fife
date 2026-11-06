@@ -36,6 +36,8 @@ export function dialogWidth(size: DialogSize) {
 export function Dialog(
   props: ParentProps<{
     size?: DialogSize
+    /** Overrides the width derived from `size`. Used by dialogs that size themselves to the terminal. */
+    width?: number
     centered?: boolean
     onClose: () => void
   }>,
@@ -70,6 +72,7 @@ export function Dialog(
         backgroundColor={RGBA.fromInts(0, 0, 0, 150)}
       >
         <box
+          id="dialog-panel"
           onMouseUp={(e: { stopPropagation(): void }) => {
             // A selection release must bubble up to the copy-on-select handler in
             // DialogProvider; the backdrop's dismiss flag keeps it from closing the dialog.
@@ -77,7 +80,7 @@ export function Dialog(
             dismiss = false
             e.stopPropagation()
           }}
-          width={dialogWidth(props.size ?? "medium")}
+          width={props.width ?? dialogWidth(props.size ?? "medium")}
           maxWidth={dimensions().width - 2}
           backgroundColor={theme.background.base}
           paddingTop={1}
@@ -311,6 +314,7 @@ function init() {
       key?: unknown
     }[],
     size: "medium" as DialogSize,
+    width: undefined as number | undefined,
     centered: false,
   })
 
@@ -392,6 +396,7 @@ function init() {
       }
       batch(() => {
         setStore("size", "medium")
+        setStore("width", undefined)
         setStore("centered", false)
         setStore("stack", [])
       })
@@ -407,6 +412,7 @@ function init() {
       }
       batch(() => {
         setStore("size", options?.size ?? "medium")
+        setStore("width", undefined)
         setStore("centered", false)
         setStore("stack", [
           {
@@ -423,6 +429,9 @@ function init() {
     get size() {
       return store.size
     },
+    get width() {
+      return store.width
+    },
     get centered() {
       return store.centered
     },
@@ -431,6 +440,9 @@ function init() {
     },
     setSize(size: "medium" | "large" | "xlarge") {
       setStore("size", size)
+    },
+    setWidth(width: number | undefined) {
+      setStore("width", width)
     },
     setCentered(centered: boolean) {
       setStore("centered", centered)
@@ -470,7 +482,12 @@ export function DialogProvider(props: ParentProps) {
         }
       >
         <Show when={value.stack.length}>
-          <Dialog onClose={() => value.clear()} size={value.size} centered={value.centered}>
+          <Dialog
+            onClose={() => value.clear()}
+            size={value.size}
+            width={value.width}
+            centered={value.centered}
+          >
             {/* Render each entry once: inserting the element function directly would re-run it, remounting
                 the dialog with fresh state, whenever a signal it reads at its root (e.g. a top-level <Show>) changes. */}
             <Show when={value.stack.at(-1)} keyed>
