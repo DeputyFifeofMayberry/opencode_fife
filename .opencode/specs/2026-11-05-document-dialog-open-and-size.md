@@ -117,7 +117,8 @@ The toast must use the existing `useToast()` API (`packages/tui/src/ui/toast.tsx
 | Specification | — | Approved, revision 1 | This document | — |
 | Implementation | Authorized 2026-11-05 | Complete (automated checks passed; AC-05 not run) | `.opencode/reports/implementation/2026-11-05-document-dialog-open-and-size.md` | Tester |
 | Testing | Authorized 2026-11-05 | Complete: AC-01–AC-04 passed; AC-05 not run; full TUI suite has 5 pre-existing failures confirmed on baseline; root check passed | `.opencode/reports/testing/2026-11-05-document-dialog-open-and-size.md` | — |
-| Correction 1 | Authorized 2026-11-05 | In progress | Tester finding: `dialog-document.test.tsx` leaves `mock.module` unrestored | Implementer |
-| QA | Not authorized | Not started | — | QA |
+| Correction 1 | Authorized 2026-11-05 | Complete: mock restored, `failure` reset per test, committed `eac33b3560` | Commit `eac33b3560 fix(tui): open documents reliably and enlarge the preview dialog` | — |
+| Local install | Authorized 2026-11-05 | CLI installed `0.0.0-dev-20261105.213645` from `eac33b356018`; agent assets 54/54 in sync; runtime verify failed with `Location plugins did not finish activating` | `bun run local:status`; `agent-system.verify.log` | User (live check) |
+| QA | Not authorized | Not started | AC-05 live check pending | QA |
 
 Correction cycles used: 0 of 2.
