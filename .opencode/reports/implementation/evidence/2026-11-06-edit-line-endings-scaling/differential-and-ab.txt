@@ -1,0 +1,18 @@
+Date: 2026-11-06
+
+Differential check (temporary script outside the repository):
+  bun run C:\Users\barne\AppData\Local\Temp\opencode\edit-endings-differential.ts
+  matched 50000 random cases
+  matched 5 fixed cases
+
+The random generator varied region line count (0-8), line text (including empty, trailing spaces, tabs,
+Unicode typography), endings (CRLF/LF mix, optional trailing ending), replacement line count (0-8), and
+replacement line text. Fallback was lineEnding(region, "\n"), the production caller's contract. The
+original algorithm was inlined in the temporary script; the optimized function was imported from
+packages/core/src/tool/plugin/edit-endings.ts. Every case matched byte-for-byte.
+
+A/B micro-benchmark (warm, repeated calls; same temporary directory):
+  mixed 1000 all changed: original 3.15 ms, optimized 2.89 ms, ratio 0.92
+  mixed 5000 all changed: original 76.95 ms, optimized 66.32 ms, ratio 0.86
+  mixed 5000 one changed: original 122.86 ms, optimized 36.01 ms, ratio 0.29
+  uniform CRLF 10000: original 314.78 ms, optimized 0.75 ms, ratio 0.00
