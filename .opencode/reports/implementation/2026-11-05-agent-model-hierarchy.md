@@ -3,7 +3,7 @@
 **Spec:** `.opencode/specs/2026-11-05-agent-model-hierarchy.md` (Revision 2, Approved 2026-11-05)
 **Stage:** Initial implementation (authorized by user 2026-11-05)
 **Status:** Implemented — ready for independent testing, except the live runtime install (R-10/AC-10), which needs a commit and explicit install authorization
-**Branch:** `dev` @ `1fe5f42` (committed; installing to the live config)
+**Branch:** `dev` — feature commit `1fe5f42`, installed and verified live
 **Next owner:** Spec Writer for Tester dispatch
 
 ## 1. Requirement status
@@ -19,7 +19,7 @@
 | R-07 Deny preservation | Implemented | No deny rule relaxed; installer asserts the matrix and the spec-writer edit/shell denies |
 | R-08 Installer and manifest | Implemented | Versions 2.1.0 / 1.2.0; manifest regenerated and `--check` passes; clean install + idempotence verified |
 | R-09 Documentation | Implemented | Five files updated; verification claim corrected to match `--standalone` reality |
-| R-10 Runtime verification | **Blocked** | Requires a committed tree and `bun run update:local`; not authorized (see §5) |
+| R-10 Runtime verification | Implemented and verified live | `bun run update:local` installed CLI `0.0.0-dev-20261105.164027` and agent system 2.1.0; see §3b |
 | R-11 Non-regression | Partial | `test:agent-system` 43/43 pass; `bun run check` result recorded in §3 |
 | R-12 Session-start integrity | Implemented (prompt + tool) | New Spec Writer section and read-only git permissions; `worktree_create` extended with `from`, `base`, and `branch` (new branch), backed by `CreateInput.newBranch` |
 
@@ -92,6 +92,24 @@ The stash was restored with `git stash pop` and the working tree verified intact
 No new error originates in a file this change modifies. The CLI improvement comes from the
 required client regeneration, not from a hand edit.
 
+### 3b. Live install and runtime verification
+
+`bun run update:local` on committed `dev` installed CLI `0.0.0-dev-20261105.164027` and agent
+system 2.1.0 / role content 1.2.0, permission mode `autoaccept`. The installer's own runtime
+assertions passed. Independent checks against the live config root:
+
+| Check | Result |
+|---|---|
+| `opencode debug agents --standalone` from outside the repo | 14 agents, **no `plan`** |
+| Role modes | `spec-writer` primary, `implementer` all, `tester` subagent, `qa` subagent |
+| Resolved models | `explore`→`vercel/minimax/minimax-m3.1-flash#medium`; `qa`→`vercel/openai/gpt-6.1-terra#high`; `fast`/`medium`/`heavy` at preset; `spec-writer`/`implementer`/`tester`/`build`/`general` inherit the default |
+| Tier access matrix | `spec-writer`: `*` deny, explore+fast allow, implementer/tester/qa ask. `implementer`: `*` ask, explore allow, spec-writer/tester/qa deny. `tester`: `*` deny. `qa`: explore ask only. `build`: denies the four SDD roles. `fast`/`medium`/`heavy`: `*` deny |
+| Live `opencode.json` | `model=mistral/deepseek-v4-1-flash-1017#max`, `agents.plan.disabled=true`, `experimental.subagent_depth=2`, plugin pinned `2.9.1` |
+| Live `cli.json` | `session.permissions=autoaccept`, all unrelated keys preserved |
+| Live router overrides | `activePreset=fife`, `activeMode=normal`, `subagentTiers={"explore":"fast","qa":"heavy"}`, preset `fife` intact |
+| Installed manifest | `agentSystemVersion=2.1.0`, `roleContentVersion=1.2.0`, `permissionMode=autoaccept`, `promptPermissions=false` |
+| `bun run local:status` | 54/54 managed files in sync; config in sync; installed build matches `dev` HEAD |
+
 ## 4. Blocked work — resolved
 
 **`.opencode/agents/implementer.md`** — R-05 required two edits: three `subagent` deny rules for
@@ -101,18 +119,23 @@ runtime rejected the attempt. The user directed the change and a separate write-
 applied exactly those two edits. Verified independently: the deny rules are at lines 74–83, the
 depth bullet at line 165, the manifest still validates, and `test:agent-system` passes 43/43.
 
-## 5. Not run / blocked verification
+## 5. Remaining verification gaps
 
-- **R-10 / AC-10 runtime install.** `bun run update:local` requires a committed `dev` tree. Committing and installing both need separate explicit authorization, and `AGENTS.md` says "Never install unasked". Not attempted.
-- **Nested delegation (AC-04).** Requires a live session with the new config installed. Not exercised.
-- **Live autoaccept / stage approval / denied action (AC-06, AC-07).** Require the live install. Not exercised.
-- **Spec Writer session-start behaviour (AC-12).** The prompt and permissions are in place; the behaviour was not exercised in a live session.
+The install and the agent/config checks are complete (§3b). These need an interactive TUI
+session and were not exercised:
 
-Safe substitute evidence for the above: a full clean install into an isolated config root
-with runtime verification enabled (`opencode debug agents --standalone`) passed every
-assertion, including the resolved models, the permission matrix, the absence of `plan`,
-and the prompt markers. What remains unproven is only the behaviour that needs a live
-TUI session and the real `update:local` install.
+- **AC-04 nested delegation.** Implementer→`explore` and QA→`explore` were not run live.
+  Depth is configured as `2` and the permissions allow it.
+- **AC-06 autoaccept prompt suppression.** The mode is `autoaccept` in the live `cli.json`;
+  the absence of a prompt was not observed interactively.
+- **AC-07 denied action.** The deny rules are present and asserted; a live blocked action was
+  not attempted.
+- **AC-12 Spec Writer session start.** The procedure and permissions are installed; a live
+  Spec Writer session performing the integrity check and worktree move was not run.
+
+The running background server was not restarted by the installer. It still runs the previous
+build until the next service restart; `--standalone` checks used the new binary and the live
+config.
 
 ## 6. Decisions and deviations
 
