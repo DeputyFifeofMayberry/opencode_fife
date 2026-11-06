@@ -20,7 +20,7 @@
 | R-08 Installer and manifest | Implemented | Versions 2.1.0 / 1.2.0; manifest regenerated and `--check` passes; clean install + idempotence verified |
 | R-09 Documentation | Implemented | Five files updated; verification claim corrected to match `--standalone` reality |
 | R-10 Runtime verification | Implemented and verified live | `bun run update:local` installed CLI `0.0.0-dev-20261105.164027` and agent system 2.1.0; live TUI checks in §3c |
-| R-11 Non-regression | Partial | `test:agent-system` 43/43 pass; `bun run check` result recorded in §3 |
+| R-11 Non-regression | Implemented | `test:agent-system` 43/43 pass; `bun run check` passes after `4e29c933dd` (see §3a) |
 | R-12 Session-start integrity | Implemented and live-verified (clean path, §3c) | New Spec Writer section and read-only git permissions; `worktree_create` extended with `from`, `base`, and `branch` (new branch), backed by `CreateInput.newBranch` |
 
 ## 2. Changed files
@@ -69,13 +69,14 @@
 | Idempotence | Second identical install | **Passed** — `in sync`, 0 changed, no backup |
 | Resolved models | `OPENCODE_CONFIG_DIR=<root> opencode debug agents --standalone` | **Passed** — `plan` absent; explore→minimax#medium; qa→terra#high; tiers preset; SDD roles and build inherit the default |
 | Tier access matrix | `debug agents` permissions | **Passed** — build denies the four SDD roles; tiers deny all subagents; spec-writer allows explore+fast and denies medium+heavy |
-| Full check | `bun run check` | **Failed — pre-existing and unrelated** (see §3a) |
+| Full check | `bun run check` | **Passed after `4e29c933dd`** — 36/36 typecheck tasks, 0 type errors, lint 0 errors (see §3a) |
 
 ### 3a. Full check result
 
-`bun run check` exits 1. The only failing task is `@opencode/server#typecheck`, in files this
-change does not touch (`packages/server/test/worktree.test.ts`, among others). The errors are
-all the same Effect type mismatch: `Request<"Requires", Service>` missing from a test environment.
+At the time of this report, `bun run check` exited 1. The only failing task was
+`@opencode/server#typecheck`, in files this change does not touch
+(`packages/server/test/worktree.test.ts`, among others). The errors were all the same Effect
+type mismatch: `Request<"Requires", Service>` missing from a test environment.
 
 **Pre-existing proof.** The tracked modifications were stashed (`git stash push` over the
 changed paths, with a `git diff` backup at `C:\Windows\Temp\impl-backup.patch`) and the
@@ -91,6 +92,11 @@ same package typechecks were run against clean `HEAD` (`69c0d41`):
 The stash was restored with `git stash pop` and the working tree verified intact.
 No new error originates in a file this change modifies. The CLI improvement comes from the
 required client regeneration, not from a hand edit.
+
+**Resolved after this report.** `4e29c933dd` provides the full application context as
+request-level services in `packages/server/src/routes.ts`, which consumes the request-level
+markers. `bun run check` now passes: 36/36 typecheck tasks, 0 type errors, lint 0 errors.
+The router-facing server tests (`integration-policy`, `fetch`, `process`) pass 17/17.
 
 ### 3b. Live install and runtime verification
 
