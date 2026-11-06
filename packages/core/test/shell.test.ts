@@ -79,6 +79,35 @@ describe("shell", () => {
   }
 
   if (process.platform === "win32") {
+    test("skips an inaccessible Windows app alias", async () => {
+      const alias = path.join(process.env.LOCALAPPDATA!, "Microsoft", "WindowsApps", "pwsh.exe")
+      const inaccessible = await fs.stat(alias).then(
+        () => false,
+        (error: NodeJS.ErrnoException) => error.code === "EACCES",
+      )
+      if (!inaccessible) return
+      const previous = process.env.PATH
+      try {
+        process.env.PATH = [
+          path.dirname(alias),
+          path.dirname(process.env.COMSPEC!),
+          path.join(process.env.SystemRoot!, "System32", "WindowsPowerShell", "v1.0"),
+        ].join(path.delimiter)
+        await withShell(alias, async () => {
+          expect(ShellSelect.name(ShellSelect.resolve({ priority: "config" }))).toBe("powershell")
+          expect(ShellSelect.name(ShellSelect.resolve({ priority: "config" }, alias))).toBe("powershell")
+          expect((await ShellSelect.list()).some((item) => item.path.toLowerCase() === alias.toLowerCase())).toBe(false)
+        })
+        await withShell(undefined, () => {
+          const shell = ShellSelect.environment()
+          expect(ShellSelect.name(shell)).toBe("powershell")
+          expect(Bun.spawnSync([shell, ...ShellSelect.args(shell, "exit 0")]).exitCode).toBe(0)
+        })
+      } finally {
+        process.env.PATH = previous
+      }
+    })
+
     test("rejects blacklisted shells case-insensitively", async () => {
       await withShell("NU.EXE", async () => {
         expect(ShellSelect.name(ShellSelect.resolve({ priority: "compat" }))).not.toBe("nu")

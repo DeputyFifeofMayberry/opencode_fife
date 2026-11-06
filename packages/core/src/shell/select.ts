@@ -53,7 +53,12 @@ export interface Interface extends State.Transformable<Editor> {
 export class Service extends Context.Service<Service, Interface>()("@opencode/ShellSelect") {}
 
 function stat(file: string) {
-  return statSync(file, { throwIfNoEntry: false }) ?? undefined
+  try {
+    return statSync(file, { throwIfNoEntry: false }) ?? undefined
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EACCES" || (error as NodeJS.ErrnoException).code === "EPERM") return
+    throw error
+  }
 }
 
 function findExecutable(name: string, bin?: string) {
@@ -102,7 +107,8 @@ function win(options?: Options, bin?: string) {
         process.env.COMSPEC || "cmd.exe",
       ]
         .filter((item): item is string => Boolean(item))
-        .map((file) => full(file, options, bin)),
+        .map((file) => full(file, options, bin))
+        .filter((file) => executable(file, options, bin)),
     ),
   )
 }
