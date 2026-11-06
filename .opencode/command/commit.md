@@ -1,6 +1,6 @@
 ---
 description: git commit and push
-model: opencode/kimi-k2.5
+model: mistral/deepseek-v4-1-flash-1017#max
 subtask: true
 ---
 
