@@ -2,7 +2,7 @@
 
 **Spec:** `.opencode/specs/2026-11-05-agent-model-hierarchy.md` (Revision 2, Approved 2026-11-05)
 **Stage:** Initial implementation (authorized by user 2026-11-05)
-**Status:** Implemented — ready for independent testing, except the live runtime install (R-10/AC-10), which needs a commit and explicit install authorization
+**Status:** Implemented — ready for independent testing; live TUI checks in §3c passed
 **Branch:** `dev` — feature commit `1fe5f42`, installed and verified live
 **Next owner:** Spec Writer for Tester dispatch
 
@@ -13,15 +13,15 @@
 | R-01 Planning consolidation | Implemented (code complete) | `agents.plan.disabled` in fragment + project config; `plan` absent from `debug agents`; effort mapping moved to `spec-writer` |
 | R-02 Default model | Implemented | `model: mistral/deepseek-v4-1-flash-1017#max` in fragment + project config; `debug agents` shows no explicit model on spec-writer/implementer/tester/build/general |
 | R-03 Tier mapping | Implemented | `subagentTiers {explore:fast, qa:heavy}` plus explicit fallback models; verified resolved models |
-| R-04 Delegation depth | Implemented | `experimental.subagent_depth: 2`; live nested delegation **not yet exercised** (see §5) |
+| R-04 Delegation depth | Implemented | `experimental.subagent_depth: 2`; live implementer → explore verified (§3c) |
 | R-05 Tier access matrix | Implemented | Config matrix implemented and asserted; `implementer.md` deny rules and depth paragraph applied |
 | R-06 Autoaccept default | Implemented | `cli.json` created with `autoaccept`; `-PromptPermissions` opt-out; `-KeepAutoAccept` removed with an explicit error |
 | R-07 Deny preservation | Implemented | No deny rule relaxed; installer asserts the matrix and the spec-writer edit/shell denies |
 | R-08 Installer and manifest | Implemented | Versions 2.1.0 / 1.2.0; manifest regenerated and `--check` passes; clean install + idempotence verified |
 | R-09 Documentation | Implemented | Five files updated; verification claim corrected to match `--standalone` reality |
-| R-10 Runtime verification | Implemented and verified live | `bun run update:local` installed CLI `0.0.0-dev-20261105.164027` and agent system 2.1.0; see §3b |
+| R-10 Runtime verification | Implemented and verified live | `bun run update:local` installed CLI `0.0.0-dev-20261105.164027` and agent system 2.1.0; live TUI checks in §3c |
 | R-11 Non-regression | Partial | `test:agent-system` 43/43 pass; `bun run check` result recorded in §3 |
-| R-12 Session-start integrity | Implemented (prompt + tool) | New Spec Writer section and read-only git permissions; `worktree_create` extended with `from`, `base`, and `branch` (new branch), backed by `CreateInput.newBranch` |
+| R-12 Session-start integrity | Implemented and live-verified (clean path, §3c) | New Spec Writer section and read-only git permissions; `worktree_create` extended with `from`, `base`, and `branch` (new branch), backed by `CreateInput.newBranch` |
 
 ## 2. Changed files
 
@@ -110,6 +110,39 @@ assertions passed. Independent checks against the live config root:
 | Installed manifest | `agentSystemVersion=2.1.0`, `roleContentVersion=1.2.0`, `permissionMode=autoaccept`, `promptPermissions=false` |
 | `bun run local:status` | 54/54 managed files in sync; config in sync; installed build matches `dev` HEAD |
 
+### 3c. Live TUI verification of the remaining gaps
+
+`termctrl` is not installed on this Windows machine. The checks ran through a disposable Bun PTY driver
+(`C:\Windows\Temp\opencode\tui-drive\drive.ts`, outside the repository). The driver starts the installed
+`opencode --standalone` (0.0.0-dev-20261105.164229) in a real ConPTY, renders the output with
+`@xterm/headless`, and asserts on the visible screen. The installed build was updated from the
+`0.0.0-dev-20261105.164027` recorded in §3b to `.164229` before these checks. The standalone server used a disposable database
+(`OPENCODE_DB=C:\Windows\Temp\opencode\tui-drive\verify.db`) and a disposable git project
+(`C:\Windows\Temp\opencode\verify-project`, branch `dev`, clean, tracking a local bare remote). No live
+session, worktree, or database was touched. The driver set `SHELL=cmd.exe` because this machine's default
+shell resolution picks the WindowsApps `pwsh.exe` execution alias, which fails with EACCES; that is a
+pre-existing environment issue, not part of this change.
+
+| Check | Procedure | Result |
+|---|---|---|
+| AC-06 autoaccept suppression | Implementer session asked to read `C:\Windows\Temp\opencode\outside.txt`, an `external_directory` `ask`. | **Passed**. The read returned `EXTERNAL_TOKEN_8842`; the screen never showed `Permission required`. Evidence: `C:\Windows\Temp\opencode\tui-drive\evidence\autoaccept-after.txt`. |
+| AC-07 denied action | Spec Writer session asked to edit `README.md`, which its `edit "*"` rule denies. | **Passed**. The edit tool returned `permission.rejected: Permission denied: edit`; README stayed unchanged; no prompt appeared. Evidence: `...\evidence\deny-after.txt`. |
+| AC-04 nested delegation | Implementer session asked to use the `explore` subagent to find a token. | **Passed**. Child session `ses_e518d1fd5fferUUOv8fN9JNGk4` has `parent_id=ses_e518d74faffeP34PJ5lwaJj84a` and `agent=explore`; the parent reported `secret.txt`. Evidence: `...\evidence\delegate-after.txt` and the disposable database query. |
+| AC-12 start check, clean path | Spec Writer session asked to start a task and run the integrity procedure. | **Passed**. It recorded the root, branch `dev`, HEAD, remote, clean status, single worktree, base in sync, and the isolation decision "Clean and unclaimed → used directly". Evidence: `...\evidence\spec-start-check.txt`. |
+| AC-10 spec approval | Spec Writer presented the spec and asked for approval. | **Passed**. The final run asked in plain text; an earlier run used a `question` form ("Approve specification" / "Request revisions"), observed in the session transcript. Autoaccept did not suppress either. Evidence: `...\evidence\spec-approval.txt` (plain-text ask). |
+| AC-10 implementation stage approval | After the spec was approved, the Spec Writer was asked to request implementation authorization. | **Passed**. It recorded the spec as `Approved`, stated that no implementation had begun, and asked for separate authorization before delegating to the Implementer. Evidence: `...\evidence\spec-stage-approval.txt`. |
+
+The live runs exposed three environment limits that do not affect the permission results:
+
+- The TUI sessions resolved to `mimo-v2.6-flash-free` (opencode provider), not the configured default
+  `mistral/deepseek-v4-1-flash-1017#max`. The model-router plugin's auto mode selected the free model.
+  The permission checks are independent of the model.
+- The `explore` agent's configured model `vercel/minimax/minimax-m3.1-flash` was unavailable at runtime.
+  The Implementer overrode it with `deepseek-v4.1-flash-free`; the nested delegation still succeeded.
+- The Spec Writer's `gh auth status` check did not run because its shell attempt was denied (the model
+  used a command outside the narrow allowlist). It completed the rest of the check with the read-only
+  git tools and direct `.git` reads. The prompt makes the `gh` check optional.
+
 ## 4. Blocked work — resolved
 
 **`.opencode/agents/implementer.md`** — R-05 required two edits: three `subagent` deny rules for
@@ -121,20 +154,23 @@ depth bullet at line 165, the manifest still validates, and `test:agent-system` 
 
 ## 5. Remaining verification gaps
 
-The install and the agent/config checks are complete (§3b). These need an interactive TUI
-session and were not exercised:
+The four gaps from the previous revision are closed for the user's pending list. AC-04
+(implementer → explore), AC-06, AC-07, AC-12 (clean path), and the stage-approval question all
+have live TUI evidence in §3c.
 
-- **AC-04 nested delegation.** Implementer→`explore` and QA→`explore` were not run live.
-  Depth is configured as `2` and the permissions allow it.
-- **AC-06 autoaccept prompt suppression.** The mode is `autoaccept` in the live `cli.json`;
-  the absence of a prompt was not observed interactively.
-- **AC-07 denied action.** The deny rules are present and asserted; a live blocked action was
-  not attempted.
-- **AC-12 Spec Writer session start.** The procedure and permissions are installed; a live
-  Spec Writer session performing the integrity check and worktree move was not run.
+Still unexercised:
+
+- **AC-12 dirty or claimed worktree.** The clean-path session chose the current worktree. A dirty
+  tree or a worktree claimed by another session was not run, so the `worktree_create` +
+  `session_move` branch has no live evidence.
+- **AC-12 missing `dev` or unreachable remote.** Not run.
+- **AC-04 QA → explore.** Only implementer → explore was exercised.
+- **Configured models at runtime.** The live sessions used `mimo-v2.6-flash-free`, and the explore
+  override used `deepseek-v4.1-flash-free`, because the configured provider models were unavailable.
+  The config-level model resolution remains as recorded in §3b.
 
 The running background server was not restarted by the installer. It still runs the previous
-build until the next service restart; `--standalone` checks used the new binary and the live
+build until the next service restart; the `--standalone` checks used the new binary and the live
 config.
 
 ## 6. Decisions and deviations
