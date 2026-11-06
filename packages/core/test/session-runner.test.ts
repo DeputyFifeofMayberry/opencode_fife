@@ -72,6 +72,7 @@ import type { Info as ToolInfo } from "@opencode/schema/tool"
 import { InstructionStateTable, SessionInboxTable, SessionMessageTable, SessionTable } from "@opencode/core/session/sql"
 import { InstructionEntry } from "@opencode/core/session/instruction-entry"
 import { SessionStore } from "@opencode/core/session/store"
+import { WorkspaceGate } from "@opencode/core/session/workspace-gate"
 import { Instructions } from "@opencode/core/instructions/index"
 import { InstructionBuiltIns } from "@opencode/core/instructions/builtins"
 import { InstructionDiscovery } from "@opencode/core/instruction-discovery"
@@ -2719,6 +2720,91 @@ describe("SessionRunnerLLM", () => {
     yield* Fiber.join(running)
     expect(executions).toEqual(["node edit.js", "pnpm typecheck"])
     expect((yield* efforts.get(sessionID))?.revision).toBe(1)
+  })
+
+  scenario("a shell before hook remains ordered against another session", function* (s) {
+    yield* insertSession(otherSessionID)
+    const waiting = yield* Deferred.make<void>()
+    const approve = yield* Deferred.make<void>()
+    const secondCalled = yield* Deferred.make<void>()
+    const executed: string[] = []
+    yield* s.bus.subscribe(SessionEvent.Tool.Called).pipe(
+      Stream.filter((event) => event.data.id === "other-session"),
+      Stream.runForEach(() => Deferred.succeed(secondCalled, undefined)),
+      Effect.forkScoped({ startImmediately: true }),
+    )
+    const hooks = yield* PluginHooks.Service
+    yield* hooks.register("tool", "execute.before", (event) =>
+      event.id === "wait-for-approval"
+        ? Deferred.succeed(waiting, undefined).pipe(Effect.andThen(Deferred.await(approve)))
+        : Effect.void,
+    )
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) => editor.add({
+      name: "shell", description: "Simulated shell", input: Schema.Struct({ command: Schema.String }),
+      output: Schema.Struct({}), options: { codemode: false },
+      execute: ({ command }) => Effect.gen(function* () {
+        executed.push(command)
+        return { output: {}, content: [{ type: "text" as const, text: "" }], metadata: { exit: 0 } }
+      }),
+    }))
+    yield* s.admit("First")
+    yield* s.session.prompt({ sessionID: otherSessionID, text: "Second", resume: false })
+    yield* s.llm.push(TestLLM.toolCall("wait-for-approval", "shell", { command: "first" }))
+    const first = yield* s.resume.pipe(Effect.forkChild)
+    yield* Deferred.await(waiting)
+    yield* s.llm.push(TestLLM.toolCall("other-session", "shell", { command: "second" }), TestLLM.stop(), TestLLM.stop())
+    const second = yield* s.session.resume(otherSessionID).pipe(Effect.forkChild)
+    yield* Deferred.await(secondCalled)
+    expect(executed).toEqual([])
+    yield* Deferred.succeed(approve, undefined)
+    yield* Fiber.join(first)
+    yield* Fiber.join(second)
+    expect(executed).toEqual(["first", "second"])
+  })
+
+  scenario("a shell awaiting authorization does not block a different session", function* (s) {
+    yield* insertSession(otherSessionID)
+    const waiting = yield* Deferred.make<void>()
+    const approve = yield* Deferred.make<void>()
+    const secondCalled = yield* Deferred.make<void>()
+    const secondRan = yield* Deferred.make<void>()
+    const executed: string[] = []
+    yield* s.bus.subscribe(SessionEvent.Tool.Called).pipe(
+      Stream.filter((event) => event.data.id === "authorized-second"),
+      Stream.runForEach(() => Deferred.succeed(secondCalled, undefined)),
+      Effect.forkScoped({ startImmediately: true }),
+    )
+    const registry = yield* Tool.Service
+    yield* registry.transform((editor) => editor.add({
+      name: "shell", description: "Shell with an authorization boundary", input: Schema.Struct({ command: Schema.String }),
+      output: Schema.Struct({}), options: { codemode: false },
+      execute: ({ command }) => Effect.gen(function* () {
+        const gate = yield* WorkspaceGate.Current
+        yield* gate.leave
+        if (command === "first") {
+          yield* Deferred.succeed(waiting, undefined)
+          yield* Deferred.await(approve)
+        }
+        yield* gate.enter
+        executed.push(command)
+        if (command === "second") yield* Deferred.succeed(secondRan, undefined)
+        return { output: {}, content: [{ type: "text" as const, text: "" }], metadata: { exit: 0 } }
+      }),
+    }))
+    yield* s.admit("First")
+    yield* s.session.prompt({ sessionID: otherSessionID, text: "Second", resume: false })
+    yield* s.llm.push(TestLLM.toolCall("authorized-first", "shell", { command: "first" }))
+    const first = yield* s.resume.pipe(Effect.forkChild)
+    yield* Deferred.await(waiting)
+    yield* s.llm.push(TestLLM.toolCall("authorized-second", "shell", { command: "second" }), TestLLM.stop(), TestLLM.stop())
+    const second = yield* s.session.resume(otherSessionID).pipe(Effect.forkChild)
+    yield* Deferred.await(secondCalled)
+    yield* Deferred.await(secondRan).pipe(Effect.timeout("5 seconds"), TestClock.withLive)
+    expect(executed).toContain("second")
+    yield* Deferred.succeed(approve, undefined)
+    yield* Fiber.join(first)
+    yield* Fiber.join(second)
   })
 
   scenario("interrupting a shell releases the workspace lock", function* (s) {
