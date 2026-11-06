@@ -38,6 +38,7 @@ export const GLOBAL_SKILLS = [
   "observability-and-instrumentation",
   "performance-optimization",
   "planning-and-task-breakdown",
+  "ponytail",
   "security-and-hardening",
   "shipping-and-launch",
   "source-driven-development",

@@ -27,7 +27,7 @@
       "source": ".opencode/agents/spec-writer.md",
       "target": "agents/spec-writer.md",
       "scope": "global",
-      "sha256": "aaad82e7d8806db99a095600daa660eb62bde4a6dd8eb10d4e19730b876ffc0c"
+      "sha256": "b02f03719575c78768162263b6b96b3da6ef178506f6831cdf632f9156ade1dd"
     },
     {
       "kind": "agent",
@@ -1684,6 +1684,14 @@
       "target": "skills/planning-and-task-breakdown/SKILL.md",
       "scope": "global",
       "sha256": "ed0f90cc5951ddd4bcab7f871f64efec93a49af9279ef93bc470da77ad8da3f7"
+    },
+    {
+      "kind": "skill",
+      "name": "ponytail",
+      "source": ".opencode/skills/ponytail/SKILL.md",
+      "target": "skills/ponytail/SKILL.md",
+      "scope": "global",
+      "sha256": "9badd22a32e19cb884e46dfa8d3aae82bb81dfa5484105b8b4f0262df823a509"
     },
     {
       "kind": "skill",
