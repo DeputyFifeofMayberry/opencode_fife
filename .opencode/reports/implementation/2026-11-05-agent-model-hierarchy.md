@@ -3,7 +3,7 @@
 **Spec:** `.opencode/specs/2026-11-05-agent-model-hierarchy.md` (Revision 2, Approved 2026-11-05)
 **Stage:** Initial implementation (authorized by user 2026-11-05)
 **Status:** Implemented — ready for independent testing, except the live runtime install (R-10/AC-10), which needs a commit and explicit install authorization
-**Branch:** `dev` @ `69c0d41` (working tree modified, uncommitted)
+**Branch:** `dev` @ `1fe5f42` (committed; installing to the live config)
 **Next owner:** Spec Writer for Tester dispatch
 
 ## 1. Requirement status
