@@ -48,7 +48,7 @@ export type InstallOptions = {
   root?: string
   configRoot?: string
   force?: boolean
-  keepAutoAccept?: boolean
+  promptPermissions?: boolean
   runtimeVerify?: boolean
   requireTiers?: boolean
   now?: Date
@@ -62,7 +62,7 @@ export type InstallResult = {
   warnings: string[]
   backupPath: string | null
   permissionMode: "prompt" | "autoaccept" | "default"
-  keepAutoAccept: boolean
+  promptPermissions: boolean
   plugin: string
   inSync: boolean
   installedManifest: InstalledManifest
@@ -94,7 +94,7 @@ export async function installAgentSystem(options: InstallOptions = {}): Promise<
   const manifest = await loadManifest(root)
   const installed = readInstalledManifest(configRoot)
   const force = options.force ?? false
-  const keepAutoAccept = options.keepAutoAccept ?? false
+  const promptPermissions = options.promptPermissions ?? false
 
   const fileActions: FileAction[] = []
   const conflicts: string[] = []
@@ -104,7 +104,7 @@ export async function installAgentSystem(options: InstallOptions = {}): Promise<
     else fileActions.push(action.action)
   }
 
-  const configPlan = await planConfig(root, configRoot, manifest, keepAutoAccept)
+  const configPlan = await planConfig(root, configRoot, manifest, promptPermissions)
   const parseErrors = configPlan.parseErrors
   if (parseErrors.length > 0) {
     const requests: BackupRequest[] = []
@@ -153,9 +153,6 @@ export async function installAgentSystem(options: InstallOptions = {}): Promise<
 
   const permissionMode = configPlan.permissionMode
   const warnings = [...configPlan.warnings]
-  if (keepAutoAccept && permissionMode === "autoaccept") {
-    warnings.push("WARNING: -KeepAutoAccept keeps session.permissions at autoaccept; SDD ask gates are suppressed.")
-  }
 
   try {
     for (const action of changedFiles) {
@@ -170,7 +167,7 @@ export async function installAgentSystem(options: InstallOptions = {}): Promise<
       installedAt: now.toISOString(),
       backupPath,
       permissionMode,
-      keepAutoAccept,
+      promptPermissions,
     })
     writeJsonAtomic(join(configRoot, "agent-system.installed.json"), installedManifest)
     await validateInstalled(configRoot, root, manifest, installedManifest)
@@ -179,7 +176,7 @@ export async function installAgentSystem(options: InstallOptions = {}): Promise<
       await verifyRuntime(configRoot, {
         requireTiers: options.requireTiers ?? configRoot === resolveConfigRoot(),
         permissionMode,
-        keepAutoAccept,
+        promptPermissions,
       })
     }
     const unmanaged = scanUnmanaged(configRoot, manifest)
@@ -195,7 +192,7 @@ export async function installAgentSystem(options: InstallOptions = {}): Promise<
       warnings,
       backupPath,
       permissionMode,
-      keepAutoAccept,
+      promptPermissions,
       plugin: PLUGIN_PIN,
       inSync: changedFiles.length === 0 && changedConfigs.length === 0,
       installedManifest,
@@ -233,7 +230,7 @@ async function planFile(configRoot: string, file: ManifestFile, installed: Insta
   return { action: { file, target, action: "replace" as const, backup: true, targetHash } }
 }
 
-async function planConfig(root: string, configRoot: string, manifest: Manifest, keepAutoAccept: boolean) {
+async function planConfig(root: string, configRoot: string, manifest: Manifest, promptPermissions: boolean) {
   const opencodePath = join(configRoot, "opencode.json")
   const routerPath = join(configRoot, "opencode-model-router.overrides.jsonc")
   const cliPath = join(configRoot, "cli.json")
@@ -307,28 +304,23 @@ async function planConfig(root: string, configRoot: string, manifest: Manifest, 
     })
   }
 
-  if (existsSync(cliPath)) {
-    const currentHash = await sha256File(cliPath)
-    try {
-      const current = readJsonFile(cliPath)
-      const merged = mergeCliPermissions(current, keepAutoAccept)
-      warnings.push(...merged.warnings)
-      permissionMode = merged.action === "kept" ? "autoaccept" : merged.action === "default" ? "default" : "prompt"
-      actions.push({
-        path: "cli.json",
-        target: cliPath,
-        action: merged.changed ? "replace" : "unchanged",
-        content: `${JSON.stringify(merged.value, null, 2)}\n`,
-        backup: merged.changed,
-        currentHash,
-      })
-    } catch (error) {
-      parseErrors.push({ path: "cli.json", message: error instanceof Error ? error.message : String(error) })
-    }
-  } else {
-    warnings.push(
-      "cli.json is absent; the installer does not create it. The runtime default is prompt because only autoaccept suppresses ask prompts.",
-    )
+  const cliExists = existsSync(cliPath)
+  try {
+    const currentHash = cliExists ? await sha256File(cliPath) : null
+    const current = cliExists ? readJsonFile(cliPath) : {}
+    const merged = mergeCliPermissions(current, promptPermissions)
+    warnings.push(...merged.warnings)
+    permissionMode = promptPermissions ? "prompt" : "autoaccept"
+    actions.push({
+      path: "cli.json",
+      target: cliPath,
+      action: merged.changed ? (cliExists ? "replace" : "create") : "unchanged",
+      content: `${JSON.stringify(merged.value, null, 2)}\n`,
+      backup: merged.changed,
+      currentHash,
+    })
+  } catch (error) {
+    parseErrors.push({ path: "cli.json", message: error instanceof Error ? error.message : String(error) })
   }
 
   return { actions, parseErrors, warnings, permissionMode }
@@ -344,7 +336,7 @@ async function buildInstalledManifest(
     installedAt: string
     backupPath: string | null
     permissionMode: "prompt" | "autoaccept" | "default"
-    keepAutoAccept: boolean
+    promptPermissions: boolean
   },
 ) {
   const files: InstalledFile[] = installableFiles(manifest).map((file) => ({
@@ -369,7 +361,7 @@ async function buildInstalledManifest(
     installedAt: metadata.installedAt,
     backupPath: metadata.backupPath,
     permissionMode: metadata.permissionMode,
-    keepAutoAccept: metadata.keepAutoAccept,
+    promptPermissions: metadata.promptPermissions,
     plugin: PLUGIN_PIN,
     files,
     config,
@@ -384,6 +376,18 @@ export async function validateInstalled(configRoot: string, root: string, manife
   }
   const opencode = readJsonFile(join(configRoot, "opencode.json"))
   const expectedOpencode = readCanonicalOpencode(root)
+  const configured = asRecord(opencode, "opencode.json")
+  if (!deepEqual(configured.model, expectedOpencode.model)) {
+    throw new InstallError("opencode.json model does not match the canonical fragment.")
+  }
+  const experimental = asRecord(configured.experimental, "opencode.json experimental")
+  const expectedExperimental = asRecord(expectedOpencode.experimental, "fragment experimental")
+  if (!deepEqual(experimental.subagent_depth, expectedExperimental.subagent_depth)) {
+    throw new InstallError("opencode.json experimental.subagent_depth does not match the canonical fragment.")
+  }
+  const configuredAgents = asRecord(configured.agents, "opencode.json agents")
+  const plan = asRecord(configuredAgents.plan, "opencode.json agents.plan")
+  if (plan.disabled !== true) throw new InstallError("opencode.json does not disable the plan agent.")
   const effort = asRecord(asRecord(opencode, "opencode.json").effort_policy, "opencode.json effort_policy")
   if (!deepEqual(effort.agent_operations, asRecord(expectedOpencode.effort_policy, "fragment effort_policy").agent_operations)) {
     throw new InstallError("opencode.json effort_policy.agent_operations does not match the canonical mapping.")
@@ -397,19 +401,16 @@ export async function validateInstalled(configRoot: string, root: string, manife
   if (!deepEqual(presets.fife, asRecord(asRecord(expectedRouter, "router fragment").presets, "router fragment presets").fife)) {
     throw new InstallError("Router overrides presets.fife does not match the canonical definition.")
   }
+  if (!deepEqual(asRecord(router, "router overrides").subagentTiers, asRecord(expectedRouter, "router fragment").subagentTiers)) {
+    throw new InstallError("Router overrides subagentTiers does not match the canonical definition.")
+  }
 
   const cliPath = join(configRoot, "cli.json")
-  if (installed.permissionMode === "prompt") {
-    if (!existsSync(cliPath)) throw new InstallError("cli.json is missing after a prompt-mode install.")
-    const cli = asRecord(readJsonFile(cliPath), "cli.json")
-    const session = asRecord(cli.session, "cli.json session")
-    if (session.permissions !== "prompt") throw new InstallError("cli.json session.permissions is not prompt.")
-  }
-  if (installed.permissionMode === "autoaccept") {
-    if (!existsSync(cliPath)) throw new InstallError("cli.json is missing after an autoaccept-mode install.")
-    const cli = asRecord(readJsonFile(cliPath), "cli.json")
-    const session = asRecord(cli.session, "cli.json session")
-    if (session.permissions !== "autoaccept") throw new InstallError("cli.json session.permissions is not autoaccept.")
+  if (!existsSync(cliPath)) throw new InstallError("cli.json is missing after install.")
+  const cli = asRecord(readJsonFile(cliPath), "cli.json")
+  const session = asRecord(cli.session, "cli.json session")
+  if (session.permissions !== installed.permissionMode) {
+    throw new InstallError(`cli.json session.permissions is ${JSON.stringify(session.permissions)}; expected ${installed.permissionMode}.`)
   }
 }
 
@@ -430,7 +431,7 @@ export function scanUnmanaged(configRoot: string, manifest: Manifest) {
 type RuntimeOptions = {
   requireTiers: boolean
   permissionMode: "prompt" | "autoaccept" | "default"
-  keepAutoAccept: boolean
+  promptPermissions: boolean
 }
 
 export async function verifyRuntime(configRoot: string, options: RuntimeOptions) {
@@ -441,7 +442,7 @@ export async function verifyRuntime(configRoot: string, options: RuntimeOptions)
   const env: Record<string, string | undefined> = { ...process.env, OPENCODE_CONFIG_DIR: configRoot }
   delete env.OPENCODE_CONFIG
   delete env.OPENCODE_CONFIG_CONTENT
-  const result = Bun.spawnSync([binary, "debug", "agents"], { cwd, env, stdout: "pipe", stderr: "pipe" })
+  const result = Bun.spawnSync([binary, "debug", "agents", "--standalone"], { cwd, env, stdout: "pipe", stderr: "pipe" })
   const stdout = result.stdout.toString()
   const stderr = result.stderr.toString()
   writeFileAtomic(logPath, `exit=${result.exitCode}\ncwd=${cwd}\n--- stdout ---\n${stdout}\n--- stderr ---\n${stderr}\n`)
@@ -452,6 +453,7 @@ export async function verifyRuntime(configRoot: string, options: RuntimeOptions)
   const agents = parseAgents(stdout, logPath)
   assertRoles(agents, logPath)
   assertPermissions(agents, logPath)
+  assertModels(agents)
   assertMarkers(agents, logPath)
   if (options.requireTiers) assertTiers(agents)
   assertPermissionMode(configRoot, options)
@@ -471,6 +473,9 @@ function parseAgents(stdout: string, logPath: string) {
 }
 
 function assertRoles(agents: Record<string, unknown>[], logPath: string) {
+  if (agents.some((entry) => entry.id === "plan")) {
+    throw new InstallError(`opencode debug agents still lists plan; expected agents.plan.disabled to remove it. Output saved to ${logPath}.`)
+  }
   const modes: Record<string, string> = { "spec-writer": "primary", implementer: "all", tester: "subagent", qa: "subagent" }
   for (const [id, mode] of Object.entries(modes)) {
     const agent = agents.find((entry) => entry.id === id)
@@ -480,33 +485,84 @@ function assertRoles(agents: Record<string, unknown>[], logPath: string) {
 }
 
 function assertPermissions(agents: Record<string, unknown>[], logPath: string) {
-  const specWriter = agents.find((entry) => entry.id === "spec-writer")
-  if (!specWriter) throw new InstallError(`spec-writer is missing; output saved to ${logPath}.`)
-  const permissions = asArray(specWriter.permissions, "spec-writer permissions").filter(isRecord)
-  const required = [
+  const find = (id: string) => {
+    const agent = agents.find((entry) => entry.id === id)
+    if (!agent) throw new InstallError(`${id} is missing; output saved to ${logPath}.`)
+    return asArray(agent.permissions, `${id} permissions`).filter(isRecord)
+  }
+  const require = (id: string, rules: { action: string; resource: string; effect: string }[]) => {
+    const permissions = find(id)
+    for (const rule of rules) {
+      if (!permissions.some((entry) => entry.action === rule.action && entry.resource === rule.resource && entry.effect === rule.effect)) {
+        throw new InstallError(`${id} is missing permission rule ${JSON.stringify(rule)}.`)
+      }
+    }
+  }
+  const forbid = (id: string, resources: string[]) => {
+    const permissions = find(id)
+    for (const resource of resources) {
+      const allowed = permissions.some(
+        (entry) => entry.action === "subagent" && entry.resource === resource && entry.effect === "allow",
+      )
+      if (allowed) throw new InstallError(`${id} must not allow direct subagent access to ${resource}.`)
+    }
+  }
+
+  require("spec-writer", [
     { action: "edit", resource: "*", effect: "deny" },
     { action: "edit", resource: ".opencode/specs/**", effect: "allow" },
     { action: "shell", resource: "*", effect: "deny" },
     { action: "subagent", resource: "*", effect: "deny" },
     { action: "subagent", resource: "explore", effect: "allow" },
-  ]
-  for (const rule of required) {
-    if (!permissions.some((entry) => entry.action === rule.action && entry.resource === rule.resource && entry.effect === rule.effect)) {
-      throw new InstallError(`spec-writer is missing permission rule ${JSON.stringify(rule)}.`)
-    }
-  }
+    { action: "subagent", resource: "fast", effect: "allow" },
+    { action: "shell", resource: "git --no-pager worktree list --porcelain", effect: "allow" },
+    { action: "shell", resource: "gh auth status", effect: "allow" },
+  ])
   for (const id of ["implementer", "tester", "qa"]) {
-    const rule = permissions.find((entry) => entry.action === "subagent" && entry.resource === id)
+    const rule = find("spec-writer").find((entry) => entry.action === "subagent" && entry.resource === id)
     if (!rule || rule.effect !== "ask") {
       throw new InstallError(`spec-writer must ask before invoking ${id}; loaded rule is ${JSON.stringify(rule)}.`)
     }
   }
-  for (const agent of agents) {
-    if (!["spec-writer", "implementer", "tester", "qa"].includes(asString(agent.id, "agent id"))) continue
-    const permissions = asArray(agent.permissions, `${agent.id} permissions`).filter(isRecord)
-    for (const tier of ["fast", "medium", "heavy"]) {
-      const rule = permissions.find((entry) => entry.action === "subagent" && entry.resource === tier && entry.effect === "allow")
-      if (rule) throw new InstallError(`${agent.id} must not allow direct subagent access to ${tier}.`)
+
+  forbid("spec-writer", ["medium", "heavy"])
+  forbid("implementer", ["spec-writer", "tester", "qa"])
+  forbid("tester", ["explore", "fast", "medium", "heavy", "general", "spec-writer", "implementer", "qa"])
+  forbid("build", ["spec-writer", "implementer", "tester", "qa"])
+  forbid("explore", ["explore", "fast", "medium", "heavy", "general", "spec-writer", "implementer", "tester", "qa"])
+  forbid("qa", ["fast", "medium", "heavy", "general", "spec-writer", "implementer", "tester", "qa"])
+  forbid("fast", ["explore", "fast", "medium", "heavy", "general", "spec-writer", "implementer", "tester", "qa"])
+  forbid("medium", ["explore", "fast", "medium", "heavy", "general", "spec-writer", "implementer", "tester", "qa"])
+  forbid("heavy", ["explore", "fast", "medium", "heavy", "general", "spec-writer", "implementer", "tester", "qa"])
+}
+
+function assertModels(agents: Record<string, unknown>[]) {
+  const fast = { providerID: "vercel", id: "minimax/minimax-m3.1-flash", variant: "medium" }
+  const medium = { providerID: "mistral", id: "deepseek-v4-1-flash-1017", variant: "max" }
+  const heavy = { providerID: "vercel", id: "openai/gpt-6.1-terra", variant: "high" }
+  const expected: Record<string, typeof fast> = {
+    fast,
+    medium,
+    heavy,
+    explore: fast,
+    qa: heavy,
+  }
+  for (const [id, want] of Object.entries(expected)) {
+    const agent = agents.find((entry) => entry.id === id)
+    if (!agent) throw new InstallError(`opencode debug agents is missing ${id}.`)
+    if (!isRecord(agent.model)) throw new InstallError(`${id} has no resolved model.`)
+    const model = agent.model
+    if (model.providerID !== want.providerID || model.id !== want.id || model.variant !== want.variant) {
+      throw new InstallError(
+        `${id} resolved to ${JSON.stringify(model)}; expected ${want.providerID}/${want.id}#${want.variant}.`,
+      )
+    }
+  }
+  // The top-level default supplies these; an explicit conflicting model would win instead.
+  for (const id of ["spec-writer", "implementer", "tester", "build", "general"]) {
+    const agent = agents.find((entry) => entry.id === id)
+    if (agent && agent.model !== undefined) {
+      throw new InstallError(`${id} carries an explicit model ${JSON.stringify(agent.model)}; it must inherit the top-level default.`)
     }
   }
 }
@@ -522,9 +578,11 @@ function assertMarkers(agents: Record<string, unknown>[], logPath: string) {
     "Skipped:",
     "Blocked:",
     "check revision",
+    "Session start: repository integrity and isolation",
+    "`medium` and `heavy` are outside your role",
   ]
   for (const marker of markers) {
-    if (!specWriterSystem.includes(marker)) throw new InstallError(`spec-writer system prompt is missing the v1.1.1 marker: ${marker}`)
+    if (!specWriterSystem.includes(marker)) throw new InstallError(`spec-writer system prompt is missing the v1.2.0 marker: ${marker}`)
   }
   if (!implementerSystem.includes("two consecutive failed attempts")) {
     throw new InstallError("implementer system prompt is missing the v1.1.1 two-attempt retry ceiling.")
@@ -541,16 +599,6 @@ function assertTiers(agents: Record<string, unknown>[]) {
 
 function assertPermissionMode(configRoot: string, options: RuntimeOptions) {
   const cliPath = join(configRoot, "cli.json")
-  if (options.permissionMode === "default") {
-    if (existsSync(cliPath)) {
-      const cli = asRecord(readJsonFile(cliPath), "cli.json")
-      const session = isRecord(cli.session) ? cli.session : {}
-      if (session.permissions === "autoaccept") {
-        throw new InstallError("cli.json was created with autoaccept; the runtime default must remain prompt.")
-      }
-    }
-    return
-  }
   if (!existsSync(cliPath)) throw new InstallError("cli.json is missing; cannot verify the permission mode.")
   const cli = asRecord(readJsonFile(cliPath), "cli.json")
   const session = asRecord(cli.session, "cli.json session")
@@ -563,7 +611,7 @@ export function describeInstall(result: InstallResult) {
   return [
     result.inSync ? "Agent system is in sync." : `Installed agent system ${result.installedManifest.agentSystemVersion}.`,
     `Role content: ${result.installedManifest.roleContentVersion}.`,
-    `Permission mode: ${result.permissionMode}${result.keepAutoAccept ? " (KeepAutoAccept opt-out recorded)" : ""}.`,
+    `Permission mode: ${result.permissionMode}${result.promptPermissions ? " (PromptPermissions opt-out recorded)" : ""}.`,
     `Changed files: ${result.changed.length}; unchanged: ${result.unchanged.length}; backed up: ${result.backedUp.length}.`,
     result.backupPath ? `Backup: ${result.backupPath}` : "Backup: none (no previous files changed).",
     result.unmanaged.length > 0 ? `Unmanaged files preserved: ${result.unmanaged.join(", ")}` : "Unmanaged files: none.",

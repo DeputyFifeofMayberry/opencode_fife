@@ -216,12 +216,12 @@ describe("EffortTransition and EffortStatus decision consistency", () => {
     })
   })
 
-  it.effect("a plan agent reports the mode pin and apply writes it", () => {
+  it.effect("a spec-writer agent reports the mode pin and apply writes it", () => {
     return Effect.gen(function* () {
       const d = yield* deps()
       const id = SessionID.make("ses_consistency_plan")
       yield* seedSession(id, undefined)
-      yield* expectConsistent(d, id, "plan", { rule: "mode-pin", level: "deep", effort: "max" })
+      yield* expectConsistent(d, id, "spec-writer", { rule: "mode-pin", level: "deep", effort: "max" })
     })
   })
 

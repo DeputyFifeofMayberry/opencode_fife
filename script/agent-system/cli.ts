@@ -47,12 +47,16 @@ async function main() {
   const configRoot = stringOption(options, "configroot")
 
   if (command === "install") {
+    if (flag(options, "keepautoaccept")) {
+      console.error("-KeepAutoAccept is removed. autoaccept is now the default; use -PromptPermissions to restore prompt mode.")
+      return 1
+    }
     try {
       const result = await installAgentSystem({
         root,
         configRoot,
         force: flag(options, "force"),
-        keepAutoAccept: flag(options, "keepautoaccept"),
+        promptPermissions: flag(options, "promptpermissions"),
         runtimeVerify: !flag(options, "skipruntimeverify"),
         requireTiers: flag(options, "requiretiers"),
       })

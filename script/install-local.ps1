@@ -12,7 +12,7 @@ param(
     [switch]$SkipAgents,
     [string]$ConfigRoot,
     [switch]$Force,
-    [switch]$KeepAutoAccept
+    [switch]$PromptPermissions
 )
 
 $ErrorActionPreference = "Stop"
@@ -160,7 +160,7 @@ if (-not $AgentsOnly -and -not $SkipAgents) {
 if (-not $SkipAgents) {
     $assetArgs = @("script/agent-system/cli.ts", "install", "--config-root", $resolvedConfigRoot)
     if ($Force) { $assetArgs += "--force" }
-    if ($KeepAutoAccept) { $assetArgs += "--keep-auto-accept" }
+    if ($PromptPermissions) { $assetArgs += "--prompt-permissions" }
     if (-not $AgentsOnly) { $assetArgs += "--require-tiers" }
     if ($env:OPENCODE_AGENT_SYSTEM_SKIP_RUNTIME_VERIFY -eq "1") { $assetArgs += "--skip-runtime-verify" }
     & bun @assetArgs

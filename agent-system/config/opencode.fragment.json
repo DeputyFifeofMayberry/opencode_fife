@@ -1,4 +1,37 @@
 {
+  "model": "mistral/deepseek-v4-1-flash-1017#max",
+  "agents": {
+    "plan": {
+      "disabled": true
+    },
+    "build": {
+      "permissions": [
+        { "action": "subagent", "resource": "spec-writer", "effect": "deny" },
+        { "action": "subagent", "resource": "implementer", "effect": "deny" },
+        { "action": "subagent", "resource": "tester", "effect": "deny" },
+        { "action": "subagent", "resource": "qa", "effect": "deny" }
+      ]
+    },
+    "explore": {
+      "model": "vercel/minimax/minimax-m3.1-flash#medium",
+      "permissions": [{ "action": "subagent", "resource": "*", "effect": "deny" }]
+    },
+    "fast": {
+      "permissions": [{ "action": "subagent", "resource": "*", "effect": "deny" }]
+    },
+    "medium": {
+      "permissions": [{ "action": "subagent", "resource": "*", "effect": "deny" }]
+    },
+    "heavy": {
+      "permissions": [{ "action": "subagent", "resource": "*", "effect": "deny" }]
+    },
+    "qa": {
+      "model": "vercel/openai/gpt-6.1-terra#high"
+    }
+  },
+  "experimental": {
+    "subagent_depth": 2
+  },
   "effort_policy": {
     "agent_operations": {
       "fast": "explore",

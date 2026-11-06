@@ -16,14 +16,14 @@ describe("agent-system status", () => {
       await installAgentSystem({ configRoot: root, runtimeVerify: false })
       const report = await readStatus(undefined, root)
       expect(report.installed).toBe(true)
-      expect(report.agentSystemVersion).toBe("2.0.0")
-      expect(report.roleContentVersion).toBe("1.1.1")
+      expect(report.agentSystemVersion).toBe("2.1.0")
+      expect(report.roleContentVersion).toBe("1.2.0")
       expect(report.files.drifted).toEqual([])
       expect(report.files.missing).toEqual([])
       expect(report.config.opencode).toBe("in-sync")
       expect(report.config.router).toBe("in-sync")
       expect(statusExitCode(report)).toBe(0)
-      expect(JSON.parse(JSON.stringify(report)).agentSystemVersion).toBe("2.0.0")
+      expect(JSON.parse(JSON.stringify(report)).agentSystemVersion).toBe("2.1.0")
     } finally {
       rmSync(root, { recursive: true, force: true })
     }

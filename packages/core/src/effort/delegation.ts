@@ -8,7 +8,7 @@ import { operationStart } from "./policy/index.js"
 import { EffortStore } from "./store.js"
 
 const DEFAULT_OPERATIONS: Readonly<Record<string, ConfigEffort.Operation>> = {
-  plan: "plan",
+  "spec-writer": "plan",
   review: "review",
   explore: "explore",
   general: "general",

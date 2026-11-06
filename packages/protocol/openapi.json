@@ -27304,6 +27304,9 @@
           "branch": {
             "type": "string"
           },
+          "newBranch": {
+            "type": "string"
+          },
           "directory": {
             "$ref": "#/components/schemas/AbsolutePath"
           },

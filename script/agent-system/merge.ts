@@ -23,7 +23,7 @@ export type MergeResult = {
 }
 
 export type PermissionMergeResult = MergeResult & {
-  action: "unchanged" | "changed" | "kept" | "default"
+  action: "unchanged" | "changed" | "default"
 }
 
 export function readCanonicalOpencode(root: string) {
@@ -39,6 +39,31 @@ export function mergeOpencodeConfig(existing: unknown, canonical: unknown): Merg
   const fragment = asRecord(canonical, "opencode fragment")
   const value = structuredClone(current)
   const warnings: string[] = []
+
+  if (fragment.model !== undefined) value.model = structuredClone(fragment.model)
+
+  const experimental = isRecord(value.experimental) ? value.experimental : {}
+  const canonicalExperimental = isRecord(fragment.experimental) ? fragment.experimental : {}
+  if (canonicalExperimental.subagent_depth !== undefined) {
+    value.experimental = { ...experimental, subagent_depth: structuredClone(canonicalExperimental.subagent_depth) }
+  }
+
+  if (isRecord(fragment.agents)) {
+    const agents = isRecord(value.agents) ? value.agents : {}
+    const merged: Record<string, unknown> = { ...agents }
+    for (const [id, item] of Object.entries(fragment.agents)) {
+      if (!isRecord(item)) continue
+      const target = isRecord(merged[id]) ? (merged[id] as Record<string, unknown>) : {}
+      const next: Record<string, unknown> = { ...target }
+      for (const [key, value] of Object.entries(item)) {
+        if (key === "permissions") continue
+        next[key] = structuredClone(value)
+      }
+      if (item.permissions !== undefined) next.permissions = mergePermissionRules(target.permissions, item.permissions)
+      merged[id] = next
+    }
+    value.agents = merged
+  }
 
   const effort = isRecord(value.effort_policy) ? value.effort_policy : {}
   const canonicalEffort = asRecord(fragment.effort_policy, "opencode fragment effort_policy")
@@ -72,6 +97,17 @@ export function mergeOpencodeConfig(existing: unknown, canonical: unknown): Merg
   }
 }
 
+/**
+ * Canonical rules are appended after any user rules so they win the last-match
+ * evaluation, and identical rules are dropped first so a reinstall is idempotent.
+ */
+function mergePermissionRules(existing: unknown, canonical: unknown) {
+  const current = existing === undefined ? [] : asArray(existing, "agent permissions")
+  const managed = asArray(canonical, "fragment agent permissions")
+  const kept = current.filter((rule) => !managed.some((candidate) => deepEqual(rule, candidate)))
+  return [...kept, ...structuredClone(managed)]
+}
+
 export function mergeRouterOverrides(existing: unknown, canonical: unknown): MergeResult {
   const current = asRecord(existing, "router overrides")
   const fragment = asRecord(canonical, "router overrides fragment")
@@ -82,6 +118,7 @@ export function mergeRouterOverrides(existing: unknown, canonical: unknown): Mer
     ...presets,
     fife: structuredClone(asRecord(canonicalPresets.fife, "fife preset")),
   }
+  if (fragment.subagentTiers !== undefined) value.subagentTiers = structuredClone(fragment.subagentTiers)
   return {
     value,
     changed: !deepEqual(current, value),
@@ -90,46 +127,28 @@ export function mergeRouterOverrides(existing: unknown, canonical: unknown): Mer
   }
 }
 
-export function mergeCliPermissions(existing: unknown, keepAutoAccept: boolean): PermissionMergeResult {
+export function mergeCliPermissions(existing: unknown, promptPermissions: boolean): PermissionMergeResult {
   const current = asRecord(existing, "cli.json")
   const value = structuredClone(current)
   const session = isRecord(value.session) ? value.session : {}
   const currentMode = session.permissions
-  if (currentMode === undefined) {
-    return {
-      value,
-      changed: false,
-      commentsNormalized: false,
-      warnings: [
-        "cli.json has no session.permissions; the runtime default is prompt because only autoaccept suppresses ask prompts.",
-      ],
-      action: "default",
-    }
-  }
-  if (currentMode !== "prompt" && currentMode !== "autoaccept") {
+  if (currentMode !== undefined && currentMode !== "prompt" && currentMode !== "autoaccept") {
     throw new MergeError(`cli.json session.permissions must be "prompt" or "autoaccept", received ${JSON.stringify(currentMode)}.`)
   }
-  if (currentMode === "prompt") {
+  const desired = promptPermissions ? "prompt" : "autoaccept"
+  if (currentMode === desired) {
     return { value, changed: false, commentsNormalized: false, warnings: [], action: "unchanged" }
   }
-  if (keepAutoAccept) {
-    return {
-      value,
-      changed: false,
-      commentsNormalized: false,
-      warnings: [
-        "WARNING: session.permissions remains autoaccept. The TUI suppresses ask prompts, so SDD approval gates are not presented.",
-      ],
-      action: "kept",
-    }
-  }
-  value.session = { ...session, permissions: "prompt" }
+  value.session = { ...session, permissions: desired }
+  const warnings = promptPermissions
+    ? ["-PromptPermissions restores prompt mode; the SDD ask gates are presented again."]
+    : []
   return {
     value,
     changed: true,
     commentsNormalized: false,
-    warnings: [],
-    action: "changed",
+    warnings,
+    action: currentMode === undefined ? "default" : "changed",
   }
 }
 

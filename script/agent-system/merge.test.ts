@@ -30,6 +30,39 @@ describe("opencode.json merge", () => {
       agent_operations: { fast: "explore", medium: "implement", heavy: "review" },
     })
     expect(result.value.plugins).toEqual(["other-plugin", "opencode-model-router@2.9.1"])
+    expect(result.value.model).toBe("mistral/deepseek-v4-1-flash-1017#max")
+    expect(result.value.experimental).toEqual({ subagent_depth: 2 })
+    expect(result.value.agents).toEqual({
+      plan: { disabled: true },
+      build: {
+        permissions: [
+          { action: "subagent", resource: "spec-writer", effect: "deny" },
+          { action: "subagent", resource: "implementer", effect: "deny" },
+          { action: "subagent", resource: "tester", effect: "deny" },
+          { action: "subagent", resource: "qa", effect: "deny" },
+        ],
+      },
+      explore: {
+        model: "vercel/minimax/minimax-m3.1-flash#medium",
+        permissions: [{ action: "subagent", resource: "*", effect: "deny" }],
+      },
+      fast: { permissions: [{ action: "subagent", resource: "*", effect: "deny" }] },
+      medium: { permissions: [{ action: "subagent", resource: "*", effect: "deny" }] },
+      heavy: { permissions: [{ action: "subagent", resource: "*", effect: "deny" }] },
+      qa: { model: "vercel/openai/gpt-6.1-terra#high" },
+    })
+  })
+
+  test("appends canonical rules after user rules and keeps them idempotent", async () => {
+    const canonical = readCanonicalOpencode(repoRoot())
+    const userRule = { action: "read", resource: "*.env", effect: "ask" }
+    const existing = { agents: { build: { description: "keep me", permissions: [userRule] } } }
+    const first = mergeOpencodeConfig(existing, canonical)
+    const build = (first.value.agents as Record<string, Record<string, unknown>>).build
+    expect(build.description).toBe("keep me")
+    expect((build.permissions as unknown[])[0]).toEqual(userRule)
+    const second = mergeOpencodeConfig(first.value, canonical)
+    expect(second.changed).toBe(false)
   })
 
   test("is idempotent when the canonical keys already match", async () => {
@@ -88,29 +121,32 @@ describe("router overrides merge", () => {
 })
 
 describe("cli.json permission merge", () => {
-  test("changes autoaccept to prompt by default", () => {
-    const result = mergeCliPermissions({ session: { permissions: "autoaccept", tps: true } }, false)
+  test("switches prompt to autoaccept by default", () => {
+    const result = mergeCliPermissions({ session: { permissions: "prompt", tps: true } }, false)
     expect(result.action).toBe("changed")
-    expect(result.value.session).toEqual({ permissions: "prompt", tps: true })
+    expect(result.value.session).toEqual({ permissions: "autoaccept", tps: true })
   })
 
-  test("keeps autoaccept with an explicit opt-out and warns", () => {
-    const result = mergeCliPermissions({ session: { permissions: "autoaccept" } }, true)
-    expect(result.action).toBe("kept")
-    expect(result.changed).toBe(false)
-    expect(result.warnings.some((warning) => warning.includes("suppresses ask prompts"))).toBe(true)
-  })
-
-  test("leaves prompt unchanged", () => {
-    const result = mergeCliPermissions({ session: { permissions: "prompt" } }, false)
+  test("leaves autoaccept unchanged by default", () => {
+    const result = mergeCliPermissions({ session: { permissions: "autoaccept" } }, false)
     expect(result.action).toBe("unchanged")
     expect(result.changed).toBe(false)
   })
 
-  test("reports the runtime default when the key is absent", () => {
+  test("-PromptPermissions restores prompt mode", () => {
+    const result = mergeCliPermissions({ session: { permissions: "autoaccept" } }, true)
+    expect(result.action).toBe("changed")
+    expect(result.value.session).toEqual({ permissions: "prompt" })
+  })
+
+  test("sets autoaccept when the key is absent", () => {
     const result = mergeCliPermissions({ session: {} }, false)
     expect(result.action).toBe("default")
-    expect(result.warnings.some((warning) => warning.includes("runtime default is prompt"))).toBe(true)
+    expect(result.value.session).toEqual({ permissions: "autoaccept" })
+  })
+
+  test("rejects an unknown permission mode", () => {
+    expect(() => mergeCliPermissions({ session: { permissions: "allow" } }, false)).toThrow(MergeError)
   })
 })
 

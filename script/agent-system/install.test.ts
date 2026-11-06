@@ -45,13 +45,16 @@ describe("agent-system install", () => {
       expect(existsSync(join(root, "opencode.json"))).toBe(true)
       expect(existsSync(join(root, "opencode-model-router.overrides.jsonc"))).toBe(true)
       expect(existsSync(join(root, "agent-system.installed.json"))).toBe(true)
-      expect(existsSync(join(root, "cli.json"))).toBe(false)
+      expect(existsSync(join(root, "cli.json"))).toBe(true)
+      expect((readJsonFile(join(root, "cli.json")) as { session: { permissions: string } }).session.permissions).toBe("autoaccept")
 
       const manifest = await loadManifest()
       const installed = readInstalledManifest(root)
       expect(installed).not.toBeNull()
-      expect(installed?.agentSystemVersion).toBe("2.0.0")
-      expect(installed?.roleContentVersion).toBe("1.1.1")
+      expect(installed?.agentSystemVersion).toBe("2.1.0")
+      expect(installed?.roleContentVersion).toBe("1.2.0")
+      expect(installed?.permissionMode).toBe("autoaccept")
+      expect(installed?.promptPermissions).toBe(false)
       expect(installed?.files.length).toBe(installableFiles(manifest).length)
       for (const file of installed?.files ?? []) {
         expect(await sha256File(join(root, file.target))).toBe(file.sha256)
@@ -142,30 +145,31 @@ describe("agent-system install", () => {
     }
   })
 
-  test("records the KeepAutoAccept opt-out and warns", async () => {
+  test("-PromptPermissions restores prompt mode and records the opt-out", async () => {
     const root = temporaryRoot()
     try {
       writeFileSync(join(root, "cli.json"), `${JSON.stringify({ session: { permissions: "autoaccept", tps: true } }, null, 2)}\n`)
-      const result = await installAgentSystem({ configRoot: root, runtimeVerify: false, keepAutoAccept: true })
-      expect(result.permissionMode).toBe("autoaccept")
-      expect(result.keepAutoAccept).toBe(true)
-      expect(result.warnings.some((warning) => warning.includes("suppresses ask prompts"))).toBe(true)
+      const result = await installAgentSystem({ configRoot: root, runtimeVerify: false, promptPermissions: true })
+      expect(result.permissionMode).toBe("prompt")
+      expect(result.promptPermissions).toBe(true)
+      const cli = readJsonFile(join(root, "cli.json")) as { session: { permissions: string; tps: boolean } }
+      expect(cli.session).toEqual({ permissions: "prompt", tps: true })
       const installed = readInstalledManifest(root)
-      expect(installed?.permissionMode).toBe("autoaccept")
-      expect(installed?.keepAutoAccept).toBe(true)
+      expect(installed?.permissionMode).toBe("prompt")
+      expect(installed?.promptPermissions).toBe(true)
     } finally {
       rmSync(root, { recursive: true, force: true })
     }
   })
 
-  test("changes autoaccept to prompt by default and backs up cli.json", async () => {
+  test("keeps autoaccept by default, preserves unrelated keys, and backs up cli.json", async () => {
     const root = temporaryRoot()
     try {
-      writeFileSync(join(root, "cli.json"), `${JSON.stringify({ session: { permissions: "autoaccept", tps: true } }, null, 2)}\n`)
+      writeFileSync(join(root, "cli.json"), `${JSON.stringify({ session: { permissions: "prompt", tps: true } }, null, 2)}\n`)
       const result = await installAgentSystem({ configRoot: root, runtimeVerify: false })
-      expect(result.permissionMode).toBe("prompt")
+      expect(result.permissionMode).toBe("autoaccept")
       const cli = readJsonFile(join(root, "cli.json")) as { session: { permissions: string; tps: boolean } }
-      expect(cli.session).toEqual({ permissions: "prompt", tps: true })
+      expect(cli.session).toEqual({ permissions: "autoaccept", tps: true })
       const manifest = readBackupManifest(firstBackup(root))
       expect(manifest.files.some((entry) => entry.path === "cli.json" && entry.existed)).toBe(true)
     } finally {
@@ -206,6 +210,16 @@ describe("agent-system install", () => {
       const opencode = readJsonFile(join(root, "opencode.json")) as Record<string, unknown>
       expect(opencode.update).toBe("disable")
       expect(opencode.provider).toEqual({ example: { apiKey: "test" } })
+      expect(opencode.model).toBe("mistral/deepseek-v4-1-flash-1017#max")
+      expect(opencode.experimental).toEqual({ subagent_depth: 2 })
+      const agents = opencode.agents as Record<string, Record<string, unknown>>
+      expect(agents.plan).toEqual({ disabled: true })
+      expect(agents.build.permissions).toEqual([
+        { action: "subagent", resource: "spec-writer", effect: "deny" },
+        { action: "subagent", resource: "implementer", effect: "deny" },
+        { action: "subagent", resource: "tester", effect: "deny" },
+        { action: "subagent", resource: "qa", effect: "deny" },
+      ])
       expect(opencode.plugins).toEqual(["other-plugin", "opencode-model-router@2.9.1"])
       expect((opencode.effort_policy as Record<string, unknown>).agent_operations).toEqual({
         fast: "explore",
@@ -217,6 +231,7 @@ describe("agent-system install", () => {
       expect(router.activeMode).toBe("normal")
       expect(router.enforcement).toEqual({ mode: "advisory" })
       expect((router.presets as Record<string, unknown>).other).toEqual({ fast: { model: "other/model" } })
+      expect(router.subagentTiers).toEqual({ explore: "fast", qa: "heavy" })
       expect(((router.presets as Record<string, unknown>).fife as Record<string, unknown>).fast).toEqual({
         model: "vercel/minimax/minimax-m3.1-flash",
         variant: "medium",

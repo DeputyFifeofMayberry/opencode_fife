@@ -20,13 +20,13 @@ global config root, and `local:status` detects lag between the two.
 
 ## Versions
 
-- Agent-system version: `2.0.0`
-- Role-content version: `1.1.1`
+- Agent-system version: `2.1.0`
+- Role-content version: `1.2.0`
 - Plugin pin: `opencode-model-router@2.9.1` (external, GPL-3.0-only, never vendored)
 - CLI version: independent `0.0.0-dev-<timestamp>` build version
 
 The installed manifest records both agent-system versions, the CLI version, the
-source commit, and the backup path.
+source commit, the backup path, and the permission mode.
 
 ## Install
 
@@ -50,7 +50,7 @@ bun run agent:install -- -ConfigRoot C:\Windows\Temp\agent-system-clean -AgentsO
 | `-SkipAgents` | Skip the agent-system asset step; preserve the CLI-only install |
 | `-ConfigRoot <path>` | Install assets into a different config root; useful for clean-install tests |
 | `-Force` | Back up and replace a managed file that was modified since the last install or collides with an unmanaged file |
-| `-KeepAutoAccept` | Keep `session.permissions: "autoaccept"`; records the opt-out in the installed manifest and prints a warning |
+| `-PromptPermissions` | Restore `session.permissions: "prompt"`; records the opt-out in the installed manifest |
 
 `-AgentsOnly` and `-SkipAgents` together install nothing and are rejected.
 
@@ -72,7 +72,7 @@ Exit codes:
 
 The report includes the CLI version and source commit, agent-system and role-content
 versions, managed-file counts, drifted files, missing files, unmanaged files,
-configuration drift, the permission mode, and the `-KeepAutoAccept` record.
+configuration drift, the permission mode, and the `-PromptPermissions` record.
 
 ## Rollback
 
@@ -97,7 +97,7 @@ reported and removed by a later install or `local:prune`.
 
 `agent-system/manifest.json` is the install contract. It declares:
 
-- `agentSystemVersion` (`2.0.0`) and `roleContentVersion` (`1.1.1`).
+- `agentSystemVersion` (`2.1.0`) and `roleContentVersion` (`1.2.0`).
 - The exact plugin pin.
 - Every managed file with its source path, install target, scope, and SHA-256.
 - The canonical config fragments.
@@ -116,7 +116,7 @@ counts. Tampering with a managed file exits nonzero and names the file.
 
 1. Edit the role under `.opencode/agents/` or the skill under `.opencode/skills/`.
 2. Keep role bodies unchanged unless the change is an intentional role revision; the
-   current baseline is v1.1.1.
+   current baseline is v1.2.0.
 3. If the change is a new skill, add its directory under `.opencode/skills/` and add
    the name to `GLOBAL_SKILLS` or `PROJECT_SKILLS` in
    `script/agent-system/lib.ts`.
@@ -154,20 +154,49 @@ If either configuration file is absent, the installer creates it with only the
 canonical keys. Malformed JSON/JSONC is refused, backed up, and reported. Writes are
 atomic and validated after writing; a failed validation restores the backup.
 
-`cli.json` is never created. If it exists and `session.permissions` is `autoaccept`,
-the default install changes it to `prompt` with a backup. `-KeepAutoAccept` keeps the
-value, records the opt-out, and warns that the TUI suppresses `ask` prompts.
+The installer creates `cli.json` with `session.permissions: "autoaccept"` when the
+file is absent and keeps `autoaccept` on reinstall, recording `permissionMode` in the
+installed manifest. `-PromptPermissions` restores `prompt` mode with a backup and
+records the opt-out.
+
+## Model hierarchy
+
+The top-level default model is `mistral/deepseek-v4-1-flash-1017#max`, the medium
+tier model. It applies to every agent without an explicit model: `spec-writer`,
+`implementer`, `tester`, `build`, `general`, and the hidden utility agents.
+
+Two non-tier agents resolve a tier model through `subagentTiers` in
+`opencode-model-router.overrides.jsonc`:
+
+- `explore` → `fast` (`vercel/minimax/minimax-m3.1-flash`, variant `medium`).
+- `qa` → `heavy` (`vercel/openai/gpt-6.1-terra`, variant `high`).
+
+The three tier agents keep their preset models. `plan` is disabled in the canonical
+configuration. `spec-writer` is the single planning primary agent and `build` remains
+the default coding agent. A persisted session whose agent is `plan` fails with
+`AgentNotFoundError`; switch that session to `spec-writer`.
 
 ## Tier and SDD boundary
 
 `fast`, `medium`, and `heavy` are plugin-registered subagents and the sole owners of
 model selection. The four SDD roles keep their own subagent permissions and stage
-gates. The Spec Writer may invoke `explore` (allow) and `implementer`/`tester`/`qa`
-(ask). The Implementer may invoke `explore` (allow) and any other subagent only with
-`ask`. The Tester denies all subagents. The QA denies all subagents by default and may
-invoke `explore` only with `ask`. No SDD role may `allow` `fast`, `medium`, or `heavy`.
-Tier selection does not alter stage authorization, approval gates, or correction
-limits.
+gates. Tier selection does not alter stage authorization, approval gates, or
+correction limits.
+
+Effective permissions:
+
+| Agent | May invoke |
+|---|---|
+| `spec-writer` | `explore`, `fast` (allow); `implementer`, `tester`, `qa` (ask); `medium`, `heavy` denied |
+| `implementer` | `explore` (allow); `fast`, `medium`, `heavy`, `general` (ask); `spec-writer`, `tester`, `qa` denied |
+| `tester` | nothing |
+| `qa` | `explore` (ask) only |
+| `build` | `explore`, `fast`, `medium`, `heavy`, `general`; not `spec-writer`, `implementer`, `tester`, `qa` |
+| `fast`, `medium`, `heavy` | nothing |
+
+Permission mode defaults to `session.permissions: "autoaccept"` in `cli.json`.
+Autoaccept suppresses tool permission prompts only. The SDD stage approval questions
+are conversation-level and remain, and hard deny rules still block.
 
 ## Security boundaries
 
@@ -188,13 +217,24 @@ The root script delegates to `script/agent-system`, the package that owns the te
 Coverage includes manifest validation and tamper detection, scope selection, JSON and
 JSONC merging, path mapping, backup/restore, drift detection, local-modification
 refusal, unmanaged-file preservation, clean install, idempotence, rollback, and the
-PowerShell `-AgentsOnly`/`-SkipAgents`/`-ConfigRoot`/`-Force`/`-KeepAutoAccept`
+PowerShell `-AgentsOnly`/`-SkipAgents`/`-ConfigRoot`/`-Force`/`-PromptPermissions`
 paths.
 
 For a clean-install test without the managed-service port conflict, set
 `OPENCODE_AGENT_SYSTEM_SKIP_RUNTIME_VERIFY=1` before invoking the PowerShell installer.
-The full `update:local` runs `opencode debug agents` against the live config and fails
-the install if the four roles, modes, permissions, or v1.1.1 markers are missing.
+The full `update:local` runs `opencode debug agents --standalone`, so the check reads
+the installed config root instead of a running background service, and fails the
+install when the loaded agents break any of these assertions:
+
+- No `plan` agent is present.
+- The four SDD roles carry their expected modes.
+- The permission rules and the tier-access matrix match.
+- `fast`, `medium`, and `heavy` carry the preset models, and `explore` and `qa`
+  resolve to the fast and heavy preset models.
+- `spec-writer`, `implementer`, `tester`, `build`, and `general` carry no explicit
+  model.
+- The v1.2.0 prompt markers are present.
+- The `cli.json` permission mode matches the install.
 
 ## Skill inventory and verification markers
 

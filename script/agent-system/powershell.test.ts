@@ -35,8 +35,8 @@ describe("PowerShell installer", () => {
       expect(existsSync(join(root, "opencode.json"))).toBe(true)
       expect(existsSync(join(root, "opencode-model-router.overrides.jsonc"))).toBe(true)
       const installed = readInstalledManifest(root)
-      expect(installed?.agentSystemVersion).toBe("2.0.0")
-      expect(installed?.roleContentVersion).toBe("1.1.1")
+      expect(installed?.agentSystemVersion).toBe("2.1.0")
+      expect(installed?.roleContentVersion).toBe("1.2.0")
     } finally {
       rmSync(root, { recursive: true, force: true })
     }
@@ -54,16 +54,31 @@ describe("PowerShell installer", () => {
     }
   })
 
-  testWindows("-KeepAutoAccept records the opt-out", () => {
+  testWindows("-PromptPermissions records the opt-out", () => {
     const root = temporaryRoot()
     try {
       writeFileSync(join(root, "cli.json"), `${JSON.stringify({ session: { permissions: "autoaccept" } }, null, 2)}\n`)
-      const result = runInstaller(["-AgentsOnly", "-ConfigRoot", root, "-KeepAutoAccept"])
+      const result = runInstaller(["-AgentsOnly", "-ConfigRoot", root, "-PromptPermissions"])
       expect(result.exitCode).toBe(0)
-      expect(result.stdout.toString()).toContain("suppresses ask prompts")
+      const installed = readInstalledManifest(root)
+      expect(installed?.permissionMode).toBe("prompt")
+      expect(installed?.promptPermissions).toBe(true)
+      expect((JSON.parse(readFileSync(join(root, "cli.json"), "utf8")) as { session: { permissions: string } }).session.permissions).toBe(
+        "prompt",
+      )
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  testWindows("defaults to autoaccept and creates cli.json when absent", () => {
+    const root = temporaryRoot()
+    try {
+      const result = runInstaller(["-AgentsOnly", "-ConfigRoot", root])
+      expect(result.exitCode).toBe(0)
       const installed = readInstalledManifest(root)
       expect(installed?.permissionMode).toBe("autoaccept")
-      expect(installed?.keepAutoAccept).toBe(true)
+      expect(installed?.promptPermissions).toBe(false)
       expect((JSON.parse(readFileSync(join(root, "cli.json"), "utf8")) as { session: { permissions: string } }).session.permissions).toBe(
         "autoaccept",
       )

@@ -43,7 +43,7 @@ export interface Inputs {
   readonly variant?: string
   /** The configured base level for sessions without an exact pick (default: standard). */
   readonly baseLevel: EffortLevel
-  /** The session's agent id; plan-mode sessions pin the effective base to deep. */
+  /** The session's agent id; planning sessions (spec-writer) pin the effective base to deep. */
   readonly agent?: string
   /** The unresolved verifier failure, when one is open. */
   readonly openFailure?: EffortState["openFailure"]
@@ -62,7 +62,7 @@ export function stateFor(input: Inputs): EffortState {
   return {
     base: input.baseLevel,
     ...(input.variant !== undefined ? { exact: input.variant } : {}),
-    ...(input.agent === "plan" ? { pin: "deep" as const } : {}),
+    ...(input.agent === "spec-writer" ? { pin: "deep" as const } : {}),
     ...(input.openFailure !== undefined ? { openFailure: input.openFailure } : {}),
     ...(input.level !== undefined ? { level: input.level } : {}),
     ...(input.cleanPasses !== undefined ? { cleanPasses: input.cleanPasses } : {}),

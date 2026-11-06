@@ -36,7 +36,11 @@
   "effort_policy": {
     "verification_commands": ["bun run check"]
   },
+  "model": "mistral/deepseek-v4-1-flash-1017#max",
   "agents": {
+    "plan": {
+      "disabled": true
+    },
     "build": {
       "description": "Primary coding agent for development work",
       "mode": "primary"

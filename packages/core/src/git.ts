@@ -148,7 +148,9 @@ export interface Interface {
     readonly create: (input: {
       repository: Repository
       directory: AbsolutePath
+      newBranch?: string
       ref?: string
+      cwd?: AbsolutePath
     }) => Effect.Effect<Repository, WorktreeError>
     readonly remove: (input: {
       repository: Repository
@@ -1436,13 +1438,20 @@ const layer = Layer.effect(
     const worktreeCreate = Effect.fn("Git.worktree.create")(function* (input: {
       repository: Repository
       directory: AbsolutePath
+      newBranch?: string
       ref?: string
+      cwd?: AbsolutePath
     }) {
+      // A new branch starts at the source worktree's HEAD, so `cwd` must be
+      // that worktree: the repository root's HEAD may be a different branch.
       yield* worktreeRun(
         "create",
         input.repository,
-        ["worktree", "add", "--detach", "--", input.directory, input.ref ?? "HEAD"],
+        input.newBranch === undefined
+          ? ["worktree", "add", "--detach", "--", input.directory, input.ref ?? "HEAD"]
+          : ["worktree", "add", "-b", input.newBranch, "--", input.directory, input.ref ?? "HEAD"],
         input.directory,
+        input.cwd ?? input.repository.worktree,
       )
       const repository = yield* discover(input.directory)
       if (repository) return repository

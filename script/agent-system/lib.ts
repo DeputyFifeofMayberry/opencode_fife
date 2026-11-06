@@ -3,8 +3,8 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, s
 import { homedir, tmpdir } from "node:os"
 import { dirname, join, relative, resolve } from "node:path"
 
-export const AGENT_SYSTEM_VERSION = "2.0.0"
-export const ROLE_CONTENT_VERSION = "1.1.1"
+export const AGENT_SYSTEM_VERSION = "2.1.0"
+export const ROLE_CONTENT_VERSION = "1.2.0"
 export const PLUGIN_PACKAGE = "opencode-model-router"
 export const PLUGIN_VERSION = "2.9.1"
 export const PLUGIN_PIN = `${PLUGIN_PACKAGE}@${PLUGIN_VERSION}`
@@ -114,7 +114,7 @@ export type InstalledManifest = {
   installedAt: string
   backupPath: string | null
   permissionMode: "prompt" | "autoaccept" | "default"
-  keepAutoAccept: boolean
+  promptPermissions: boolean
   plugin: string
   files: InstalledFile[]
   config: InstalledConfig[]

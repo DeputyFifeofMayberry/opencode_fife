@@ -19,5 +19,11 @@
         "costRatio": 8
       }
     }
+  },
+  // Agents that follow a tier's model without being tier agents themselves.
+  // The installer merges only subagentTiers and preserves other keys.
+  "subagentTiers": {
+    "explore": "fast",
+    "qa": "heavy"
   }
 }

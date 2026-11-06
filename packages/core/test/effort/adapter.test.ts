@@ -80,8 +80,8 @@ describe("EffortAdapter.decideFor", () => {
     })
   })
 
-  it("pins plan-mode sessions to deep", () => {
-    expect(EffortAdapter.decideFor(full, { baseLevel: "low", agent: "plan" })).toEqual({
+  it("pins planning sessions to deep", () => {
+    expect(EffortAdapter.decideFor(full, { baseLevel: "low", agent: "spec-writer" })).toEqual({
       rule: "mode-pin",
       level: "deep",
       effort: "max",
@@ -199,10 +199,10 @@ describe("EffortAdapter frozen mode", () => {
     })).toMatchObject({ mode: "frozen", baseLevel: "deep", decision: { rule: "base", level: "deep", effort: "max" } })
   })
 
-  it("keeps the plan pin under frozen", () => {
+  it("keeps the planning pin under frozen", () => {
     expect(EffortAdapter.resolve({
       policy: new ConfigEffort.Info({ mode: "frozen", base_level: "low" }),
-      agent: "plan",
+      agent: "spec-writer",
       model: full,
     })).toMatchObject({ mode: "frozen", decision: { rule: "mode-pin", level: "deep", effort: "max" } })
   })

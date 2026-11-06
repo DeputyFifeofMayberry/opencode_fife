@@ -29,7 +29,7 @@ export type StatusReport = {
   agentSystemVersion: string | null
   roleContentVersion: string | null
   permissionMode: string | null
-  keepAutoAccept: boolean
+  promptPermissions: boolean
   plugin: string | null
   files: {
     total: number
@@ -56,7 +56,7 @@ export async function readStatus(root = repoRoot(), configRootInput?: string): P
     agentSystemVersion: null,
     roleContentVersion: null,
     permissionMode: null,
-    keepAutoAccept: false,
+    promptPermissions: false,
     plugin: null,
     files: { total: 0, inSync: 0, drifted: [], missing: [], extra: [], unmanaged: [] },
     config: { opencode: "missing", router: "missing", cli: "missing" },
@@ -76,7 +76,7 @@ export async function readStatus(root = repoRoot(), configRootInput?: string): P
   report.agentSystemVersion = installed.agentSystemVersion
   report.roleContentVersion = installed.roleContentVersion
   report.permissionMode = installed.permissionMode
-  report.keepAutoAccept = installed.keepAutoAccept
+  report.promptPermissions = installed.promptPermissions
   report.plugin = installed.plugin
 
   let manifest: Manifest
@@ -214,7 +214,7 @@ export function describeStatus(report: StatusReport) {
   }
   const lines = [
     `Agent system: ${report.agentSystemVersion} (role content ${report.roleContentVersion})`,
-    `Permission mode: ${report.permissionMode}${report.keepAutoAccept ? " (KeepAutoAccept opt-out recorded)" : ""}`,
+    `Permission mode: ${report.permissionMode}${report.promptPermissions ? " (PromptPermissions opt-out recorded)" : ""}`,
     `Plugin: ${report.plugin}`,
     `Managed files: ${report.files.inSync}/${report.files.total} in sync`,
   ]

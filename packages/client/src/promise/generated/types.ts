@@ -4907,6 +4907,7 @@ export type WorktreeCreateInput = {
   readonly projectID: string
   readonly from?: string | undefined
   readonly branch?: string | undefined
+  readonly newBranch?: string | undefined
   readonly directory?: string | undefined
   readonly name?: string | undefined
 }

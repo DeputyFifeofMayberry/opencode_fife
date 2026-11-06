@@ -86,7 +86,7 @@ bun run test:agent-system
 
 ### Agent system
 
-The agent system is version `2.0.0` with role content `1.1.1`. `agent-system/manifest.json` records every managed file with its SHA-256 and scope; `agent-system/manifest.schema.json` validates it. Regenerate the manifest after an intentional role or skill change with `bun run agent:manifest`, then run `bun run agent:manifest -- --check` and `bun run test:agent-system`.
+The agent system is version `2.1.0` with role content `1.2.0`. `agent-system/manifest.json` records every managed file with its SHA-256 and scope; `agent-system/manifest.schema.json` validates it. Regenerate the manifest after an intentional role or skill change with `bun run agent:manifest`, then run `bun run agent:manifest -- --check` and `bun run test:agent-system`.
 
 Installer options:
 
@@ -94,17 +94,17 @@ Installer options:
 |---|---|
 | `-AgentsOnly` | Install agents, skills, and configuration without building or swapping the CLI. A dirty tree is reported and the working tree is copied so assets can be iterated before committing. |
 | `-SkipAgents` | Preserve the previous CLI-only install. |
-| `-ConfigRoot <path>` | Install into an isolated config root. Use `OPENCODE_AGENT_SYSTEM_SKIP_RUNTIME_VERIFY=1` for a clean-install test that cannot reach the live managed service. |
+| `-ConfigRoot <path>` | Install into an isolated config root. Runtime verification runs `opencode debug agents --standalone`, so it reads that root rather than the live service; set `OPENCODE_AGENT_SYSTEM_SKIP_RUNTIME_VERIFY=1` to skip it. |
 | `-Force` | Back up and replace a managed file that was modified since the last install or collides with an unmanaged file. |
-| `-KeepAutoAccept` | Keep `session.permissions: "autoaccept"`, record the opt-out in the installed manifest, and warn that the TUI suppresses `ask` prompts. |
+| `-PromptPermissions` | Restore `session.permissions: "prompt"`; records the opt-out in the installed manifest. |
 
 `local:status` exits `0` in sync, `1` on drift, `2` when the agent system is not installed (including a missing or unreadable installed manifest), and `3` on error. `--json` returns the same data in machine-readable form.
 
-The default install changes `session.permissions` from `autoaccept` to `prompt` when `cli.json` exists, because `autoaccept` suppresses the TUI presentation of the SDD `ask` gates. The previous `cli.json` is backed up and the change is reported. `-KeepAutoAccept` is the explicit opt-out.
+The default install sets `session.permissions: "autoaccept"` in `cli.json`, creating the file when it is absent and keeping the value on reinstall. Autoaccept suppresses tool permission prompts only; the conversation-level SDD stage approvals remain, and hard deny rules still block. `-PromptPermissions` restores `prompt` mode with a backup and records the opt-out in the installed manifest.
 
 Agent-system backups live under `~/.config/opencode/backups/agent-system/<timestamp>/` with a `backup.json` manifest and the newest 5 are retained. `local:rollback -AgentsOnly` restores the most recent backup, verifies the restored hashes, removes files the install created, and preserves unmanaged files created after the backup. `local:rollback -BinaryOnly` restores only the CLI. With no backup, the command exits `2`.
 
-Tier boundary: `fast`, `medium`, and `heavy` are plugin-registered subagents and the sole owners of model selection. The four SDD roles keep their own `subagent` permissions and stage gates; the Spec Writer may invoke `explore` (allow) and `implementer`/`tester`/`qa` (ask), the Implementer may invoke `explore` (allow) and any other subagent only with `ask`, the Tester denies all subagents, and the QA denies all subagents by default and may invoke `explore` only with `ask`. No SDD role may `allow` `fast`, `medium`, or `heavy`. Tier selection does not alter stage authorization, approval gates, or correction limits. The model-router plugin remains external at `opencode-model-router@2.9.1`; its model IDs and routing behavior are unchanged.
+Tier boundary: `fast`, `medium`, and `heavy` are plugin-registered subagents and the sole owners of model selection. The four SDD roles keep their own `subagent` permissions and stage gates. The Spec Writer may invoke `explore` and `fast` (allow) and `implementer`/`tester`/`qa` (ask); `medium` and `heavy` are denied. The Implementer may invoke `explore` (allow) and `fast`/`medium`/`heavy`/`general` (ask). The Tester invokes no subagents. The QA may invoke `explore` only, with `ask`. `build` may invoke `explore`/`fast`/`medium`/`heavy`/`general` but not the SDD roles. The tier agents invoke nothing. Tier selection does not alter stage authorization, approval gates, or correction limits. `plan` is disabled; `spec-writer` is the planning primary agent. The model-router plugin remains external at `opencode-model-router@2.9.1`.
 
 Rollback: save work and close clients (`opencode service stop`), run `bun run local:rollback`, then reopen `opencode .` and verify it. The rollback keeps the pre-rollback executable as an `opencode.exe.old-*` rename for one more undo, syncs the build record from the archive, and removes the record when the archive predates build manifests. A rename still held by a running session is reported rather than deleted; the next install or prune removes it once the session exits.
 

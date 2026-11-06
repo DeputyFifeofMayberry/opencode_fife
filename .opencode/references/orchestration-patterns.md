@@ -77,10 +77,10 @@ If any answer is "no," fall back to direct invocation or a single-persona comman
 
 ### 4. Sequential pipeline as user-driven slash commands
 
-The user runs slash commands in a defined order, carrying context (or commit history) between them. There is no orchestrator agent — the user IS the orchestrator.
+The user runs the stages in a defined order, carrying context (or commit history) between them. The planning stage is the `spec-writer` agent, not a slash command. There is no orchestrator agent — the user IS the orchestrator.
 
 ```
-user runs:  /spec  →  /plan  →  /build  →  /test  →  /review  →  /ship
+user runs:  /spec  →  spec-writer  →  /build  →  /test  →  /review  →  /ship
 ```
 
 **Use when:** the workflow has dependencies (each step needs the previous step's output) and human judgment between steps adds value.
@@ -272,7 +272,7 @@ Do **not** rebuild this as a `/debug` slash command that fans out subagents. Sub
 
 - Production-bound verdict on a known diff → use `/ship` (subagents).
 - One specialist perspective on one artifact → direct persona invocation.
-- Sequential lifecycle (spec → plan → build) → user-driven slash commands (Pattern 4).
+- Sequential lifecycle (spec → spec-writer → build) → user-driven slash commands (Pattern 4).
 - Read-heavy research with a small digest → built-in `Explore` subagent.
 
 Reach for Agent Teams only when teammates **need** to challenge each other to produce the right answer.
@@ -315,7 +315,7 @@ A `code-reviewer` that internally invokes `security-auditor` when it sees auth c
 
 ### C. Sequential orchestrator that paraphrases
 
-An agent that calls `/spec`, then `/plan`, then `/build`, etc. on the user's behalf.
+An agent that calls `/spec`, then runs the `spec-writer` stage, then `/build`, etc. on the user's behalf.
 
 **Why it fails:**
 - Loses the human checkpoints that catch wrong-direction work

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "agentSystemVersion": "2.0.0",
-  "roleContentVersion": "1.1.1",
+  "agentSystemVersion": "2.1.0",
+  "roleContentVersion": "1.2.0",
   "plugin": "opencode-model-router@2.9.1",
   "lineEndings": "lf",
   "files": [
@@ -11,7 +11,7 @@
       "source": ".opencode/agents/implementer.md",
       "target": "agents/implementer.md",
       "scope": "global",
-      "sha256": "4b5eb2ce9f23bcde1cf17406528449a2fb0281714d71689dcad9e4799660340f"
+      "sha256": "a2dee29a3dde5dcf812be497e6568aebd85fbfe363d703c2f2f0dc11bbe57cb5"
     },
     {
       "kind": "agent",
@@ -19,7 +19,7 @@
       "source": ".opencode/agents/qa.md",
       "target": "agents/qa.md",
       "scope": "global",
-      "sha256": "c4a4890344355e87a7dca94f44f96d1c0647dad94c6bd887556e811da3ec55ab"
+      "sha256": "f07a02745cfda0d9da73e1c77975aedae58dab64f9649973e18b1653f5533ca1"
     },
     {
       "kind": "agent",
@@ -27,7 +27,7 @@
       "source": ".opencode/agents/spec-writer.md",
       "target": "agents/spec-writer.md",
       "scope": "global",
-      "sha256": "b70e647f7db287c71777b3dd8f750ba6d571b6350e8b97cf4a8fa265dc1ba642"
+      "sha256": "aaad82e7d8806db99a095600daa660eb62bde4a6dd8eb10d4e19730b876ffc0c"
     },
     {
       "kind": "agent",
@@ -43,7 +43,7 @@
       "source": "agent-system/config/model-router.overrides.jsonc",
       "target": null,
       "scope": "config",
-      "sha256": "09eac19d8345269ffa402ec9f7c731f6f6db00c1d98180db483d82ece4d2d6b1"
+      "sha256": "22448bb5e9691b475716d415320cafc46c026d588868f874e276601735d4daf5"
     },
     {
       "kind": "config",
@@ -51,7 +51,7 @@
       "source": "agent-system/config/opencode.fragment.json",
       "target": null,
       "scope": "config",
-      "sha256": "5ae526220736dc6335aadea97eeb963aec7c83c721dd7712da4d56c53e1fd71f"
+      "sha256": "adc3c9285245e5eda90ba0178623632e1674975e3aaae46625da60a401223393"
     },
     {
       "kind": "skill",

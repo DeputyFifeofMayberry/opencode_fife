@@ -4,6 +4,8 @@ export interface WorktreeCreateInput {
   readonly directory: string
   /** Starting ref, not the name of a new branch. Reject unsupported refs rather than ignoring them. */
   readonly branch?: string
+  /** Create and check out this new branch instead of a detached HEAD. */
+  readonly newBranch?: string
 }
 
 export interface WorktreeRemoveInput {

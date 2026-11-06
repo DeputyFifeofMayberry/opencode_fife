@@ -51,7 +51,7 @@ const seedSession = Effect.fn(function* (sessionID: SessionID) {
 
 describe("operationFor", () => {
   bunIt("maps built-in agents and honors config overrides", () => {
-    expect(operationFor("plan")).toBe("plan")
+    expect(operationFor("spec-writer")).toBe("plan")
     expect(operationFor("review")).toBe("review")
     expect(operationFor("explore")).toBe("explore")
     expect(operationFor("general")).toBe("general")
@@ -79,8 +79,8 @@ describe("EffortDelegation.seed", () => {
 
       const id2 = SessionID.make("ses_delegation_plan")
       yield* seedSession(id2)
-      // Without overrides the built-in map applies: plan starts deep.
-      yield* EffortDelegation.seed({ efforts }, { sessionID: id2, agent: "plan", inheritedVariants: [] })
+      // Without overrides the built-in map applies: the planning role starts deep.
+      yield* EffortDelegation.seed({ efforts }, { sessionID: id2, agent: "spec-writer", inheritedVariants: [] })
       expect((yield* efforts.get(id2))?.baseLevel).toBe("deep")
     })
   })
@@ -94,7 +94,7 @@ describe("EffortDelegation.seed", () => {
       yield* seedSession(id)
       yield* EffortDelegation.seed(
         { efforts, overrides: policy?.agent_operations },
-        { sessionID: id, agent: "plan", inheritedVariants: [undefined, undefined, "low"] },
+        { sessionID: id, agent: "spec-writer", inheritedVariants: [undefined, undefined, "low"] },
       )
       expect(yield* efforts.get(id)).toBeUndefined()
     })
@@ -106,7 +106,7 @@ describe("EffortDelegation.seed", () => {
       const id = SessionID.make("ses_delegation_existing")
       yield* seedSession(id)
       yield* efforts.set({ sessionID: id, baseLevel: "low", revision: 3 })
-      yield* EffortDelegation.seed({ efforts }, { sessionID: id, agent: "plan", inheritedVariants: [] })
+      yield* EffortDelegation.seed({ efforts }, { sessionID: id, agent: "spec-writer", inheritedVariants: [] })
       const row = yield* efforts.get(id)
       expect(row?.baseLevel).toBe("low")
       expect(row?.revision).toBe(3)

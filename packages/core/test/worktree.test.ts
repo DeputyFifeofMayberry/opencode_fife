@@ -394,6 +394,35 @@ describe("Worktree", () => {
     }),
   )
 
+  it.live("creates a worktree on a new branch from a selected base", () =>
+    Effect.gen(function* () {
+      const input = yield* setup()
+      const worktree = yield* fixtureWorktree()
+      const parent = abs(`${input.root.path}-new-branch-worktree`)
+      yield* Effect.addFinalizer(() => Effect.promise(() => fs.rm(parent, { recursive: true, force: true })))
+      yield* Effect.promise(async () => {
+        await $`git branch feature-base`.cwd(input.sourceDirectory).quiet()
+      })
+
+      const created = yield* worktree.create({
+        branch: "feature-base",
+        newBranch: "session-work",
+        directory: parent,
+        name: "worktree",
+      })
+
+      const head = (yield* Effect.promise(() => $`git rev-parse HEAD`.cwd(created.directory).quiet().text())).trim()
+      const base = (yield* Effect.promise(() =>
+        $`git rev-parse feature-base`.cwd(input.sourceDirectory).quiet().text(),
+      )).trim()
+      const current = (yield* Effect.promise(() =>
+        $`git branch --show-current`.cwd(created.directory).quiet().text(),
+      )).trim()
+      expect(head).toBe(base)
+      expect(current).toBe("session-work")
+    }),
+  )
+
   it.live("does not interpret a branch as a git option", () =>
     Effect.gen(function* () {
       const input = yield* setup()

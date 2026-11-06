@@ -30,6 +30,15 @@ const MoveOutput = Schema.Struct({ sessionID: Session.ID, directory: AbsolutePat
 
 export const WorktreeCreateInput = Schema.Struct({
   name: Schema.Trim.check(Schema.isNonEmpty()).annotate({ description: "Worktree name." }),
+  branch: Schema.optionalKey(Schema.Trim.check(Schema.isNonEmpty())).annotate({
+    description: "Starting ref. Defaults to the source worktree's HEAD. This is not the name of a new branch.",
+  }),
+  newBranch: Schema.optionalKey(Schema.Trim.check(Schema.isNonEmpty())).annotate({
+    description: "Create and check out this new branch instead of a detached HEAD.",
+  }),
+  from: Schema.optionalKey(AbsolutePath).annotate({
+    description: "Source worktree directory. Its HEAD is the default starting ref.",
+  }),
 })
 
 export const WorktreeRemoveInput = Schema.Struct({
@@ -161,17 +170,26 @@ export const Plugin = {
         })
         draft.add({
           name: "worktree_create",
-          description: "Create a named worktree. Returns its directory.",
+          description:
+            "Create a named worktree, optionally on a new branch started from a chosen ref. Returns its directory.",
           input: WorktreeCreateInput,
           output: Worktree.Info,
           options: { namespace: "opencode", codemode: true, pinned: true },
           execute: (input) =>
-            ctx.worktree.create({ projectID: ctx.location.project.id, name: input.name }).pipe(
-              Effect.map((output) => ({ output, content: `Created worktree in ${output.directory}.` })),
-              Effect.mapError(
-                (error) => new ToolFailure({ message: `Unable to create worktree ${input.name}`, error }),
+            ctx.worktree
+              .create({
+                projectID: ctx.location.project.id,
+                name: input.name,
+                branch: input.branch,
+                newBranch: input.newBranch,
+                from: input.from,
+              })
+              .pipe(
+                Effect.map((output) => ({ output, content: `Created worktree in ${output.directory}.` })),
+                Effect.mapError(
+                  (error) => new ToolFailure({ message: `Unable to create worktree ${input.name}`, error }),
+                ),
               ),
-            ),
         })
         draft.add({
           name: "worktree_list",

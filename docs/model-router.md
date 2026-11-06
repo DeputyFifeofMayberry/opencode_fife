@@ -39,7 +39,7 @@ The live mapping:
 | Tier | Model | Pin |
 |---|---|---|
 | `fast` | `vercel/minimax/minimax-m3.1-flash` | `medium` |
-| `medium` | `vercel/deepseek/deepseek-v4.1-flash-1017` | `max` |
+| `medium` | `mistral/deepseek-v4-1-flash-1017` | `max` |
 | `heavy` | `vercel/openai/gpt-6.1-terra` | `high` |
 
 All three tiers are pinned, so no tier keeps an operation seed. `medium` pins
@@ -49,6 +49,23 @@ comparison justifies its `xhigh` design intent. See "Per-tier effort pins" in
 section 4 for the rules and rollback.
 
 `fast` is read-only by default. Never dispatch an edit to it.
+
+### Subagent tier mapping
+
+`subagentTiers` maps a non-tier agent to a tier so the agent resolves that tier's
+model. It applies to agents whose mode is `subagent` or unset; agents with mode
+`all` or `primary` are skipped. Markdown-defined subagents are skipped at config
+time but can still receive the tier at dispatch time when the call names no
+model.
+
+Live value in `opencode-model-router.overrides.jsonc`:
+
+```jsonc
+"subagentTiers": { "explore": "fast", "qa": "heavy" }
+```
+
+`explore` resolves the `fast` model and `qa` resolves the `heavy` model. The
+three tier agents keep their preset models.
 
 ## 3. Configuration paths and precedence
 
@@ -107,7 +124,7 @@ Router overrides, with placeholders:
     "escalate": {
       "effortBump": false,
       "variantSteps": "none",
-      "maxAttemptsPerTier": 1,
+      "maxAttemptsPerTier": 2,
       "maxTotalAttempts": 3,
       "costCeiling": { "multiple": 4 }
     }
@@ -235,7 +252,7 @@ The report joins descendants through `parentID`. An unexported child silently un
 3. Restart the server: `opencode service restart`.
 4. Re-run the tier and effort checks:
    - `opencode debug agents` shows the three tiers with the expected models.
-   - `/tiers` shows the active preset and no variant fields.
+   - `/tiers` shows the active preset and the pinned variant for each tier.
    - `/router` shows the expected engine and preset. Do not rely on a `config notice` line: this build dropped an invalid `engine` value without printing one.
    - A `fast` dispatch refuses an edit.
    - A `medium`/`heavy` dispatch reports the expected base level and next rule.
