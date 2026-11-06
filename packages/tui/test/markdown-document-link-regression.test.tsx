@@ -44,6 +44,18 @@ test("renders a document path once when terminal hyperlinks are unavailable", as
   expect(frame).not.toContain("file:///")
 })
 
+test("renders a document path when its file check fails", async () => {
+  const content = linkifyDocumentPaths("see docs/plan.md for details", {
+    cwd: "Y:/CodingProjects/opencode_fife",
+    exists: () => {
+      throw new Error("EUNKNOWN: stat failed")
+    },
+  })
+  const frame = await render(content)
+
+  expect(frame).toContain("see docs/plan.md for details")
+})
+
 test("still shows a web URL when terminal hyperlinks are unavailable", async () => {
   const frame = await render("see [the docs](https://example.com/docs) for details")
 

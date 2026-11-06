@@ -32,7 +32,12 @@ function link(raw: string, options: Options) {
   // Held placeholders and pasted binary text can contain NUL, which statSync rejects.
   if (raw.includes("\u0000")) return undefined
   const resolved = absolute(raw, options.cwd)
-  if (!options.exists(resolved)) return undefined
+  try {
+    if (!options.exists(resolved)) return undefined
+  } catch {
+    // An inaccessible file must not prevent the session from rendering.
+    return undefined
+  }
   return { resolved, markdown: `[${raw}](${href(resolved)})` }
 }
 
