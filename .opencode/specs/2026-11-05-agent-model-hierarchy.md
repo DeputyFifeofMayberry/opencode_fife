@@ -330,14 +330,28 @@ D-01 through D-08 were approved by the user on 2026-11-05. D-10 is user-requeste
 
 ## 12. Execution record
 
-**Execution status:** Not started
-**Current stage:** Awaiting implementation authorization
-**Authorizations:** Specification revision 2 approved 2026-11-05; implementation not authorized
+**Execution status:** In progress
+**Current stage:** Implementation complete; awaiting testing authorization
+**Authorizations:** Specification revision 2 approved 2026-11-05; implementation authorized 2026-11-05
 **Correction cycles:** 0 of 2
-**Next owner:** User for implementation authorization
+**Next owner:** User for testing authorization
 
 | Stage | Owner | Authorization | Result | Evidence |
 |---|---|---|---|---|
 | Specification (revision 1) | Spec Writer | Requested by user | Superseded by revision 2 | Draft history |
 | Specification (revision 2) | Spec Writer | Approved by user, 2026-11-05 | Approved | This document |
-| Implementation | Implementer | Not authorized | Not started | None |
+| Implementation | Implementer | Authorized 2026-11-05 | Complete | `.opencode/reports/implementation/2026-11-05-agent-model-hierarchy.md` |
+
+## 13. Post-approval change — 2026-11-05
+
+After implementation, the user directed the removal of the Spec Writer's `edit`, `shell`, and write-capable `subagent` restrictions. The installed role now allows `edit *`, `shell *`, and `subagent *`, and its prompt no longer forbids editing code or committing.
+
+This supersedes the `spec-writer` row of R-05 and the Spec Writer clause of R-07; AC-05 no longer applies to `spec-writer`. The remaining matrix rows (`implementer`, `tester`, `qa`, `build`, and the three tiers) are unchanged.
+
+| Requirement | Approved Revision 2 | Current |
+|---|---|---|
+| R-05, `spec-writer` row | `explore`, `fast`; `implementer`/`tester`/`qa` with ask; deny `medium`/`heavy` | all subagents allowed |
+| R-07, Spec Writer clause | Spec Writer cannot edit application code | no longer applies |
+| AC-05, `spec-writer` clause | Spec Writer cannot invoke `medium`/`heavy` | no longer applicable |
+
+This is a user-directed scope change, not an implementation deviation. The Revision 2 baseline above remains the record of what was approved.

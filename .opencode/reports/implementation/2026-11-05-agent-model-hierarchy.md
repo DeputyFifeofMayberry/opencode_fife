@@ -14,7 +14,7 @@
 | R-02 Default model | Implemented | `model: mistral/deepseek-v4-1-flash-1017#max` in fragment + project config; `debug agents` shows no explicit model on spec-writer/implementer/tester/build/general |
 | R-03 Tier mapping | Implemented | `subagentTiers {explore:fast, qa:heavy}` plus explicit fallback models; verified resolved models |
 | R-04 Delegation depth | Implemented | `experimental.subagent_depth: 2`; live implementer → explore verified (§3c) |
-| R-05 Tier access matrix | Implemented | Config matrix implemented and asserted; `implementer.md` deny rules and depth paragraph applied |
+| R-05 Tier access matrix | Implemented, then superseded for `spec-writer` | Config matrix implemented and asserted; `implementer.md` deny rules and depth paragraph applied. The 2026-11-05 permission change opened the Spec Writer's edit, shell, and subagent access (see §3b) |
 | R-06 Autoaccept default | Implemented | `cli.json` created with `autoaccept`; `-PromptPermissions` opt-out; `-KeepAutoAccept` removed with an explicit error |
 | R-07 Deny preservation | Implemented | No deny rule relaxed; installer asserts the matrix and the spec-writer edit/shell denies |
 | R-08 Installer and manifest | Implemented | Versions 2.1.0 / 1.2.0; manifest regenerated and `--check` passes; clean install + idempotence verified |
@@ -115,6 +115,8 @@ assertions passed. Independent checks against the live config root:
 | Live router overrides | `activePreset=fife`, `activeMode=normal`, `subagentTiers={"explore":"fast","qa":"heavy"}`, preset `fife` intact |
 | Installed manifest | `agentSystemVersion=2.1.0`, `roleContentVersion=1.2.0`, `permissionMode=autoaccept`, `promptPermissions=false` |
 | `bun run local:status` | 54/54 managed files in sync; config in sync; installed build matches `dev` HEAD |
+
+**Post-report change.** The user later removed the Spec Writer's `edit`, `shell`, and write-capable `subagent` restrictions. The `spec-writer` row of the tier-access matrix above and the Spec Writer clause of R-07 no longer describe the installed role; the other rows are unchanged. See the spec's §13.
 
 ### 3c. Live TUI verification of the remaining gaps
 
