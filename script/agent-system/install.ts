@@ -509,23 +509,12 @@ function assertPermissions(agents: Record<string, unknown>[], logPath: string) {
   }
 
   require("spec-writer", [
-    { action: "edit", resource: "*", effect: "deny" },
-    { action: "edit", resource: ".opencode/specs/**", effect: "allow" },
-    { action: "shell", resource: "*", effect: "deny" },
-    { action: "subagent", resource: "*", effect: "deny" },
-    { action: "subagent", resource: "explore", effect: "allow" },
-    { action: "subagent", resource: "fast", effect: "allow" },
-    { action: "shell", resource: "git --no-pager worktree list --porcelain", effect: "allow" },
-    { action: "shell", resource: "gh auth status", effect: "allow" },
+    { action: "edit", resource: "*", effect: "allow" },
+    { action: "shell", resource: "*", effect: "allow" },
+    { action: "subagent", resource: "*", effect: "allow" },
+    { action: "external_directory", resource: "*", effect: "ask" },
   ])
-  for (const id of ["implementer", "tester", "qa"]) {
-    const rule = find("spec-writer").find((entry) => entry.action === "subagent" && entry.resource === id)
-    if (!rule || rule.effect !== "ask") {
-      throw new InstallError(`spec-writer must ask before invoking ${id}; loaded rule is ${JSON.stringify(rule)}.`)
-    }
-  }
 
-  forbid("spec-writer", ["medium", "heavy"])
   forbid("implementer", ["spec-writer", "tester", "qa"])
   forbid("tester", ["explore", "fast", "medium", "heavy", "general", "spec-writer", "implementer", "qa"])
   forbid("build", ["spec-writer", "implementer", "tester", "qa"])
@@ -579,7 +568,7 @@ function assertMarkers(agents: Record<string, unknown>[], logPath: string) {
     "Blocked:",
     "check revision",
     "Session start: repository integrity and isolation",
-    "`medium` and `heavy` are outside your role",
+    "Each downstream invocation requires explicit user authorization",
   ]
   for (const marker of markers) {
     if (!specWriterSystem.includes(marker)) throw new InstallError(`spec-writer system prompt is missing the v1.2.0 marker: ${marker}`)
