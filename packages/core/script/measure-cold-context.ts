@@ -30,7 +30,7 @@ if (resolved.exitCode !== 0) throw new Error(`Unknown baseline ref ${requested}:
 const baseline = resolved.stdout.toString().trim()
 
 const normalize = (text: string) => text.replaceAll("\r\n", "\n")
-const files = (await Array.fromAsync(new Bun.Glob("*/SKILL.md").scan({ cwd: path.join(root, ".opencode/skills") }))).sort()
+const files = (await Array.fromAsync(new Bun.Glob("**/SKILL.md").scan({ cwd: path.join(root, ".opencode/skills") }))).sort()
 const baselineFiles = (() => {
   const result = Bun.spawnSync(["git", "ls-tree", "-r", "--name-only", baseline, ".opencode/skills"], { cwd: root, stderr: "pipe" })
   if (result.exitCode !== 0) throw new Error(`Could not list baseline skills: ${result.stderr.toString().trim()}`)
@@ -96,12 +96,12 @@ const model = SessionRunnerModel.resolved(OpenAIChat.route.model({ id: "fixture"
   limit: { context: 200_000, output: 32_000 },
 })
 const transport = SessionModelTransport.Service.of({
-  bind: () => ({ execute: () => Effect.die("unused") }),
+  bind: () => ({ execute: () => Effect.die(new Error("fixture transport called")) }),
   close: () => Effect.void,
   closeAll: Effect.void,
 })
 const tool = new ToolDefinition({ name: "fixture", description: "Fixed fixture tool", inputSchema: { type: "object" } })
-const toolSnapshot = { definitions: [tool], execute: () => Effect.die("unused") }
+const toolSnapshot = { definitions: [tool], execute: () => Effect.die(new Error("fixture tool called")) }
 const prompt = "Explain the fixture."
 const pluginText = "Fixed fixture plugin instructions."
 
@@ -122,6 +122,7 @@ const measure = (instructions: string, skillCatalog: string) =>
       tools: toolSnapshot,
     })
     const request = prepared.request
+    if (request.system.length !== 3) throw new Error(`Expected 3 system parts, got ${request.system.length}`)
     const wire = JSON.stringify({ system: request.system, messages: request.messages, tools: request.tools })
     return {
       projectInstructions: request.system[0]?.text.length,

@@ -28,10 +28,10 @@ describe("Cold context guidance routes", () => {
     for (const guide of guidePaths) {
       expect(instructions).toContain(guide)
       const absolute = path.resolve(root, guide)
+      expect(FileAccess.resolvePath(root, guide)).toBe(absolute)
       for (const directory of [root, path.join(root, "packages/core")]) {
-        const target = FileAccess.resolvePath(directory, absolute)
-        expect(target).toBe(absolute)
-        expect((await Bun.file(target).text()).length).toBeGreaterThan(0)
+        expect(FileAccess.resolvePath(directory, guide)).toBe(path.resolve(directory, guide))
+        expect((await Bun.file(absolute).text()).length).toBeGreaterThan(0)
       }
     }
   })
@@ -49,7 +49,8 @@ describe("Cold context guidance routes", () => {
       const files = Environment.makeFiles(Environment.makeLocalDriver(spawner))
       for (const guide of guidePaths) {
         for (const directory of [root, path.join(root, "packages/core")]) {
-          const target = AbsolutePath.make(FileAccess.resolvePath(directory, path.resolve(root, guide)))
+          expect(FileAccess.resolvePath(directory, guide)).toBe(path.resolve(directory, guide))
+          const target = AbsolutePath.make(FileAccess.resolvePath(root, guide))
           const result = yield* ReadToolFileSystem.read(files, target, guide, {})
           expect(result.content).toMatchObject({ type: "file", encoding: "utf8" })
           if (result.content.type !== "file" || result.content.encoding !== "utf8") throw new Error("Expected text")
