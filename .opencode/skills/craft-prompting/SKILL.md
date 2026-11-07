@@ -1,6 +1,6 @@
 ---
 name: craft-prompting
-description: "Adaptive prompt engineering for creating, revising, optimizing, or evaluating prompts. Assess the task, target model, context, constraints, and required output; select the simplest effective technique, from direct instructions to structure such as CRAFT (Context, Role, Action, Format, Tone), few-shot examples, decomposition, retrieval grounding, or schema constraints. Use CRAFT when it materially helps or is explicitly requested, not universally. Use for prompt artifacts, templates, critiques, and system or developer instructions; do not activate to execute an ordinary task, edit ordinary prose, or answer a general prompting question."
+description: "Use to create, revise, optimize, or evaluate prompts, prompt templates, and system or developer instructions. Do not invoke merely to execute a task, edit ordinary prose, or answer a general prompting question."
 ---
 
 # Adaptive Prompting (craft-prompting)

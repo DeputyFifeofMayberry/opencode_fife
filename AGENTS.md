@@ -19,6 +19,8 @@ Plans under `docs/superpowers/` and `docs/plans/` are preserved historical artif
 
 `.opencode/references/` holds the standing checklists: `definition-of-done.md` (completion bar), `testing-patterns.md`, `orchestration-patterns.md` (slash-command and persona patterns), and the `security-`, `performance-`, `observability-`, and `accessibility-checklist.md` files. Read the matching one when a change touches that dimension.
 
+All `.opencode/references/` paths in these instructions are relative to the repository root, not the session directory. Before using a file tool, resolve them against the repository root to an absolute path; use the environment's workspace root folder.
+
 ## Lessons Learned
 
 - Record lessons only when the `lessons-learned` skill is invoked.
@@ -36,6 +38,7 @@ Plans under `docs/superpowers/` and `docs/plans/` are preserved historical artif
 - Report what was delegated, why, and what came back. Do not hide child-session cost or failures.
 - Prefer existing slash commands for deterministic specialist workflows. `orchestration-patterns.md` covers slash-command and persona patterns.
 - High-risk or ambiguous work: plan first and get approval before implementing.
+- `fast`, `medium`, and `heavy` are plugin-registered subagents and the sole owners of model selection. The four SDD roles retain their own permissions and stage gates. `plan` is disabled; `spec-writer` is the planning primary and `build` is the default coding agent.
 
 ## Workflow
 
@@ -48,40 +51,23 @@ Plans under `docs/superpowers/` and `docs/plans/` are preserved historical artif
 
 ## Local Updates
 
-- "Update opencode", "create local update package", and "install local build" all mean one procedure: `bun run update:local` (alias of `install:local`) from the repo root on a committed `dev` tree. It installs both the CLI and the agent system. Full process: `docs/local-development.md`; confirmed decisions: `docs/intent/local-update.md`; agent-system contract: `agent-system/README.md`.
-- The canonical agent sources are `.opencode/agents/` and `.opencode/skills/`. `~/.config/opencode/` is an install target; never edit it as source. The installer copies the managed roles and global-scope skills there, merges the canonical tier keys into `opencode.json` and `opencode-model-router.overrides.jsonc`, and writes `agent-system.installed.json`.
-- Never install unasked. If `bun run local:status` shows `dev` ahead of the installed build, say so and wait for the user to request the update.
-- The installer refuses a dirty tree for a full install; commit first. `-AgentsOnly` reports the dirty tree and copies the working tree so assets can be iterated before committing. Its compiled smoke test is the only hard gate; other checks are advisory per the checklist in `docs/local-development.md`.
-- Options: `-AgentsOnly` (assets only, no CLI build), `-SkipAgents` (CLI only), `-ConfigRoot <path>` (isolated clean install), `-Force` (back up and replace a locally modified managed file), `-PromptPermissions` (restore `prompt` mode; autoaccept is the default and suppresses tool permission prompts only, leaving the SDD stage approvals intact).
-- Companion commands: `local:list`, `local:status`, `local:rollback`, `local:prune`, `agent:install`, `agent:status`, `agent:rollback`, `agent:manifest`, `test:agent-system`. Installs archive the previous build and prune the archive to the newest 5; agent-system backups use the same retention.
-- Tier boundary: `fast`, `medium`, and `heavy` are plugin-registered subagents and the sole owners of model selection. The four SDD roles keep their own `subagent` permissions and stage gates; tier selection does not alter stage authorization, approval gates, or correction limits. `plan` is disabled; `spec-writer` is the single planning primary agent and `build` remains the default coding agent.
+Before checking or reporting local update status, rolling back, pruning, updating, packaging, or installing OpenCode, read `.opencode/references/local-updates.md`. Never install without an explicit user request; protect active sessions. The canonical full procedure is `bun run update:local` on a clean, committed `dev` tree. If `bun run local:status` shows `dev` ahead of the installed build, say so and wait for the user to request the update.
 
 ## Live TUI Testing
 
-- `bun run dev:live` from a development worktree tests its TUI against the currently elected `opencode` background server and live sessions; pass a directory when needed (`bun run dev:live /path/to/project`).
-- Script discovers server via `opencode service status`, injects its private local credential (`opencode service get password`), uses the `dev` TUI storage channel so tabs and client-local state match the installed client.
-- Prefer `dev:live` over plain `bun run dev`. Implicit managed-service connection may replace the live server when worktree client version differs; explicit `--server` warns and continues without replacing it.
-- **Concurrent testing:** Worktree isolation does not isolate background servers, ports, storage, or live sessions — `dev:live` targets the currently elected server and the shared `dev` TUI storage channel from any worktree. Coordinate concurrent tests; use separate instances or storage to prevent interference.
+Before planning, reviewing, or running a live TUI test, read `.opencode/references/live-tui-and-desktop.md` and use `opencode-dev` when running it. Do not disrupt the shared server, storage, or active sessions.
 
 ## Live Desktop Diagnostics
 
-- When attaching Playwright to a running desktop app, use `chromium.connectOverCDP(endpoint, { noDefaults: true })`.
-- Without `noDefaults`, Playwright applies light-mode media emulation during attachment. An app following the system theme then flashes light until the connection closes. The option also preserves the existing focus and other media preferences.
-- Do not emulate a color scheme or reduced-motion preference on the user's live window unless explicitly requested; use an isolated test context for those scenarios.
+Before interacting with a live desktop window or planning, reviewing, or attaching diagnostics to it, read `.opencode/references/live-tui-and-desktop.md`. Preserve its focus, theme, and media preferences.
 
 ## TUI Stories
 
-- TUI story request → fixture-driven story under `packages/tui/src/feature-plugins/system/storybook`, registered in `index.tsx`.
-- Render the real production component, not a visual copy; keep submissions and side effects local so the story is safe to explore repeatedly.
-- Expose state dimensions via story keybindings, listed in `StoryFooter`; include a reset command when combinations can leave the fixture confusing.
-- Run one story: `OPENCODE_STORY=<story-id> bun run dev:live` from the development worktree; exercise narrow + wide terminal sizes when layout matters.
+Before planning, reviewing, creating, or changing a TUI story, read the TUI Stories section of `.opencode/references/live-tui-and-desktop.md`.
 
 ## TUI Theme Tokens
 
-- Choose tokens by semantic role, never current color: no raw `theme.hue`, no borrowing unrelated semantic tokens for a preferred appearance.
-- `text.feedback`/`background.feedback`: outcome/status feedback only (errors, warnings, success, informational). `formfield` states: form-control text, ordinals, selection markers. `action` states: actions.
-- Missing semantic role → extend theme schema, defaults, resolution, types before component use; never repurpose the nearest-looking token.
-- Changing the public token surface → verify built-in light + dark defaults and the custom-theme fallback path, plus the affected component.
+Before planning, reviewing, choosing, using, or changing TUI theme tokens, read the TUI Theme Tokens section of `.opencode/references/live-tui-and-desktop.md`.
 
 ## Branch Names
 
@@ -113,136 +99,7 @@ User-facing `feat`/`fix`/`perf` PRs: add a small looping animated SVG under `###
 
 ## Style Guide
 
-### General Principles
-
-- One function unless composable or reusable.
-- Validate unknown values once, at the owning boundary; pass typed values inward. No repeated `typeof value === "object"`/property-existence checks; no defensive revalidation of values already guaranteed by schema, constructor, or internal type.
-- No preemptive single-use helpers; inline at the call site unless reused, hiding a genuinely complex boundary, or carrying a clear independent name that improves the caller.
-- Speculative or vanishingly unlikely race/security complexity → explain concrete failure mode, likelihood, complexity cost; get user buy-in first. Never silently expand scope for theoretical robustness.
-- Avoid `try`/`catch` where possible.
-- No `any`.
-- Prefer Bun APIs (`Bun.file()`).
-- Prefer type inference; explicit annotations/interfaces only when necessary (exports, clarity).
-- Prefer functional array methods (`flatMap`, `filter`, `map`) over for loops; type guards on `filter` preserve downstream inference.
-- `src/config`: follow the existing self-export pattern at file top (`export * as ConfigAgent from "./agent.js"`).
-- Effect generators: bind services to named variables before calling methods; no nested service yields (`yield* (yield* Foo.Service).bar()`).
-
-Inline values used only once:
-
-```ts
-// Good
-const journal = await Bun.file(path.join(dir, "journal.json")).json()
-
-// Bad
-const journalPath = path.join(dir, "journal.json")
-const journal = await Bun.file(journalPath).json()
-```
-
-### Destructuring
-
-Avoid unnecessary destructuring; dot notation preserves context.
-
-```ts
-// Good
-obj.a
-obj.b
-
-// Bad
-const { a, b } = obj
-```
-
-### Imports
-
-- No aliased imports (`import { foo as bar } from "..."`, renamed imports like `resolve as pathResolve`).
-- No type-position `import("...")`, e.g. `Schema.declare<import("@opencode/plugin/effect/plugin").Plugin["effect"]>`. Genuine, unavoidable name collision only: aliased type import (`import type { Plugin as PluginDefinition } from "..."`) as last resort — still strongly discouraged.
-- No star imports (`import * as Foo`, `import type * as Foo`).
-- Namespace-style value → import the module's exported namespace by name (`import { Project } from "@opencode/core/project"`), reference `Project.ID`.
-- Dynamic imports for heavy modules needed only in selected code paths, especially startup-sensitive entrypoints. Destructure bindings near the top of the narrowest scope, reading like normal imports. No inline chains (`await import("./module").then((mod) => mod.value())`, `(await import("./module")).value()`). Branch-specific imports stay inside the branch needing them, preserving lazy loading.
-
-### Variables
-
-Prefer `const` over `let`; ternaries or early returns over reassignment.
-
-```ts
-// Good
-const foo = condition ? 1 : 2
-
-// Bad
-let foo
-if (condition) foo = 1
-else foo = 2
-```
-
-### Control Flow
-
-No `else`; prefer early returns.
-
-```ts
-// Good
-function foo() {
-  if (condition) return 1
-  return 2
-}
-
-// Bad
-function foo() {
-  if (condition) return 1
-  else return 2
-}
-```
-
-### Complex Logic
-
-Several validation branches or supporting details → main function reads as the happy path; supporting details move to small helpers below.
-
-```ts
-// Good
-export function loadThing(input: unknown) {
-  const config = requireConfig(input)
-  const metadata = readMetadata(input)
-  return createThing({ config, metadata })
-}
-
-function requireConfig(input: unknown) {
-  ...
-}
-```
-
-- Helpers stay close to the code they support, below the main export when that reads better; extract only real concepts (`requireConfig`, `readMetadata`).
-- No `Effect` returns from helpers unless genuinely effectful; synchronous parsing, validation, option building stay synchronous.
-- Untrusted JSON → Effect schema helpers (`Schema.UnknownFromJsonString`, `Schema.decodeUnknownOption`), not manual `JSON.parse` in `Effect.try`.
-- Comments cover non-obvious constraints and surprising behavior only — not obvious assignments or control flow.
-
-### Schema Definitions (Drizzle)
-
-snake_case field names, so columns never redefine names as strings.
-
-```ts
-// Good
-const table = sqliteTable("session", {
-  id: text().primaryKey(),
-  project_id: text().notNull(),
-  created_at: integer().notNull(),
-})
-
-// Bad
-const table = sqliteTable("session", {
-  id: text("id").primaryKey(),
-  projectID: text("project_id").notNull(),
-  createdAt: integer("created_at").notNull(),
-})
-```
-
-### Experimental API
-
-- An experimental endpoint lives at `/api/experimental/<group>/...`, its OpenAPI identifier is `experimental.<group>.<method>`, and it lands in the SDK as `client.experimental.<group>.<method>`. Its description says "Experimental: may change without compatibility guarantees."
-- `packages/protocol/test/experimental-identifiers.test.ts` enforces the path and identifier match in both directions; the SDK namespace follows from the path.
-- An experimental field or parameter on a stable endpoint goes under an `experimental` key (`experimental.<name>`), the same way config does (`config.experimental.*`).
-- New endpoints and new default behaviors start experimental.
-- To graduate one, move the route out of `/api/experimental`, drop the `experimental.` prefix, and note it in `CHANGELOG.md`.
-- Experimental HTTP routes change without aliases: rename or remove the route, then update the callers.
-- A breaking move of shipped SDK or plugin API (including moving it under `experimental`) keeps the old path and type names as deprecated aliases of the new ones until the next minor, each marked `@deprecated` with the replacement and "Removed in the next minor". Generated SDK moves get them from the codegen (`compile(..., { aliases: true })` in `packages/client/script/generate.ts`), not by hand.
-- Experimental plugin hooks are named `experimental.*` (`experimental.ws.handshake`).
+Before writing, editing, or reviewing code, or designing, reviewing, implementing, or documenting experimental APIs or plugin hooks, read `.opencode/references/coding-style.md`. Follow the repository invariants and established local style; validate unknown inputs at their boundary, avoid `any`, and preserve module boundaries.
 
 ## Testing
 
@@ -262,30 +119,11 @@ const table = sqliteTable("session", {
 
 ## Session Core
 
-- Durable events stay minimal: record irreducible new facts; never repeat state derivable by folding ordered aggregate history. Enrich projections and read models with previous or derived state when consumers need self-contained views.
-- Durable prompt admission stays separate from model execution. `Session.prompt(...)` publishes `session.inbox.enqueued`, whose projection inserts one durable `session_inbox` row, then schedules advisory `SessionExecution.wake(sessionID)` unless `resume: false` requests admit-only behavior. Delivery publishes `session.inbox.delivered`; its projection consumes the inbox row and inserts the visible message in the same transaction. `session_inbox` stores only unconsumed work.
-- Reusing a Session ID adopts the existing Session. Reused user/synthetic inbox item ID is idempotent when Session and type match: first admission wins; retried payload, metadata, and delivery mode are ignored, whether pending or already delivered (reconciled from the projected message without retained enqueue history). Cross-Session or cross-type reuse fails. Control items keep their operation-specific conflict behavior.
-- `SessionExecution` stays process-global and Session-ID based. Its local implementation owns the process-local Session coordinator and discovers placement via `SessionStore` + `LocationServiceMap.get(session.location)` only when a drain starts; no layer takes a Session ID. Interruption targets the active process-local ownership chain for that Session; interrupting a known-but-idle or locally-unowned Session is a no-op; the public API rejects an unknown Session.
-- `SessionRunner`, model resolution, tool registry, permissions, filesystem: all Location-scoped. Omitted `Location.workspaceID` = implicit-local placement; explicit workspace identity reserved for future placement semantics.
-- Each step: one explicit `llm.stream` call continuing from reloaded history. No in-memory tool loop.
-- Local Session drains stay process-local until clustering is implemented. `SessionRunCoordinator` joins explicit same-Session resumes, coalesces prompt wakeups, lets different Sessions run concurrently. Write-ahead execution claim marks a process-local busy period for restart recovery: terminal completion, failure, or user interruption releases it; shutdown interruption and process death preserve it. Startup recovery resumes claimed top-level Sessions with durable per-execution attempt accounting. Claim = recovery marker, not clustered ownership, fencing, or an exactly-once guarantee.
-- Delivery vocabulary stays explicit. Prompts steer by default. Safe step boundaries: steered compaction takes priority up to the first steered move control; other steers keep enqueue order. Idle boundary: steers take priority; otherwise exactly one queued item delivers before the runner reevaluates continuation. Inbox items may be cancelled or changed between queue and steer before delivery. Promoting new user input resets the selected agent's step allowance; a steer batch resets it once.
-- One step = one logical LLM call; its durable record covers only the model-visible span. Never write "provider turn"; never use bare "turn" for a single call — "turn" is reserved for the future assistant-turn unit containing all steps from prompt promotion until the session would go idle.
-- Event replay ownership stays separate from clustered Session execution ownership.
+Before investigating or explaining Session execution, history, inbox, compaction, or related APIs, or designing, reviewing, or changing them, read `.opencode/references/session-core.md` and preserve its invariants. One step is one logical LLM call. Never write "provider turn" or use bare "turn" for a single call; a turn is the future assistant-turn unit containing all steps until the session would go idle.
 
 ## Technical Communication and Decision Support
 
-The user is an educated, technically curious professional with strong analytical and project-management skills but no software engineering background. They follow complex ideas when explained; do not assume familiarity with code, architecture, or engineering conventions. Bridge that gap so they can evaluate alternatives and decide. The goal is understanding sufficient for sound decisions, not turning them into an engineer.
-
-- **Terms.** On first use of a term, acronym, concept, or tool: what it is in everyday English, what it does here, why it matters to this project. Keep the real term so it becomes familiar; never swap one piece of jargon for another. Explain only as much as the decision needs. Instead of "a middleware abstraction with dependency injection to decouple the services", say "separate these parts so they don't depend directly on each other, so changing one is less likely to break another; developers call this loose coupling".
-- **Subjects.** Cover what it is, what it does, why it matters here, and whether it needs a decision or only awareness. Skip questions that do not apply.
-- **Decisions.** Never present bare implementation options. State the choice in plain language, give each option's practical gain and cost, name the consequences that matter (quality, reliability, complexity, performance, security, cost, maintenance), then recommend one and say why. Frame choices around outcomes, not mechanisms. Routine engineering choices are yours; escalate only when a choice materially affects scope, cost, security, reliability, user experience, maintenance, or an established requirement, and follow existing approval boundaries.
-- **Problems.** For bugs, errors, and design weaknesses: what is happening, why, what the user would experience, whether it affects current behavior or future maintenance, how severe, whether action is needed, and a proportionate fix. Separate confirmed problems from risks and speculation; do not inflate an issue because it offends an ideal.
-- **Analogies.** Construction, project-management, or everyday parallels when they genuinely help. Never force one, never make it childish, never let it replace an accurate explanation, and name where it breaks down.
-- **Accuracy.** Simplification must not change meaning. Keep real distinctions, uncertainty, assumptions, and exact identifiers, paths, commands, and config values; explain why a detail matters instead of dropping it. Mark recommendations as recommendations, requirements as requirements.
-- **Tone.** Lead with the answer or recommendation, then the reasoning. Direct and respectful, never patronizing. Do not re-explain what the user has already shown they understand. Short answers for simple questions, enough background for complex ones; bullets and a concrete example when they shorten the explanation.
-- **Decision shape** (adapt, never template): Decision, Context, Options, Recommendation, Impact, Next step.
-- **Test before sending:** would an intelligent professional without software engineering experience understand what this is, why it matters, and what to do next? If not, rewrite.
+Use clear, concise language for an analytically strong user without assuming software engineering expertise. Lead with the answer, explain material terms and tradeoffs, and preserve uncertainty. Before preparing prose or explaining a technical decision, read `.opencode/references/technical-communication.md` from the repository root.
 
 ## Communication
 

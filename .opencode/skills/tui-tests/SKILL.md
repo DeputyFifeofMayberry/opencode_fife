@@ -1,6 +1,6 @@
 ---
 name: tui-tests
-description: Use when writing, fixing, or reviewing tests that render OpenTUI (testRender, createTestRenderer, createAppFixture) in packages/tui or packages/cli. Covers frame waits (waitForFrame, waitFor, waitForVisualIdle, flush), started vs non-started renderers, injected clocks, mock keyboard and mouse input, terminal sizes, cleanup and shared paths, and the 30s budget. Also use when a TUI test fails with "Timed out waiting for frame predicate after N passes", or when a tui test file is slow. For cli subprocess and service tests, use the unit-tests skill.
+description: "Use when writing, fixing, reviewing, or speeding up OpenTUI renderer tests in packages/tui or packages/cli, including testRender, createTestRenderer, createAppFixture, and flaky or slow TUI tests. For CLI subprocess and service tests use unit-tests."
 ---
 
 # TUI tests

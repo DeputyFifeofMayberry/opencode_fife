@@ -1,6 +1,6 @@
 ---
 name: component-tests
-description: Use when writing, changing, debugging, or reviewing the Playwright component tests that mount stories. That covers specs in packages/app/component-tests or packages/session-ui/component-tests, `*.fixture.tsx` files there or beside source (such as packages/gui-plugins/src/browser/panel.fixture.tsx), the stories they mount, and the shared harness in packages/stories (playwright/config.ts, playwright/story.ts, vite.config.ts, src/frame.tsx, src/index-plugin.ts, mocks). Also use when a component test is flaky, passed on retry, or fails with "Execution context was destroyed", "Failed to fetch dynamically imported module", or `#story-root` hidden. Covers mount args, source modules imported by URL, Vite dependency pre-bundling and reloads, a cold vs warm story server, mobile drawers, geometry, and checks before pushing.
+description: "Use for Playwright component tests, story fixtures, and the shared story harness in packages/app/component-tests, packages/session-ui/component-tests, packages/stories, or source-adjacent fixtures; also diagnose story server and flaky component tests."
 ---
 
 # Component tests

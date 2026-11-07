@@ -67,7 +67,7 @@
       "source": ".opencode/skills/app-e2e-tests/SKILL.md",
       "target": "skills/app-e2e-tests/SKILL.md",
       "scope": "project",
-      "sha256": "c1c4e3ad5fea5fa14619dcb6b35e5c26a59a03b13725f7cc04780360f7f27b8d"
+      "sha256": "21220b4efe66650661309d7b29991f1a76ad27ccf87c13605bafdf9cb2c424db"
     },
     {
       "kind": "skill",
@@ -99,7 +99,7 @@
       "source": ".opencode/skills/component-tests/SKILL.md",
       "target": "skills/component-tests/SKILL.md",
       "scope": "project",
-      "sha256": "a8219cf8cc77bf9e21c989b106c54aa77c085006157878a128c1117e20b54aa1"
+      "sha256": "f876d4db623699d683a5d3623911c4237225a497c8a8c0f6297949ac5684c7d5"
     },
     {
       "kind": "skill",
@@ -115,7 +115,7 @@
       "source": ".opencode/skills/constraint-driven-development/SKILL.md",
       "target": "skills/constraint-driven-development/SKILL.md",
       "scope": "global",
-      "sha256": "375cb5d1de2c069b1a2c6adcde76bb2c4709a899768fd690889667b95fd5f239"
+      "sha256": "6676138a8babb05c019a875b12b4a37cee69fc6ee42a2b383235708e2ae86881"
     },
     {
       "kind": "skill",
@@ -123,7 +123,7 @@
       "source": ".opencode/skills/construction-humanizer/SKILL.md",
       "target": "skills/construction-humanizer/SKILL.md",
       "scope": "global",
-      "sha256": "75301f543a6ece93042dedbe33fc72dd08f3c616f950223cda862847014433bc"
+      "sha256": "5d73fcffd629c9635a49b851c6cf87c8a7d185cab59d911e67824482ce41e013"
     },
     {
       "kind": "skill",
@@ -235,7 +235,7 @@
       "source": ".opencode/skills/craft-prompting/SKILL.md",
       "target": "skills/craft-prompting/SKILL.md",
       "scope": "global",
-      "sha256": "60ffd53cece2ab081f730ecefc3c7401028ca85ae2c33fb19b273b3b9bb7300b"
+      "sha256": "c3240f8b5f1b43fc92afb196e77cec3a752306509b854009b7e42059270503a0"
     },
     {
       "kind": "skill",
@@ -1731,7 +1731,7 @@
       "source": ".opencode/skills/security-and-hardening/SKILL.md",
       "target": "skills/security-and-hardening/SKILL.md",
       "scope": "global",
-      "sha256": "2e3fc60eed5aba97fe416f3f3c9317fdb014a682925ec70a733c3ff99e4b9858"
+      "sha256": "b101a52447ff3b0c87ffbe986928cf19ed26fdb757d51b6ce380fb4741b01d9c"
     },
     {
       "kind": "skill",
@@ -1771,7 +1771,7 @@
       "source": ".opencode/skills/tui-tests/SKILL.md",
       "target": "skills/tui-tests/SKILL.md",
       "scope": "project",
-      "sha256": "db566da22798300d5e357f661b4abc63883a6a3627d4678058ee502d740924fc"
+      "sha256": "2ec5396a6e5937014f452f2ecffcf97c41b6e816e55465cb03e141317e6d95c8"
     },
     {
       "kind": "skill",
@@ -1779,7 +1779,7 @@
       "source": ".opencode/skills/unit-tests/SKILL.md",
       "target": "skills/unit-tests/SKILL.md",
       "scope": "project",
-      "sha256": "31fb5d19b3bc0268de9e445db4a0b75d746b1d9598ccfe46edbda3b2da797ee5"
+      "sha256": "518ed5c5bd5bc1f8cfd18918ac6da6da8f550286b77facb4eb9a96e787cd997d"
     },
     {
       "kind": "skill",

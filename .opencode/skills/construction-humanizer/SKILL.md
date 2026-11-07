@@ -1,13 +1,6 @@
 ---
 name: construction-humanizer
-description: |
-  Write, rewrite, and review construction and job-search communication in the voice of
-  a capable, practical construction project management professional. Use for PM emails,
-  subcontractor and owner coordination, RFIs, submittals, bid leveling, meeting notes,
-  resumes, cover letters, LinkedIn messages, recruiter follow-ups, and career transitions.
-  Remove AI writing patterns without changing facts, commitments, contract language,
-  technical meaning, or the writer's level of responsibility. Favor clear, natural,
-  moderately technical language over corporate polish, empty jargon, or forced informality.
+description: "Write, rewrite, or review construction project management and job-search communication, including RFIs, bids, emails, resumes, and recruiter messages. Preserve facts, commitments, contract language, and responsibility."
 license: MIT
 metadata:
   version: "1.0.0"

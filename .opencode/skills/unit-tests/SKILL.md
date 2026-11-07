@@ -1,6 +1,6 @@
 ---
 name: unit-tests
-description: Use when writing, reviewing, speeding up, or fixing a flaky `bun test` unit test in any package (core, cli, server, ai, codemode, util, client, sdk, plugin, http-recorder, merman, app src and test-browser, desktop, gui-plugins, ui, session-ui, latex, ...), except OpenTUI renderer tests (see tui-tests). Also use when a test "timed out after 5000ms" on Windows CI, fails only on Windows, when the unit job is slow, when adding cli subprocess or service tests, or when adding a package's test task to turbo.json. Covers controlling time instead of sleeping, per-test timeouts, process and git spawn cost on Windows, Windows-only failures, temp dirs and process state, leaks between files, and reading CI timeouts.
+description: "Use when writing, reviewing, speeding up, or debugging Bun unit tests, CLI subprocess or service tests, Windows-only failures, CI timeouts, or package test tasks. For OpenTUI renderer tests use tui-tests instead."
 ---
 
 # Fast, Reliable Unit Tests
