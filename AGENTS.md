@@ -38,7 +38,7 @@ All `.opencode/references/` paths in these instructions are relative to the repo
 - Report what was delegated, why, and what came back. Do not hide child-session cost or failures.
 - Prefer existing slash commands for deterministic specialist workflows. `orchestration-patterns.md` covers slash-command and persona patterns.
 - High-risk or ambiguous work: plan first and get approval before implementing.
-- `fast`, `medium`, and `heavy` are plugin-registered subagents and the sole owners of model selection. The four SDD roles retain their own permissions and stage gates. `plan` is disabled; `spec-writer` is the planning primary and `build` is the default coding agent.
+- `fast`, `medium`, and `heavy` are plugin-registered subagents and the sole owners of model selection. The four SDD roles are disabled; `build` is the default coding agent.
 
 ## Workflow
 

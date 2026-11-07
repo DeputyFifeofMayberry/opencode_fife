@@ -23,26 +23,51 @@ import { refuseNetwork } from "../test/lib/effect"
 
 // Compare a committed baseline with the working tree; only fixed, non-private fixture text is emitted.
 const root = path.resolve(import.meta.dir, "../../..")
-const baseline = process.argv[2]
-if (!baseline) throw new Error("Usage: bun run script/measure-cold-context.ts <baseline-git-ref>")
+const requested = process.argv[2]
+if (!requested) throw new Error("Usage: bun run script/measure-cold-context.ts <baseline-git-ref>")
+const resolved = Bun.spawnSync(["git", "rev-parse", "--verify", `${requested}^{commit}`], { cwd: root, stderr: "pipe" })
+if (resolved.exitCode !== 0) throw new Error(`Unknown baseline ref ${requested}: ${resolved.stderr.toString().trim()}`)
+const baseline = resolved.stdout.toString().trim()
 
+const normalize = (text: string) => text.replaceAll("\r\n", "\n")
 const files = (await Array.fromAsync(new Bun.Glob("*/SKILL.md").scan({ cwd: path.join(root, ".opencode/skills") }))).sort()
+const baselineFiles = (() => {
+  const result = Bun.spawnSync(["git", "ls-tree", "-r", "--name-only", baseline, ".opencode/skills"], { cwd: root, stderr: "pipe" })
+  if (result.exitCode !== 0) throw new Error(`Could not list baseline skills: ${result.stderr.toString().trim()}`)
+  return result.stdout
+    .toString()
+    .split("\n")
+    .filter((line) => line.endsWith("/SKILL.md"))
+    .map((line) => line.slice(".opencode/skills/".length))
+})()
+const allFiles = [...new Set([...files, ...baselineFiles])].sort()
 const content = async (file: string, ref?: string) => {
-  if (!ref) return Bun.file(path.join(root, file)).text()
+  if (!ref) {
+    const target = Bun.file(path.join(root, file))
+    return (await target.exists()) ? normalize(await target.text()) : ""
+  }
   const result = Bun.spawnSync(["git", "show", `${ref}:${file.replaceAll("\\", "/")}`], { cwd: root, stderr: "pipe" })
-  if (result.exitCode !== 0) throw new Error(`Could not read baseline file ${file}`)
-  return result.stdout.toString()
+  if (result.exitCode !== 0) {
+    const stderr = result.stderr.toString()
+    if (/does not exist|exists on disk, but not in|path .* does not exist/i.test(stderr)) return ""
+    throw new Error(`Could not read baseline file ${file}: ${stderr.trim()}`)
+  }
+  return normalize(result.stdout.toString())
 }
 
 const skills = async (ref?: string) =>
-  Promise.all(
-    files.map(async (file) => {
-      const directory = path.join(root, ".opencode/skills")
-      const result = SkillFile.parse(directory, path.join(directory, file), await content(`.opencode/skills/${file}`, ref))
-      if (result._tag !== "Parsed") throw new Error(`Invalid skill: ${file}`)
-      return result.skill
-    }),
-  )
+  (
+    await Promise.all(
+      allFiles.map(async (file) => {
+        const text = await content(`.opencode/skills/${file}`, ref)
+        if (!text) return
+        const directory = path.join(root, ".opencode/skills")
+        const result = SkillFile.parse(directory, path.join(directory, file), text)
+        if (result._tag !== "Parsed") throw new Error(`Invalid skill: ${file}: ${JSON.stringify(result)}`)
+        return result.skill
+      }),
+    )
+  ).filter((skill) => skill !== undefined)
 
 const catalog = async (ref?: string) => {
   const entries = await skills(ref)
