@@ -422,6 +422,12 @@ export function reduceSessionRows(
   return projectEntries(entries)
 }
 
+// Provider caches are block-quantized (Mistral uses 64-token blocks, OpenAI 1,024-token buckets), so a
+// few blocks of movement is normal reuse. Only flag a material loss: enough tokens to matter in absolute
+// terms and at least a tenth of the previous cached prefix.
+const MATERIAL_CACHE_DROP = 8_192
+const MATERIAL_CACHE_DROP_RATIO = 0.1
+
 export function cacheReuseDrop(previous: CacheUsage | undefined, current: CacheUsage) {
   if (previous === undefined) return
   if (
@@ -431,9 +437,9 @@ export function cacheReuseDrop(previous: CacheUsage | undefined, current: CacheU
   )
     return
   const drop = previous.read - current.read
-  // OpenAI cache reads can move between one and two 1,024-token buckets without a material loss of reuse.
-  if (current.model.providerID === "openai" && drop >= 1_024 && drop <= 2_048) return
-  return drop > 0 ? drop : undefined
+  if (drop < MATERIAL_CACHE_DROP) return
+  if (drop / previous.read < MATERIAL_CACHE_DROP_RATIO) return
+  return drop
 }
 
 function hasTokenUsage(
