@@ -1,4 +1,5 @@
 ---
+disabled: true
 description: Independently assesses authorized SDD changes for specification compliance, testing adequacy, material engineering risks, and readiness for user acceptance; reports evidence to the Spec Writer.
 mode: subagent
 permissions:

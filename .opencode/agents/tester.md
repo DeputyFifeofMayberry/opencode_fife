@@ -1,4 +1,5 @@
 ---
+disabled: true
 description: Independently verifies approved SDD implementations against acceptance criteria and actual runtime behavior, reporting reproducible evidence without modifying production code.
 mode: subagent
 permissions:

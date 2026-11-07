@@ -1,4 +1,5 @@
 ---
+disabled: true
 description: Implements explicitly authorized specifications with guided technical autonomy, meaningful self-verification, and evidence-backed handoffs to independent testing.
 mode: all
 permissions:

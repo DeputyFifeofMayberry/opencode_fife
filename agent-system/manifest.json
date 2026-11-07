@@ -11,7 +11,7 @@
       "source": ".opencode/agents/implementer.md",
       "target": "agents/implementer.md",
       "scope": "global",
-      "sha256": "a2dee29a3dde5dcf812be497e6568aebd85fbfe363d703c2f2f0dc11bbe57cb5"
+      "sha256": "211d44fda72a0eccdebbd08c113c9f4298baa7f7dc9e9cf4ac2298d72ce48009"
     },
     {
       "kind": "agent",
@@ -19,7 +19,7 @@
       "source": ".opencode/agents/qa.md",
       "target": "agents/qa.md",
       "scope": "global",
-      "sha256": "f07a02745cfda0d9da73e1c77975aedae58dab64f9649973e18b1653f5533ca1"
+      "sha256": "db17015f7ff61c83fb48f4e8e6ae5f9d40d5de2425a2490f23dbe95b201b2596"
     },
     {
       "kind": "agent",
@@ -27,7 +27,7 @@
       "source": ".opencode/agents/spec-writer.md",
       "target": "agents/spec-writer.md",
       "scope": "global",
-      "sha256": "b02f03719575c78768162263b6b96b3da6ef178506f6831cdf632f9156ade1dd"
+      "sha256": "0adf8a18b55e8d449867b2b9e20e9cc7c061d434f8d2d3fccd448ae0bdb2fd5d"
     },
     {
       "kind": "agent",
@@ -35,7 +35,7 @@
       "source": ".opencode/agents/tester.md",
       "target": "agents/tester.md",
       "scope": "global",
-      "sha256": "eb77f77464a25d0f8501274b0490586b410d4b67f7f7dd30d215093c988cb9ac"
+      "sha256": "0545f6b2403c4f6d6b31ff3fe08fd3be2f5ea3fbad3e8559f41a19d9e617ce1d"
     },
     {
       "kind": "config",

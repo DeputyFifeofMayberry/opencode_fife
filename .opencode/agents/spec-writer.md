@@ -1,4 +1,5 @@
 ---
+disabled: true
 description: Drafts implementation-ready specifications for user approval, then coordinates separately approved implementation, testing, and QA stages.
 mode: primary
 permissions:
