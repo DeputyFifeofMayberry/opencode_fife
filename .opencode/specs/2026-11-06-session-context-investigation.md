@@ -229,7 +229,7 @@ Approved decisions:
 2. The materiality thresholds are 100 ms for U1 p95 and 50 ms for the A/B deltas.
 3. The report path is `docs/audits/cli-performance/finding-02-history-reconstruction-2026-11-06.md`.
 
-Execution state: Awaiting stage approval.
+Execution state: Complete.
 Definition of Done: `.opencode/references/definition-of-done.md` applies. For this task, the harness assertions and the negative check satisfy the "new behavior covered by tests" item. No production behavior changes, so no regression suite is required beyond the harness run.
 
 Execution record:
@@ -254,5 +254,6 @@ Execution record:
 - Correction cycle 2 recovery (2026-11-06): First attempt ended while the 100-iteration run was executing. Checked: no `bun` process, no temp directory, report unchanged. Follow-up sent to re-run the three runs one at a time and update the report.
 - Correction cycle 2 result (2026-11-06): Three 100-iteration runs, all Material. S3 p95 104.47, 103.66, and 121.93 ms; medians 85.21, 85.90, and 85.61 ms; maxes 134.74, 142.01, and 159.46 ms. JSON files at `%TEMP%\session-context-100-run1.json`, `run2.json`, and `run3.json`. Distribution rule gives Material. Report update in progress.
 - Correction cycle 2 complete (2026-11-06): Report updated to Material. Three 100-iteration runs, all Material: S3 p95 104.47, 103.66, 121.93 ms; medians 85.21, 85.90, 85.61 ms; maxes 134.74, 142.01, 159.46 ms. Report adds the distribution table, uses run 3 for the full scenario table, updates the phase breakdown and per-turn projection, and proposes a separate optimization spec targeting `withParts`. No production or harness code change. Awaiting authorization for the final retest.
-- Current state: Awaiting authorization for final retest.
+- Final decision (2026-11-06): The user decided the optimization is not worth pursuing at this time based on the evidence. The investigation is closed. The final retest and QA continuation are waived by the decision. The report records the Material stress-case verdict and the real-world relevance caveat.
+- Current state: Complete.
 - Cost and latency: implementation and testing session cost and latency not measured.

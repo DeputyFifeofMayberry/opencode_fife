@@ -220,6 +220,8 @@ Proposed separate spec:
 
 This is a proposal for a separate spec. No optimization was implemented in this investigation.
 
+**Decision (2026-11-06):** The user decided the optimization is not worth pursuing at this time based on the evidence. The stress case remains documented for future review. No optimization spec is commissioned.
+
 ## Limitations
 
 - The S3 p95 tail is heavy and unstable. The median is stable at 85.21–85.90 ms; the p95 is 103.66–121.93 ms and the max is 134.74–159.46 ms. The verdict is Material under the approved 100 ms p95 rule, not because the typical step is slow.
