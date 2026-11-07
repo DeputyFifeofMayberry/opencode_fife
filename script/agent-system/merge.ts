@@ -160,10 +160,13 @@ export function mergeRouterOverridesText(text: string, canonical: unknown) {
   }
 }
 
-export function canonicalPermissionRules(agents: unknown) {
+export function canonicalPermissionRules(agents: unknown, disabled: ReadonlySet<string> = new Set()) {
   const list = asArray(agents, "agents")
   const specWriter = list.find((entry) => isRecord(entry) && entry.id === "spec-writer")
-  if (!isRecord(specWriter)) throw new MergeError("spec-writer is missing from debug agents output.")
+  if (!isRecord(specWriter)) {
+    if (disabled.has("spec-writer")) return []
+    throw new MergeError("spec-writer is missing from debug agents output.")
+  }
   const permissions = asArray(specWriter.permissions, "spec-writer permissions")
   return permissions.filter(isRecord)
 }
