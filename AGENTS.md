@@ -7,9 +7,9 @@
 
 ## Skills
 
-The repository `.opencode/skills/` tree is the canonical source for the managed skill library: 30 global-scope skills and 10 project-scope skills. `~/.config/opencode/skills/` is an install target, never a source. On OpenCode V2 the precedence is project `.opencode/skills/` → personal `~/.config/opencode/skills/`, so the project copy is the one that runs; edit that copy or the change is invisible.
+The repository `.opencode/skills/` tree is the canonical source for the managed skill library: 32 global-scope skills and 10 project-scope skills. `~/.config/opencode/skills/` is an install target, never a source. On OpenCode V2 the precedence is project `.opencode/skills/` → personal `~/.config/opencode/skills/`, so the project copy is the one that runs; edit that copy or the change is invisible.
 
-- **Global-scope skills** are copied to the global config root by `bun run update:local`. They supply general technique: the writing and prompting skills, review and planning skills, security and performance skills, and the rest of the 30-skill library.
+- **Global-scope skills** are copied to the global config root by `bun run update:local`. They supply general technique: the writing and prompting skills, review and planning skills, security and performance skills, and the rest of the 32-skill library.
 - **Project-scope skills** supply repository knowledge and tooling and are never installed globally: `unit-tests`, `tui-tests`, `app-e2e-tests`, `component-tests`, `effect`, `opencode-dev`, `humanizer_fife`, `plan-hardening`, `rtl-aware-development`, and `sample-skill`.
 - **Adding or changing a skill:** edit `.opencode/skills/<name>/`, add the name to `GLOBAL_SKILLS` or `PROJECT_SKILLS` in `script/agent-system/lib.ts`, run `bun run agent:manifest`, then `bun run agent:manifest -- --check` and `bun run test:agent-system`.
 
@@ -18,6 +18,13 @@ Use a skill when its description matches the task. A question, a read-only inspe
 Plans under `docs/superpowers/` and `docs/plans/` are preserved historical artifacts; any `REQUIRED SUB-SKILL` headers in them refer to retired tooling and are not active instructions.
 
 `.opencode/references/` holds the standing checklists: `definition-of-done.md` (completion bar), `testing-patterns.md`, `orchestration-patterns.md` (slash-command and persona patterns), and the `security-`, `performance-`, `observability-`, and `accessibility-checklist.md` files. Read the matching one when a change touches that dimension.
+
+## Lessons Learned
+
+- Record lessons only when the `lessons-learned` skill is invoked.
+- Document significant issues, recurring mistakes, and unresolved difficulties in `docs/agent-lessons.md`.
+- Keep entries concise, factual, and free of speculation. Consolidate recurring issues rather than duplicating entries.
+- This file is for human review only. Do not initiate corrective actions based on its contents.
 
 ## Delegation
 

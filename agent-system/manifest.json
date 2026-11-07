@@ -1643,7 +1643,7 @@
       "source": ".opencode/skills/lessons-learned/SKILL.md",
       "target": "skills/lessons-learned/SKILL.md",
       "scope": "global",
-      "sha256": "f04b169c444c7b467ee2154621380609da4dcb47529a8cd46c63d3401829e819"
+      "sha256": "332e404c78c1707fa7ab049f944eab7c25e391de70f7bfeb09cd192e81403f25"
     },
     {
       "kind": "skill",
