@@ -74,6 +74,8 @@ const layer = Layer.effect(
     const verifications = yield* FiberMap.make<SessionSchema.ID, void, never>()
     // Title generation starts once input is visible and must not delay model execution.
     const titles = yield* FiberMap.make<SessionSchema.ID, void, never>()
+    const modelKey = (model: SessionSchema.Info["model"]) =>
+      model === undefined ? "" : `${model.providerID}/${model.id}/${model.variant ?? ""}`
 
     // Each drain is one turn and starts its own trace, whatever fiber woke it.
     const drain = Effect.fn("SessionRunner.drain", { root: true })(function* (input: DrainInput) {
@@ -82,6 +84,9 @@ const layer = Layer.effect(
       let continuing = input.continuation !== undefined
       let step = input.continuation?.step ?? 1
       let entering = true
+      let instructionsPrepared = false
+      let refreshInstructions = false
+      let lastModel = ""
       let stepped = input.stepped ?? false
       const promotable = input.promotable ?? "input"
       if (!force && !continuing && !stepped) {
@@ -136,6 +141,8 @@ const layer = Layer.effect(
               if (!continuing && pending?.delivery !== "steer") {
                 entering = true
                 step = 1
+                instructionsPrepared = false
+                refreshInstructions = false
               }
               if (pending?.type === "move")
                 return DrainResult.Moved({
@@ -201,7 +208,16 @@ const layer = Layer.effect(
               }
               const ready = yield* restore(
                 Effect.gen(function* () {
-                  const selected = yield* prepareContext(sessionID)
+                  const selected = yield* selectContext(sessionID)
+                  const model = modelKey(selected.session.model)
+                  const modelChanged = lastModel !== model
+                  lastModel = model
+                  const commitInstructions = !instructionsPrepared || refreshInstructions || modelChanged
+                  yield* prepareContext(selected, commitInstructions)
+                  if (commitInstructions) {
+                    instructionsPrepared = true
+                    refreshInstructions = false
+                  }
                   const promoted = yield* SessionInbox.promote(
                     db,
                     bus,
@@ -226,6 +242,7 @@ const layer = Layer.effect(
 
       const startedAt = yield* Clock.currentTimeMillis
       const session = yield* store.get(sessionID)
+      lastModel = modelKey(session?.model)
       const idleAt = session?.time.idle === undefined ? undefined : DateTime.toEpochMillis(session.time.idle)
       let checkpoint = false
       let estimatedPrompt: number | undefined
@@ -250,7 +267,9 @@ const layer = Layer.effect(
             checkpoint = next.context.messages[0]?.type === "compaction"
             estimatedPrompt = SessionCompaction.estimateContext(next.context)
           }
-          continuing = yield* runStep(next.context, step)
+          continuing = yield* runStep(next.context, step, () => {
+            refreshInstructions = true
+          })
           stepped = true
           step++
           stepCount++
@@ -309,38 +328,65 @@ const layer = Layer.effect(
         }
       })
 
-    const prepareContext = Effect.fn("SessionRunner.prepareContext")(function* (sessionID: SessionSchema.ID) {
+    const selectContext = Effect.fn("SessionRunner.selectContext")(function* (sessionID: SessionSchema.ID) {
       // Plugins can reload mid-turn; each step and retry must read the settled agents, models and skills.
       yield* plugins.awaitActivation
-      const selected = yield* context.select(sessionID)
+      return yield* context.select(sessionID)
+    })
+
+    const prepareContext = Effect.fn("SessionRunner.prepareContext")(function* (
+      selected: SessionContext.Selection,
+      commitInstructions: boolean,
+    ) {
+      // Read instruction sources on every step so plugin reloads and cancellations settle, but commit
+      // deltas only at turn boundaries or after a compaction/model switch. A mid-turn system update
+      // would invalidate the provider's prompt cache for the next step.
       // A blocked initial instruction baseline must leave admitted input pending.
-      yield* InstructionState.prepare(db, bus, selected.instructions, sessionID)
+      yield* InstructionState.prepare(db, bus, selected.instructions, selected.session.id, commitInstructions)
       return selected
     })
 
     /** Owns logical Step policy; each attempt owns its streaming, tools, and durable settlement. */
-    const runStep = Effect.fn("SessionRunner.runStep")(function* (first: SessionContext.Loaded, step: number) {
+    const runStep = Effect.fn("SessionRunner.runStep")(function* (
+      first: SessionContext.Loaded,
+      step: number,
+      refreshInstructions: () => void,
+    ) {
       const sessionID = first.session.id
       let assistantMessageID = SessionMessage.ID.create()
       const retry = yield* SessionRunnerRetry.make(bus, sessionID)
       let initial: SessionContext.Loaded | undefined = first
       let recoverOverflow = true
       let recoverContinuation = true
+      let refresh = false
       while (true) {
         // Reuse boundary preparation once; retries refresh context without delivering more input.
-        const entered = initial ?? (yield* prepareContext(sessionID).pipe(Effect.flatMap(context.load)))
+        const entered =
+          initial ??
+          (yield* selectContext(sessionID).pipe(
+            Effect.flatMap((selected) => prepareContext(selected, refresh)),
+            Effect.flatMap(context.load),
+          ))
         initial = undefined
+        refresh = false
         // The effort policy may switch the session's variant durably; reload so this step's request carries it.
         const switched = yield* EffortTransition.apply(
           { bus, store, efforts, config, models },
           { sessionID, agent: entered.agent.id, resolved: entered.model },
         )
-        const loaded = switched ? yield* prepareContext(sessionID).pipe(Effect.flatMap(context.load)) : entered
+        const loaded = switched
+          ? yield* selectContext(sessionID).pipe(
+              Effect.flatMap((selected) => prepareContext(selected, true)),
+              Effect.flatMap(context.load),
+            )
+          : entered
         const estimate = SessionCompaction.estimatePrompt(loaded)
         const compacted = yield* compaction.compact({ reason: "auto", context: loaded, estimate })
         if (compacted.status === "failed") return yield* new StepFailedError({ error: compacted.error })
         if (compacted.status === "completed") {
           assistantMessageID = SessionMessage.ID.create()
+          refresh = true
+          refreshInstructions()
           continue
         }
         yield* compaction.precompute(Effect.succeed(loaded), estimate)
@@ -465,6 +511,8 @@ const layer = Layer.effect(
           Compacted: Effect.fnUntraced(function* () {
             recoverOverflow = false
             assistantMessageID = SessionMessage.ID.create()
+            refresh = true
+            refreshInstructions()
           }),
           RecoverFull: Effect.fnUntraced(function* () {
             recoverContinuation = false
