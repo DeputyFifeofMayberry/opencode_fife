@@ -4,7 +4,7 @@
 **Approval:** Decisions D5 and D8-D11, the abort criteria, and this spec's location confirmed by the user on 2026-11-06
 **Date:** 2026-11-06
 **Scope:** Machine-wide OpenCode install; no repository changes during the trial
-**Source of truth for gstack:** `garrytan/gstack` at tag `v1.96.0.0`
+**Source of truth for gstack:** `garrytan/gstack` at tag `v1.97.0.0` (the trial started on `v1.96.0.0` and upgraded on 2026-11-07)
 
 ## 1. Objective
 
@@ -29,7 +29,7 @@ When this work is complete:
 | D5 | Exempt gstack skill execution from the router's delegation protocol via instruction text | The router injects a global system prompt and has no per-agent opt-out or custom-instruction hook |
 | D6 | Skip `cso`, `codex`, `claude-code` skills | Required external tools are not installed |
 | D7 | Keep the `gstack-` prefix | Setup defaults to `--no-prefix`, which would collide with the existing `/learn` command; pass `--prefix` explicitly |
-| D8 | Pin `v1.96.0.0` | Latest stable; contains Windows test fixes and the Chromium CVE fix |
+| D8 | Pin `v1.96.0.0`, upgraded to `v1.97.0.0` on 2026-11-07 | Latest stable; contains Windows test fixes and the Chromium CVE fix |
 | D9 | Clone to `~/gstack` | Matches upstream docs; keeps the source checkout out of the generated runtime root |
 | D10 | Snapshot `~/.config/opencode` before install | Enables exact rollback |
 | D11 | No team mode, no repository commit | OpenCode team-mode support is unverified; trial first |
@@ -62,7 +62,7 @@ Run in **Git Bash** (WSL would write to the Linux home, not `%USERPROFILE%`).
 2. Clone the pinned tag:
 
    ```bash
-   git clone --branch v1.96.0.0 --depth 1 https://github.com/garrytan/gstack.git ~/gstack
+   git clone --branch v1.97.0.0 --depth 1 https://github.com/garrytan/gstack.git ~/gstack
    ```
 
 3. Install only the OpenCode host:
@@ -206,7 +206,7 @@ Confirmed by the user on 2026-11-06:
 
 ## 14. Implementation record (2026-11-07)
 
-- Installed `v1.96.0.0` at `~/gstack` with `./setup --host opencode --prefix`. `./setup --status` reports `opencode / experimental / global / current / 1.96.0.0`.
+- Installed `v1.96.0.0` at `~/gstack` with `./setup --host opencode --prefix`, then upgraded to `v1.97.0.0` on 2026-11-07. `./setup --status` reports `opencode / experimental / global / current / 1.97.0.0`.
 - 61 `gstack-*` skill directories and 61 `gstack-*.md` commands are installed under `~/.config/opencode/`.
 - `disabled_skills` is `cso,codex,claude-code`. The three skill directories and command files are absent.
 - `~/.config/opencode/AGENTS.md` contains the section 5 block and is loaded by OpenCode.
@@ -215,4 +215,6 @@ Confirmed by the user on 2026-11-06:
 - Browser smoke: `browse.exe goto https://example.com` returned HTTP 200 and `browse.exe text` returned the page text.
 - Setup was interrupted twice by OpenCode dev-server restarts during skill registration. It was completed with a detached Git Bash process (`~/gstack-run-setup.sh`), which survives the restart.
 - Correction to D6: Codex CLI `0.164.0` is installed on this machine, so `/gstack-codex` is viable. It stays disabled per the approved decision; re-enable with `gstack-config set disabled_skills cso,claude-code` and re-run setup.
-- Not yet exercised: `/gstack-review` router-exemption check (V7), `/gstack-qa` end-to-end, and the rollback rehearsal (V8). These belong to the trial.
+- V7 passed: during `/gstack-review`, the skill read the checklist, preamble, full diff, and five reference files directly. The only subagent dispatch was the adversarial pass the skill itself requires; no `@fast` info-gathering dispatch occurred.
+- V8 passed as a static rehearsal: the snapshot has 84 files and valid JSON; the live tree has 62 `gstack*` skill directories and 59 `gstack-*` commands; the 32 managed skills are untouched. The destructive directory swap was not run because it would disrupt the live server.
+- Not yet exercised: `/gstack-qa` end-to-end against a real browser surface.
