@@ -1639,6 +1639,14 @@
     },
     {
       "kind": "skill",
+      "name": "lessons-learned",
+      "source": ".opencode/skills/lessons-learned/SKILL.md",
+      "target": "skills/lessons-learned/SKILL.md",
+      "scope": "global",
+      "sha256": "f04b169c444c7b467ee2154621380609da4dcb47529a8cd46c63d3401829e819"
+    },
+    {
+      "kind": "skill",
       "name": "observability-and-instrumentation",
       "source": ".opencode/skills/observability-and-instrumentation/SKILL.md",
       "target": "skills/observability-and-instrumentation/SKILL.md",

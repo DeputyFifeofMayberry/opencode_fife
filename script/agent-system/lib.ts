@@ -35,6 +35,7 @@ export const GLOBAL_SKILLS = [
   "idea-refine",
   "incremental-implementation",
   "interview-me",
+  "lessons-learned",
   "observability-and-instrumentation",
   "performance-optimization",
   "planning-and-task-breakdown",
