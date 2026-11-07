@@ -49,25 +49,35 @@ test("indexed tail footer calculations do not subscribe to an unrelated history 
   })
 })
 
-test("filters OpenAI cache quantization from cache reuse drops", () => {
+test("ignores small cache reuse drops", () => {
   const openai = { id: "gpt", providerID: "openai" }
+  const mistral = { id: "deepseek-v4-1-flash-1017", providerID: "mistral", variant: "max" }
   expect(cacheReuseDrop(undefined, { read: 10_000, model: openai })).toBeUndefined()
-  expect(cacheReuseDrop({ read: 10_000, model: openai }, { read: 11_000, model: openai })).toBeUndefined()
-  expect(cacheReuseDrop({ read: 10_000, model: openai }, { read: 8_977, model: openai })).toBe(1_023)
-  expect(cacheReuseDrop({ read: 10_000, model: openai }, { read: 8_976, model: openai })).toBeUndefined()
-  expect(cacheReuseDrop({ read: 10_000, model: openai }, { read: 8_500, model: openai })).toBeUndefined()
-  expect(cacheReuseDrop({ read: 10_000, model: openai }, { read: 7_952, model: openai })).toBeUndefined()
-  expect(cacheReuseDrop({ read: 10_000, model: openai }, { read: 7_951, model: openai })).toBe(2_049)
+  expect(cacheReuseDrop({ read: 100_000, model: openai }, { read: 101_000, model: openai })).toBeUndefined()
+  expect(cacheReuseDrop({ read: 100_000, model: openai }, { read: 98_977, model: openai })).toBeUndefined()
+  expect(cacheReuseDrop({ read: 100_000, model: openai }, { read: 97_952, model: openai })).toBeUndefined()
+  expect(cacheReuseDrop({ read: 300_000, model: mistral }, { read: 299_360, model: mistral })).toBeUndefined()
+  expect(cacheReuseDrop({ read: 300_000, model: mistral }, { read: 292_448, model: mistral })).toBeUndefined()
+})
+
+test("flags material cache reuse drops", () => {
+  const mistral = { id: "deepseek-v4-1-flash-1017", providerID: "mistral", variant: "max" }
+  expect(cacheReuseDrop({ read: 100_000, model: mistral }, { read: 90_000, model: mistral })).toBe(10_000)
+  expect(cacheReuseDrop({ read: 100_000, model: mistral }, { read: 89_999, model: mistral })).toBe(10_001)
+  expect(cacheReuseDrop({ read: 300_000, model: mistral }, { read: 260_000, model: mistral })).toBe(40_000)
+  expect(cacheReuseDrop({ read: 300_000, model: mistral }, { read: 0, model: mistral })).toBe(300_000)
+  expect(cacheReuseDrop({ read: 10_000, model: mistral }, { read: 0, model: mistral })).toBe(10_000)
+  expect(cacheReuseDrop({ read: 5_000, model: mistral }, { read: 0, model: mistral })).toBeUndefined()
 })
 
 test("compares cache reuse only for the same model", () => {
-  const previous = { read: 10_000, model: { id: "claude", providerID: "anthropic" } }
-  expect(cacheReuseDrop(previous, { read: 8_976, model: { id: "gpt", providerID: "openai" } })).toBeUndefined()
-  expect(cacheReuseDrop(previous, { read: 8_976, model: { id: "claude", providerID: "anthropic" } })).toBe(1_024)
+  const previous = { read: 100_000, model: { id: "claude", providerID: "anthropic" } }
+  expect(cacheReuseDrop(previous, { read: 88_976, model: { id: "gpt", providerID: "openai" } })).toBeUndefined()
+  expect(cacheReuseDrop(previous, { read: 88_976, model: { id: "claude", providerID: "anthropic" } })).toBe(11_024)
   expect(
     cacheReuseDrop(
-      { read: 10_000, model: { id: "gpt", providerID: "openai", variant: "low" } },
-      { read: 8_976, model: { id: "gpt", providerID: "openai", variant: "high" } },
+      { read: 100_000, model: { id: "gpt", providerID: "openai", variant: "low" } },
+      { read: 88_976, model: { id: "gpt", providerID: "openai", variant: "high" } },
     ),
   ).toBeUndefined()
 })
