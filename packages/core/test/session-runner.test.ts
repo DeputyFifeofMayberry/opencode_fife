@@ -1559,6 +1559,35 @@ describe("SessionRunnerLLM", () => {
     expect(instructionEvents[1]?.metadata).toBeUndefined()
   })
 
+  scenario("defers instruction updates to the next turn", function* (s) {
+    const instructionEvents: Event.Payload[] = []
+    const unsubscribe = yield* s.bus.listen((event) =>
+      Effect.sync(() => {
+        if (event.type === "session.instructions.updated") instructionEvents.push(event)
+      }),
+    )
+
+    yield* s.admit("First")
+    yield* s.llm.push(TestLLM.toolCall("call-echo", "echo", { text: "one" }), TestLLM.text("Done", "text-done"))
+    const tools = yield* s.blockTools()
+    const run = yield* s.resume.pipe(Effect.forkChild)
+    yield* tools.started
+
+    // A skill or AGENTS.md change while the turn is in flight must wait for the next turn.
+    s.systemBaseline = "Changed context"
+    yield* tools.release
+    yield* Fiber.join(run)
+
+    expect(instructionEvents).toHaveLength(1)
+    expect(instructionEvents[0]?.metadata).toEqual({ instructions: { initial: true } })
+
+    yield* s.runPrompt("Second")
+    yield* unsubscribe
+
+    expect(instructionEvents).toHaveLength(2)
+    expect(instructionEvents[1]?.data).toMatchObject({ text: "Changed context" })
+  })
+
   scenario("retries the first request after system context becomes available", function* (s) {
     const messageID = SessionMessage.ID.create()
     s.systemUnavailable = true

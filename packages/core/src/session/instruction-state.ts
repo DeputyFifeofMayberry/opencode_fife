@@ -82,8 +82,10 @@ export const prepare = Effect.fn("InstructionState.prepare")(function* (
   bus: Bus.Interface,
   instructions: Instructions.List,
   sessionID: SessionSchema.ID,
+  commitObservation = true,
 ) {
-  yield* commit(db, bus, instructions, yield* observe(db, instructions, sessionID))
+  const observation = yield* observe(db, instructions, sessionID)
+  if (commitObservation) yield* commit(db, bus, instructions, observation)
 })
 
 export const apply = Effect.fn("InstructionState.apply")(function* (
