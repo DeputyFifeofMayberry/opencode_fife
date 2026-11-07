@@ -22,6 +22,7 @@
     "benchmark:edit": "bun run script/benchmark-edit.ts",
     "benchmark:location": "bun run script/benchmark-location.ts",
     "benchmark:location-memory": "bun run script/benchmark-location-memory.ts",
+    "benchmark:session-context": "bun run script/benchmark-session-context.ts",
     "build": "bun run script/build.ts",
     "pack": "bun run script/pack.ts",
     "update-models-snapshot": "bun run script/update-models-snapshot.ts",
